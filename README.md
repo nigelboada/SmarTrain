@@ -4,7 +4,7 @@ Repositori per al projecte SmarTrain de l'assignatura Plataformes en Xarxa.
 
 SmarTrain és una plataforma de seguiment esportiu per a futbolistes que combina la captura de dades sensorials amb Intel·ligència Artificial per analitzar la càrrega física i el posicionament en temps real.
 
-# Arquitectura general del sistema 
+## Arquitectura general del sistema 
 
 El projecte segueix una arquitectura Client-Servidor amb processament a l'extrem (Edge Computing):
 
