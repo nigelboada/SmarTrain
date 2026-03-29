@@ -17,8 +17,6 @@ def download_data():
     return "UCI HAR Dataset"
 
 def load_dataset(base_path, type="train"):
-    # Carreguem les dades de l'acceleròmetre (X, Y, Z)
-    # El dataset UCI ja ve segmentat en finestres de 128 mostres
     x_path = os.path.join(base_path, type, f"X_{type}.txt")
     y_path = os.path.join(base_path, type, f"y_{type}.txt")
 
@@ -34,13 +32,10 @@ def run_experiment():
     X_train, y_train = load_dataset(data_dir, "train")
     X_test, y_test = load_dataset(data_dir, "test")
 
-    # CONFIGURACIÓ DEL PIPELINE: Random Forest
-    # Utilitzem 100 arbres per tenir un bon equilibri precisió/mida
     print("Entrenant Random Forest Classifier...")
     model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
     model.fit(X_train, y_train)
 
-    # RESULTATS
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
 
