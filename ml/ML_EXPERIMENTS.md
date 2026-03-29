@@ -42,6 +42,8 @@ El procés d'entrenament seguirà aquest flux:
 
     Quantització: Conversió a INT8 per optimitzar la mida (< 2MB) i la latència en el mòbil.
 
+--------------------------
+
 ### Experiment 1: Baseline amb Random Forest (UCI HAR Dataset)
 
 * **Data:** 29/03/2026
