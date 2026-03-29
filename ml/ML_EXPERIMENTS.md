@@ -1,4 +1,4 @@
-1. Problema a resoldre
+### 1. Problema a resoldre
 
 L'objectiu d'aquest mòdul de Machine Learning és la Classificació d'Activitat Humana (HAR) aplicada al futbol amateur. El sistema ha de ser capaç d'identificar en temps real, mitjançant les dades de l'acceleròmetre del dispositiu mòbil, en quin dels següents 3 estats es troba el jugador:
 
@@ -8,7 +8,7 @@ L'objectiu d'aquest mòdul de Machine Learning és la Classificació d'Activitat
 
     Esprint: Curses d'alta intensitat (accions explosives).
 
-2. Models Candidats
+### 2. Models candidats
 
 Per a aquest problema de sèries temporals, s'han seleccionat els següents models per a l'experimentació:
 
@@ -16,7 +16,7 @@ Per a aquest problema de sèries temporals, s'han seleccionat els següents mode
 
     Random Forest: Com a model de referència (baseline) per comparar la precisió d'un mètode clàssic basat en característiques estadístiques (mitjana, variància, etc.).
 
-3. Herramientas utilizadas
+### 3. Eines utilitzades
 
     Google Colab / Jupyter Notebooks: Per a l'entrenament i visualització de dades.
 
@@ -26,7 +26,7 @@ Per a aquest problema de sèries temporals, s'han seleccionat els següents mode
 
     TensorFlow Lite Converter: Per a la quantització i exportació del model final al format mòbil.
 
-4. Pipeline de entrenamiento
+### 4. Pipeline d'entrenament
 
 El procés d'entrenament seguirà aquest flux:
 
