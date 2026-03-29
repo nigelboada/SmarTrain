@@ -42,13 +42,13 @@ El procés d'entrenament seguirà aquest flux:
 
     Quantització: Conversió a INT8 per optimitzar la mida (< 2MB) i la latència en el mòbil.
 
-#### 🧪 Experiment 1: Baseline amb Random Forest (UCI HAR Dataset)
+### Experiment 1: Baseline amb Random Forest (UCI HAR Dataset)
 
 * **Data:** 29/03/2026
 * **Script utilitzat:** `/ml/scripts/train_baseline.py`
 * **Dataset:** UCI Human Activity Recognition (7,352 entrenament / 2,947 test).
 
-##### ⚙️ Configuració del Pipeline
+##### Configuració del pipeline
 | Paràmetre | Valor |
 | :--- | :--- |
 | **Model** | Random Forest Classifier |
@@ -57,10 +57,10 @@ El procés d'entrenament seguirà aquest flux:
 | **Segmentació** | Finestres de 128 mostres (2.56s) |
 | **Llibreries** | Scikit-learn, Pandas, Numpy |
 
-##### 📊 Resultats Obtinguts
-| Mètrica | Valor Real |
+##### Resultats obtinguts
+| Mètrica | Valor real |
 | :--- | :--- |
-| **Accuracy Total** | **92.06%** |
+| **Accuracy total** | **92.06%** |
 | **F1-Score (Weighted)** | **0.92** |
 | **Precision (Mitjana)** | **0.92** |
 
@@ -70,7 +70,7 @@ El procés d'entrenament seguirà aquest flux:
 * **Estar dret/Seure (4, 5):** 0.90 / 0.91
 * **Estirat (6):** 1.00 (Precisió perfecta)
 
-##### 💡 Conclusions de l'Experiment 1
+##### Conclusions de l'experiment 1
 Els resultats són molt satisfactoris per a un model inicial. S'observa que el model identifica perfectament l'estat de repòs total (activitat 6), però té lleugeres confusions en activitats dinàmiques similars (escales vs caminar). 
 
 **Pla d'acció:** Tot i l'alta precisió, el model Random Forest genera un fitxer de gran mida que pot ser ineficient en dispositius mòbils. El següent experiment es basarà en una **CNN 1D** per intentar mantenir o millorar aquest 92% però optimitzant el pes per a l'exportació a **TensorFlow Lite**.
