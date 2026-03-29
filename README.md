@@ -1,10 +1,10 @@
-# SmarTrain - Sistema de monitorització de rendiment
+## SmarTrain - Sistema de monitorització de rendiment
 
 Repositori per al projecte SmarTrain de l'assignatura Plataformes en Xarxa.
 
 SmarTrain és una plataforma de seguiment esportiu per a futbolistes que combina la captura de dades sensorials amb Intel·ligència Artificial per analitzar la càrrega física i el posicionament en temps real.
 
-## Arquitectura general del sistema 
+### Arquitectura general del sistema 
 
 El projecte segueix una arquitectura Client-Servidor amb processament a l'extrem (Edge Computing):
 
@@ -16,7 +16,7 @@ El projecte segueix una arquitectura Client-Servidor amb processament a l'extrem
 
     Wearable: Integració amb Wear OS per a la captura de la freqüència cardíaca via Bluetooth.
 
-## Estructura del projecte 
+### Estructura del projecte 
 
 El repositori està organitzat segons els estàndards de l'assignatura:
 
@@ -24,7 +24,7 @@ El repositori està organitzat segons els estàndards de l'assignatura:
 
     /ml: Conté tot el cicle de vida de la Intel·ligència Artificial: datasets, notebooks d'experimentació i models TFLite.
 
-## Instruccions per executar l'app 
+### Instruccions per executar l'app 
 
     Clonar el repositori: git clone https://github.com/el-teu-usuari/SmarTrain.git.
 
