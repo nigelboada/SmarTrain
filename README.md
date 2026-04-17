@@ -24,6 +24,27 @@ El repositori està organitzat segons els estàndards de l'assignatura:
 
     /ml: Conté tot el cicle de vida de la Intel·ligència Artificial: datasets, notebooks d'experimentació i models TFLite.
 
+
+Descripció del Backend
+
+    Firebase Firestore: Utilitzat com a base de dades NoSQL per a l'emmagatzematge en temps real de les sessions d'entrenament.
+
+    Firebase Auth: (Opcional, si el poses) Per a la gestió d'usuaris.
+
+Flux de dades
+
+    Captura: El LocationProvider obté les coordenades GPS.
+
+    Persistència Local: Les dades s'emmagatzemen temporalment a una base de dades Room mentre l'entrenament està actiu.
+
+    Sincronització: En finalitzar la sessió, el Repository envia les dades a Firestore.
+
+    Consulta: La pantalla d'historial consulta directament a Firestore per mostrar les dades actualitzades en tots els dispositius.
+
+
+
+
+
 ### Instruccions per executar l'app 
 
     Clonar el repositori: git clone https://github.com/el-teu-usuari/SmarTrain.git.
