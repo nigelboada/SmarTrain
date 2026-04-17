@@ -1,20 +1,19 @@
 package com.udl.smartrain.domain.model
 
-import androidx.room3.Entity
-import androidx.room3.PrimaryKey
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.util.Date
 
-@Entity(tableName = "sessions") // Això diu a Room que crei una taula
+@Entity(tableName = "sessions") // <-- Assegura't que porta el parèntesi
 data class Session(
-    @PrimaryKey val id: String = "", // Firebase sol donar IDs de text
+    @PrimaryKey val id: String = "",
     val userId: String = "",
-    val startTime: Date = Date(),
+    val startTime: Date = Date(), // Room necessita el Converter per això
     val durationSeconds: Long = 0,
     val distanceMetres: Double = 0.0,
     val avgBpm: Int? = null,
     val intensityScore: Double = 0.0,
-    val isSynced: Boolean = false // Camp clau per saber si ja s'ha pujat al núvol
+    val isSynced: Boolean = false
 ) {
-    // Constructor buit necessari per a Firebase Firestore
     constructor() : this("", "", Date(), 0, 0.0, null, 0.0, false)
 }

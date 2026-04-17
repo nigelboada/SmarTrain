@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+import androidx.lifecycle.ViewModelProvider
+
 class MainViewModel(
     private val repository: SessionRepository
 ) : ViewModel() {
@@ -26,5 +28,15 @@ class MainViewModel(
                 _currentSession.value = null
             }
         }
+    }
+}
+
+class MainViewModelFactory(private val repository: SessionRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MainViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

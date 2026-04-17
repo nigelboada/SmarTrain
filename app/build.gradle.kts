@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.udl.smartrain"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.udl.smartrain"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -65,5 +65,9 @@ dependencies {
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.adapters)
     ksp(libs.androidx.room.compiler)
+
+    implementation(libs.androidx.activity.ktx)
+
 }
