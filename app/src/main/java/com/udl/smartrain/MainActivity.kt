@@ -72,9 +72,12 @@ fun SmarTrainApp(viewModel: MainViewModel) {
             })
         }
         composable(Screen.Session.route) {
-            SessionScreen(onStopSession = {
-                navController.popBackStack() // Torna al Dashboard
-            })
+            SessionScreen(
+                viewModel = viewModel, // PASSA EL VIEWMODEL AQUÍ
+                onStopSession = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

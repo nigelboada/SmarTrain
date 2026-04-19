@@ -20,10 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.udl.smartrain.service.TrackingService
-
+import com.udl.smartrain.ui.viewmodel.MainViewModel
 
 @Composable
-fun SessionScreen(onStopSession: () -> Unit) {
+fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -58,11 +58,10 @@ fun SessionScreen(onStopSession: () -> Unit) {
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
-            // Aturem el servei i tornem
-            context.stopService(Intent(context, TrackingService::class.java))
-            onStopSession()
+            viewModel.finishAndSaveSession() // Això guarda a Room i Firebase
+            onStopSession() // Això et torna al Dashboard
         }) {
-            Text(text = "FINALITZAR")
+            Text("Finalitzar Entrenament")
         }
     }
 }

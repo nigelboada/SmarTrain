@@ -3,11 +3,13 @@ package com.udl.smartrain.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.udl.smartrain.data.local.SessionDao
 import com.udl.smartrain.domain.model.Session
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 
 interface SessionRepository {
     suspend fun saveSession(session: Session): Result<Unit>
     suspend fun getSessionHistory(userId: String): List<Session>
+    fun getSessionsStream(): Flow<List<Session>> // <-- Afegeix això
 }
 
 class SessionRepositoryImpl(
@@ -37,5 +39,9 @@ class SessionRepositoryImpl(
     override suspend fun getSessionHistory(userId: String): List<Session> {
         // Aquí podríem decidir si llegir de Room o de Firebase
         return emptyList() // Ho omplirem després
+    }
+
+    override fun getSessionsStream(): Flow<List<Session>> {
+        return sessionDao.getAllSessions() // Llegeix de Room per a màxima velocitat
     }
 }

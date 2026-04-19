@@ -25,22 +25,27 @@ El repositori està organitzat segons els estàndards de l'assignatura:
     /ml: Conté tot el cicle de vida de la Intel·ligència Artificial: datasets, notebooks d'experimentació i models TFLite.
 
 
-Descripció del Backend
+#### Descripció del Backend
 
-    Firebase Firestore: Utilitzat com a base de dades NoSQL per a l'emmagatzematge en temps real de les sessions d'entrenament.
+El backend de SmarTrain s'ha implementat utilitzant Firebase (Google Cloud Platform), escollit per la seva capacitat de sincronització en temps real i la seva escalabilitat. Els serveis utilitzats són:
 
-    Firebase Auth: (Opcional, si el poses) Per a la gestió d'usuaris.
+    Cloud Firestore: Base de dades NoSQL basada en documents per a l'emmagatzematge de les sessions d'entrenament, rutes GPS i mètriques de rendiment.
 
-Flux de dades
+    Firebase Authentication: Gestió del registre i inici de sessió d'usuaris de forma segura.
 
-    Captura: El LocationProvider obté les coordenades GPS.
+#### Flux de dades del sistema
 
-    Persistència Local: Les dades s'emmagatzemen temporalment a una base de dades Room mentre l'entrenament està actiu.
+El sistema segueix un flux circular per garantir la integritat de les dades:
 
-    Sincronització: En finalitzar la sessió, el Repository envia les dades a Firestore.
+    Captura: El LocationProvider i el SensorProvider recullen dades en brut (GPS, ritme cardíac).
 
-    Consulta: La pantalla d'historial consulta directament a Firestore per mostrar les dades actualitzades en tots els dispositius.
+    Processament: El MainViewModel rep les dades i actualitza l'estat de la UI.
 
+    Persistència Local (Room): En finalitzar l'entrenament, el SessionRepository guarda la sessió a la base de dades local SQLite (via Room).
+
+    Sincronització Remota: El Repositori intenta immediatament una operació d'escriptura a Firestore. Si l'operació té èxit, marca la sessió com a isSynced = true.
+
+    Recuperació: En obrir l'historial, l'aplicació prioritza les dades de Firestore per oferir una experiència multi-dispositiu.
 
 
 

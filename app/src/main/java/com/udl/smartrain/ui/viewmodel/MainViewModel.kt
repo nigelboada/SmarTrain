@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(
     private val repository: SessionRepository
@@ -16,6 +18,13 @@ class MainViewModel(
 
     private val _currentSession = MutableStateFlow<Session?>(null)
     val currentSession: StateFlow<Session?> = _currentSession
+
+    val sessionsHistory: StateFlow<List<Session>> = repository.getSessionsStream()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun startNewSession(userId: String) {
         _currentSession.value = Session(userId = userId)
