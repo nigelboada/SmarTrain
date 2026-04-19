@@ -1,5 +1,7 @@
 package com.udl.smartrain.ui.viewmodel
 
+import java.util.UUID
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.udl.smartrain.data.repository.SessionRepository
@@ -19,7 +21,7 @@ class MainViewModel(
     private val _currentSession = MutableStateFlow<Session?>(null)
     val currentSession: StateFlow<Session?> = _currentSession
 
-    val sessionsHistory: StateFlow<List<Session>> = repository.getSessionsStream()
+    val sessionsHistory = repository.getSessionHistory("usuari_id_actual")
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -27,13 +29,25 @@ class MainViewModel(
         )
 
     fun startNewSession(userId: String) {
-        _currentSession.value = Session(userId = userId)
+        // Generem un ID únic i l'assignem a la sessió
+        val newSessionId = UUID.randomUUID().toString()
+
+        _currentSession.value = Session(
+            id = newSessionId,
+            userId = userId
+        )
     }
 
     fun finishAndSaveSession() {
-        viewModelScope.launch {
-            _currentSession.value?.let {
-                repository.saveSession(it)
+        Log.d("DEBUG_VM", "Entrant a finishAndSaveSession()")
+
+        val current = _currentSession.value
+        if (current == null) {
+            Log.e("DEBUG_VM", "Error: _currentSession és NULL! No es pot guardar res.")
+        } else {
+            Log.d("DEBUG_VM", "Sessió trobada, guardant: ${current.id}")
+            viewModelScope.launch {
+                repository.saveSession(current)
                 _currentSession.value = null
             }
         }

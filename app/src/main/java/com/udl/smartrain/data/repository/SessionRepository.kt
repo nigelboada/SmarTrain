@@ -1,14 +1,17 @@
 package com.udl.smartrain.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.udl.smartrain.data.local.SessionDao
 import com.udl.smartrain.domain.model.Session
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 
 interface SessionRepository {
     suspend fun saveSession(session: Session): Result<Unit>
-    suspend fun getSessionHistory(userId: String): List<Session>
+    fun getSessionHistory(userId: String): Flow<List<Session>>
     fun getSessionsStream(): Flow<List<Session>> // <-- Afegeix això
 }
 
@@ -17,28 +20,31 @@ class SessionRepositoryImpl(
     private val firestore: FirebaseFirestore
 ) : SessionRepository {
 
-    override suspend fun saveSession(session: Session): Result<Unit> = try {
-        // 1. Guardem primer en LOCAL (sempre funciona, encara que no hi hagi internet)
-        sessionDao.insertSession(session)
+    override suspend fun saveSession(session: Session): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            Log.d("DEBUG_DB", "--- Iniciant guardat de sessió: ${session.id} ---")
 
-        // 2. Intentem guardar en REMOT (Firebase)
-        firestore.collection("sessions")
-            .document(session.id)
-            .set(session)
-            .await()
+            // 1. Guardem a Room (Base de dades local)
+            sessionDao.insertSession(session)
+            Log.d("DEBUG_DB", "Pas 1: Guardat a Room correctament.")
 
-        // 3. Si ha pujat bé, actualitzem el camp 'isSynced' en local
-        sessionDao.insertSession(session.copy(isSynced = true))
+            // 2. Guardem a Firebase (Backend)
+            // Fem servir .await() per esperar a que Firebase acabi
+            firestore.collection("sessions")
+                .document(session.id)
+                .set(session)
+                .await()
+            Log.d("DEBUG_DB", "Pas 2: Guardat a Firebase correctament.")
 
-        Result.success(Unit)
-    } catch (e: Exception) {
-        // Si falla Firebase, l'app segueix funcionant perquè ja està a Room!
-        Result.failure(e)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("DEBUG_DB", "Error fatal al guardar: ${e.message}", e)
+            Result.failure(e)
+        }
     }
 
-    override suspend fun getSessionHistory(userId: String): List<Session> {
-        // Aquí podríem decidir si llegir de Room o de Firebase
-        return emptyList() // Ho omplirem després
+    override fun getSessionHistory(userId: String): Flow<List<Session>> {
+        return sessionDao.getAllSessions()
     }
 
     override fun getSessionsStream(): Flow<List<Session>> {

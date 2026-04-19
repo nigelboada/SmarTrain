@@ -1,5 +1,7 @@
 package com.udl.smartrain.ui.screens
 
+import android.util.Log
+
 import android.Manifest
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -34,6 +37,10 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
             val intent = Intent(context, TrackingService::class.java)
             ContextCompat.startForegroundService(context, intent)
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.startNewSession("usuari_proves_123") // Inicialitzem amb un ID dummy
     }
 
     Column(
@@ -58,8 +65,9 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
-            viewModel.finishAndSaveSession() // Això guarda a Room i Firebase
-            onStopSession() // Això et torna al Dashboard
+            Log.d("DEBUG_CLICK", "S'ha clicat el botó de finalitzar!")
+            viewModel.finishAndSaveSession()
+            onStopSession()
         }) {
             Text("Finalitzar Entrenament")
         }
