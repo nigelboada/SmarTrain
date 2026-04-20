@@ -15,6 +15,9 @@ interface SessionDao {
     @Delete
     suspend fun deleteSession(session: Session)
 
+    @Update
+    suspend fun updateSession(session: Session)
+
     @Query("SELECT * FROM sessions WHERE isSynced = 0")
     suspend fun getUnsyncedSessions(): List<Session>
 }

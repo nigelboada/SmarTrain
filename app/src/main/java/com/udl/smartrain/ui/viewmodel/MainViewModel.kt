@@ -68,6 +68,13 @@ class MainViewModel(
             repository.deleteSession(session)
         }
     }
+
+    fun updateSession(session: Session) {
+        viewModelScope.launch {
+            repository.updateSession(session)
+        }
+    }
+
 }
 
 class MainViewModelFactory(

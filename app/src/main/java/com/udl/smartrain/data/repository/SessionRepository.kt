@@ -12,6 +12,7 @@ import kotlinx.coroutines.tasks.await
 interface SessionRepository {
     suspend fun saveSession(session: Session): Result<Unit>
     suspend fun deleteSession(session: Session): Result<Unit>
+    suspend fun updateSession(session: Session): Result<Unit>
     fun getSessionHistory(userId: String): Flow<List<Session>>
     fun getSessionsStream(): Flow<List<Session>> // <-- Afegeix això
 }
@@ -50,6 +51,18 @@ class SessionRepositoryImpl(
             sessionDao.deleteSession(session)
             // 2. Esborrem de Firebase
             firestore.collection("sessions").document(session.id).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateSession(session: Session): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // 1. Actualitzem a Room
+            sessionDao.updateSession(session)
+            // 2. Actualitzem a Firestore (sobrescriu el document amb el mateix ID)
+            firestore.collection("sessions").document(session.id).set(session).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
