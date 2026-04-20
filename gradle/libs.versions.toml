@@ -21,6 +21,7 @@ room3CommonJvm = "3.0.0-alpha02"
 room = "2.6.1"
 ksp = "2.1.0-1.0.29"
 adapters = "3.2.0-alpha11"
+locationdelegation = "1.1.2"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
@@ -55,6 +56,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 androidx-room3-common-jvm = { group = "androidx.room3", name = "room3-common-jvm", version.ref = "room3CommonJvm" }
 androidx-adapters = { group = "androidx.databinding", name = "adapters", version.ref = "adapters" }
+locationdelegation = { group = "com.google.androidbrowserhelper", name = "locationdelegation", version.ref = "locationdelegation" }
 
 
 [plugins]

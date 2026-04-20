@@ -23,6 +23,7 @@ import com.udl.smartrain.ui.viewmodel.MainViewModel
 import com.udl.smartrain.ui.viewmodel.MainViewModelFactory
 
 import androidx.activity.viewModels
+import com.udl.smartrain.data.local.LocationProvider
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,9 +38,11 @@ class MainActivity : ComponentActivity() {
         val firestore = Firebase.firestore
         val repository = SessionRepositoryImpl(db.sessionDao(), firestore)
 
+        val locationProvider = LocationProvider(applicationContext)
+
         // 3. Crear el ViewModel usant la Factory
         val viewModel: MainViewModel by viewModels {
-            MainViewModelFactory(repository)
+            MainViewModelFactory(repository, locationProvider)
         }
 
         setContent {

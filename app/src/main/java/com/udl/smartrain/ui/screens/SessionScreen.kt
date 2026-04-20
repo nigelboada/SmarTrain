@@ -66,7 +66,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
 
         Button(onClick = {
             Log.d("DEBUG_CLICK", "S'ha clicat el botó de finalitzar!")
-            viewModel.finishAndSaveSession()
+            viewModel.finishAndSaveSession(context)
             onStopSession()
         }) {
             Text("Finalitzar Entrenament")

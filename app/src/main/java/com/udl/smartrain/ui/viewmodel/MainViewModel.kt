@@ -1,21 +1,26 @@
 package com.udl.smartrain.ui.viewmodel
 
+import android.content.Context
+import android.content.Intent
 import java.util.UUID
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.udl.smartrain.data.repository.SessionRepository
+import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.domain.model.Session
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 import androidx.lifecycle.ViewModelProvider
+import com.udl.smartrain.service.TrackingService
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 
 class MainViewModel(
-    private val repository: SessionRepository
+    private val repository: SessionRepository,
+    private val locationProvider: LocationProvider
 ) : ViewModel() {
 
     private val _currentSession = MutableStateFlow<Session?>(null)
@@ -38,8 +43,13 @@ class MainViewModel(
         )
     }
 
-    fun finishAndSaveSession() {
+    fun finishAndSaveSession(context: Context) {
         Log.d("DEBUG_VM", "Entrant a finishAndSaveSession()")
+
+        locationProvider.stopTracking()
+
+        val intent = Intent(context, TrackingService::class.java)
+        context.stopService(intent)
 
         val current = _currentSession.value
         if (current == null) {
@@ -54,11 +64,14 @@ class MainViewModel(
     }
 }
 
-class MainViewModelFactory(private val repository: SessionRepository) : ViewModelProvider.Factory {
+class MainViewModelFactory(
+    private val repository: SessionRepository,
+    private val locationProvider: LocationProvider
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(repository) as T
+            return MainViewModel(repository, locationProvider) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -3,6 +3,7 @@ package com.udl.smartrain.data.local
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.util.Log
 import com.google.android.gms.location.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,5 +32,6 @@ class LocationProvider(context: Context) {
 
     fun stopTracking() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        Log.d("DEBUG_LOCATION", "GPS aturat correctament.")
     }
 }

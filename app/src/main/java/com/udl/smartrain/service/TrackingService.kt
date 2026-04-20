@@ -3,6 +3,7 @@ package com.udl.smartrain.service
 import android.app.*
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.udl.smartrain.R
 import com.udl.smartrain.data.local.LocationProvider
@@ -41,8 +42,11 @@ class TrackingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("SERVICE_DEBUG", "Servei destruint-se...")
+
         sensorProvider.stopListening()
         locationProvider.stopTracking()
+        stopForeground(STOP_FOREGROUND_REMOVE)
         serviceScope.cancel()
     }
 
