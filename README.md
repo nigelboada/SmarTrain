@@ -4,6 +4,9 @@ Repositori per al projecte SmarTrain de l'assignatura Plataformes en Xarxa.
 
 SmarTrain és una plataforma de seguiment esportiu per a futbolistes que combina la captura de dades sensorials amb Intel·ligència Artificial per analitzar la càrrega física i el posicionament en temps real.
 
+
+
+
 ### Arquitectura general del sistema 
 
 El projecte segueix una arquitectura Client-Servidor amb processament a l'extrem (Edge Computing):
@@ -18,11 +21,37 @@ El projecte segueix una arquitectura Client-Servidor amb processament a l'extrem
 
 ### Estructura del projecte 
 
-El repositori està organitzat segons els estàndards de l'assignatura:
+El repositori està organitzat seguint el patró d'rquitectura Clean Architecture aplicada a MVVM, garantint la separació de responsabilitats:
+
+    SmarTrain/
+    ├── app/
+    │   ├── src/main/java/com/udl/smartrain/
+    │   │   ├── data/
+    │   │   │   ├── local/          # Persistència: Room (Entities, DAOs, Converters)
+    │   │   │   └── repository/     # Repository Pattern (Sincronització Firebase/Room)
+    │   │   ├── domain.model/       # Entitats del domini (Data classes)
+    │   │   ├── service/            # Serveis en segon pla (TrackingService, Location)
+    │   │   ├── ui/
+    │   │   │   ├── screens/        # Interfície d'usuari (Jetpack Compose)
+    │   │   │   ├── theme/          # Definició de colors i estils
+    │   │   │   └── viewmodel/      # Lògica d'estat (MainViewModel)
+    │   │   ├── MainActivity.kt     # Punt d'entrada de l'App
+    │   │   └── SmarTrainNav.kt     # Configuració de la navegació (NavHost)
+    │   └── google-services.json    # Credencials Firebase
+    └── ml/
+        ├── experiments/            # Notebooks de recerca i datasets
+        ├── scripts/                # Scripts de preprocessament i transformació
+        └── ML_EXPERIMENTS.md       # Documentació del cicle de vida del model ML
+
+Especificacions:
 
     /app: Conté el projecte d'Android Studio, la interfície d'usuari (UI), i els serveis de captura (GPS/Acceleròmetre).
+    
+    /data: Capa de dades. És la responsable de decidir si l'app ha de llegir de la memòria local (Room) o del núvol (Firestore).
+    
+    /ui: Capa de presentació. Utilitza StateFlow per mantenir la interfície sincronitzada amb les dades en temps real.
 
-    /ml: Conté tot el cicle de vida de la Intel·ligència Artificial: datasets, notebooks d'experimentació i models TFLite.
+    /ml: Mòdul independent que conté tot el cicle de vida de la Intel·ligència Artificial: datasets, notebooks d'experimentació i models TFLite.
 
 
 #### Descripció del Backend
@@ -41,7 +70,7 @@ El sistema segueix un flux circular per garantir la integritat de les dades:
 
     Processament: El MainViewModel rep les dades i actualitza l'estat de la UI.
 
-    Persistència Local (Room): En finalitzar l'entrenament, el SessionRepository guarda la sessió a la base de dades local SQLite (via Room).
+    Persistència Local (Room): En finalitzar l'entrenament, el SessionRepository guarda la sessió a la base de dades local SQLite (via Room). Això assegura que l'usuari no perdi informació en zones sense cobertura.
 
     Sincronització Remota: El Repositori intenta immediatament una operació d'escriptura a Firestore. Si l'operació té èxit, marca la sessió com a isSynced = true.
 
