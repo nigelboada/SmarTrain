@@ -1,5 +1,6 @@
 package com.udl.smartrain.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -26,10 +27,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ui.Screen
+import com.udl.smartrain.ui.components.GlassCard
+import com.udl.smartrain.ui.theme.DarkBlueSecondary
+import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -79,11 +85,10 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     }
 
     Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screen.Session.route) }) {
-                Icon(Icons.Default.Add, contentDescription = "Començar Entrenament")
-            }
-        }
+        containerColor = Color.Transparent, // Fons transparent per veure el gradient
+        modifier = Modifier.background(
+            Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary))
+        )
     ) { paddingValues ->
         LazyColumn(modifier = Modifier.padding(paddingValues)) {
             items(sessions) { session ->
@@ -108,6 +113,23 @@ fun SessionItem(session: Session, onDelete: () -> Unit, onEdit: () -> Unit) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
 
+    GlassCard(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                // Títols amb Bebas Neue
+                Text(text = session.sessionName, style = MaterialTheme.typography.titleMedium, color = Color.White)
+
+                // Body amb Inter
+                Text(text = "Usuari: ${session.userId}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
+            }
+
+            // Botons amb tint blanc per contrastar amb el blau/porpra
+            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White) }
+            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Esborrar", tint = Color.White) }
+        }
+    }
+
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -118,14 +140,14 @@ fun SessionItem(session: Session, onDelete: () -> Unit, onEdit: () -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 // Títol de la sessió
+                Text(text = session.sessionName, style = MaterialTheme.typography.titleMedium)
+
+                // Salt de línia fet amb dos components Text
+                Text(text = "Usuari: ${session.userId}", style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    text = session.sessionName,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                // Detalls
-                Text(
-                    text = "Usuari: ${session.userId} • $dateString",
-                    style = MaterialTheme.typography.bodySmall
+                    text = dateString,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant // Una mica més gris
                 )
             }
 
