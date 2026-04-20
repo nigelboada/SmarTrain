@@ -10,8 +10,10 @@ import androidx.compose.material3.Card
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -41,18 +43,26 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(sessions) { session ->
-                SessionItem(session)
+                SessionItem(session, onDelete = { viewModel.deleteSession(session) })
             }
         }
     }
 }
 
 @Composable
-fun SessionItem(session: Session) {
+fun SessionItem(session: Session, onDelete: () -> Unit) { // Afegim el callback
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Sessió: ${session.id.take(8)}...") // Mostrem part de l'ID
-            Text(text = "Usuari: ${session.userId}")
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(text = "Sessió: ${session.id.take(8)}...")
+                Text(text = "Usuari: ${session.userId}")
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Esborrar")
+            }
         }
     }
 }

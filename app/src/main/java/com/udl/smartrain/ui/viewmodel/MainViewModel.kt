@@ -62,6 +62,12 @@ class MainViewModel(
             }
         }
     }
+
+    fun deleteSession(session: Session) {
+        viewModelScope.launch {
+            repository.deleteSession(session)
+        }
+    }
 }
 
 class MainViewModelFactory(

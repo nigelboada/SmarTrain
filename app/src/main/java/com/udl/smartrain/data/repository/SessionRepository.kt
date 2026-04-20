@@ -11,6 +11,7 @@ import kotlinx.coroutines.tasks.await
 
 interface SessionRepository {
     suspend fun saveSession(session: Session): Result<Unit>
+    suspend fun deleteSession(session: Session): Result<Unit>
     fun getSessionHistory(userId: String): Flow<List<Session>>
     fun getSessionsStream(): Flow<List<Session>> // <-- Afegeix això
 }
@@ -39,6 +40,18 @@ class SessionRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("DEBUG_DB", "Error fatal al guardar: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteSession(session: Session): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // 1. Esborrem de Room
+            sessionDao.deleteSession(session)
+            // 2. Esborrem de Firebase
+            firestore.collection("sessions").document(session.id).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
