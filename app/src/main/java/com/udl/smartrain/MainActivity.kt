@@ -70,9 +70,7 @@ fun SmarTrainApp(viewModel: MainViewModel) {
             })
         }
         composable(Screen.Dashboard.route) {
-            DashboardScreen(onStartSession = {
-                navController.navigate(Screen.Session.route)
-            })
+            DashboardScreen(viewModel = viewModel, navController = navController)
         }
         composable(Screen.Session.route) {
             SessionScreen(
