@@ -35,8 +35,7 @@ El repositori està organitzat seguint el patró d'rquitectura Clean Architectur
     │   │   │   ├── screens/        # Interfície d'usuari (Jetpack Compose)
     │   │   │   ├── theme/          # Definició de colors i estils
     │   │   │   └── viewmodel/      # Lògica d'estat (MainViewModel)
-    │   │   ├── MainActivity.kt     # Punt d'entrada de l'App
-    │   │   └── SmarTrainNav.kt     # Configuració de la navegació (NavHost)
+    │   │   └── MainActivity.kt     # Punt d'entrada de l'App
     │   └── google-services.json    # Credencials Firebase
     └── ml/
         ├── experiments/            # Notebooks de recerca i datasets

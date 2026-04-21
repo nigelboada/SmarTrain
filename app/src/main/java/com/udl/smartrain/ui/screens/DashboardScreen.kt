@@ -34,8 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
-import com.udl.smartrain.ui.Screen
 import com.udl.smartrain.ui.components.GlassCard
+import com.udl.smartrain.ui.navigation.Screen
 import com.udl.smartrain.ui.theme.DarkBlueSecondary
 import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
@@ -165,23 +165,44 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     }
 }
 
+
 @Composable
 fun SessionItem(session: Session, onDelete: () -> Unit, onEdit: () -> Unit) {
-    // Formatejador per a la data
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
 
-    GlassCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+    GlassCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(20.dp), // Més padding intern = més elegància
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = session.sessionName, style = MaterialTheme.typography.titleMedium, color = Color.White)
-                Text(text = "Usuari: ${session.userId}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
-                Text(text = dateString, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f))
+            // Columna principal amb espaiat entre línies
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp) // Aire entre les línies de text
+            ) {
+                Text(
+                    text = session.sessionName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
+                )
+                Text(
+                    text = "Usuari: ${session.userId}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f) // Lleugera transparència
+                )
+                Text(
+                    text = dateString,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.6f) // Encara més subtil
+                )
             }
 
+            // Botons d'acció amb mida optimitzada
             Row {
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White)
