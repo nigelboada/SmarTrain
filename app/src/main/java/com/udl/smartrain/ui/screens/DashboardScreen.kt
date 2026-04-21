@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
+import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.navigation.Screen
 import com.udl.smartrain.ui.theme.DarkBlueSecondary
@@ -114,6 +115,13 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     }
 
     Scaffold(
+        topBar = {
+            AppHeader(
+                title = "Dashboard",
+                onLanguageSelected = { /* Lògica canvi idioma */ },
+                onSettingsClick = { /* Lògica anar a perfil */ }
+            )
+        },
         containerColor = Color.Transparent,
         modifier = Modifier.background(
             Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary))

@@ -46,7 +46,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFFAFAFA) // Això agafa el color del teu tema!
+        color = MaterialTheme.colorScheme.background // Això agafa el color del teu tema!
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
