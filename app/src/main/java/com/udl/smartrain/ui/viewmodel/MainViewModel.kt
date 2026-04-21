@@ -4,15 +4,16 @@ import android.content.Context
 import android.content.Intent
 import java.util.UUID
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.udl.smartrain.data.repository.SessionRepository
 import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.domain.model.Session
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.google.firebase.auth.FirebaseAuth
 import androidx.lifecycle.ViewModelProvider
 import com.udl.smartrain.service.TrackingService
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,10 +25,10 @@ class MainViewModel(
 ) : ViewModel() {
 
     private val _currentSession = MutableStateFlow<Session?>(null)
-    val currentSession: StateFlow<Session?> = _currentSession
 
-    val currentUserEmail: String?
-        get() = FirebaseAuth.getInstance().currentUser?.email
+
+    var currentUserName by mutableStateOf("Usuari Actual") // Placeholder, pots obtenir-ho de FirebaseAuth o d'una font de dades
+
 
     val sessionsHistory = repository.getSessionHistory("usuari_id_actual")
         .stateIn(
@@ -76,6 +77,12 @@ class MainViewModel(
         viewModelScope.launch {
             repository.updateSession(session)
         }
+    }
+
+    fun updateUserName(newName: String) {
+        currentUserName = newName
+        // Aquí en el futur es podria afegir codi per guardar-ho a Firebase o Room
+        Log.d("DEBUG_VM", "Nom d'usuari actualitzat a: $newName")
     }
 
 }
