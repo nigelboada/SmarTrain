@@ -15,12 +15,14 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +45,9 @@ import java.util.Locale
 @Composable
 fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     val sessions by viewModel.sessionsHistory.collectAsState(initial = emptyList())
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var sessionToDelete by remember { mutableStateOf<Session?>(null) }
 
     var showDialog by remember { mutableStateOf(false) }
     var sessionToEdit by remember { mutableStateOf<Session?>(null) }
@@ -84,24 +89,77 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
         )
     }
 
+    if (showDeleteDialog && sessionToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirmar esborrat") },
+            text = { Text("Segur que vols esborrar la sessió '${sessionToDelete?.sessionName}'? Aquesta acció no es pot desfer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteSession(sessionToDelete!!)
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Esborrar", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel·lar")
+                }
+            }
+        )
+    }
+
     Scaffold(
-        containerColor = Color.Transparent, // Fons transparent per veure el gradient
+        containerColor = Color.Transparent,
         modifier = Modifier.background(
             Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary))
-        )
+        ),
+        // Afegim el botó flotant que havíem perdut
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.Session.route) },
+                containerColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Nova Sessió", tint = PurplePrimary)
+            }
+        }
     ) { paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            items(sessions) { session ->
-                SessionItem(
-                    session = session,
-                    onDelete = { viewModel.deleteSession(session) },
-                    onEdit = {
-                        sessionToEdit = session
-                        editUserName = session.userId
-                        editSessionName = session.sessionName
-                        showDialog = true // Obrim el diàleg
-                    }
+        // Si no hi ha sessions, mostrem un missatge perquè l'usuari sàpiga que funciona
+        if (sessions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No hi ha sessions enregistrades.\nClica el botó + per començar!",
+                    color = Color.White.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodyLarge
                 )
+            }
+        } else {
+            // Si hi ha sessions, mostrem la llista
+            LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                items(sessions) { session ->
+                    SessionItem(
+                        session = session,
+                        onDelete = {
+                            sessionToDelete = session
+                            showDeleteDialog = true
+                        },
+                        onEdit = {
+                            sessionToEdit = session
+                            editUserName = session.userId
+                            editSessionName = session.sessionName
+                            showDialog = true
+                        }
+                    )
+                }
             }
         }
     }
@@ -113,51 +171,23 @@ fun SessionItem(session: Session, onDelete: () -> Unit, onEdit: () -> Unit) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
 
-    GlassCard(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                // Títols amb Bebas Neue
-                Text(text = session.sessionName, style = MaterialTheme.typography.titleMedium, color = Color.White)
-
-                // Body amb Inter
-                Text(text = "Usuari: ${session.userId}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
-            }
-
-            // Botons amb tint blanc per contrastar amb el blau/porpra
-            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White) }
-            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Esborrar", tint = Color.White) }
-        }
-    }
-
-
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+    GlassCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                // Títol de la sessió
-                Text(text = session.sessionName, style = MaterialTheme.typography.titleMedium)
-
-                // Salt de línia fet amb dos components Text
-                Text(text = "Usuari: ${session.userId}", style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text = dateString,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant // Una mica més gris
-                )
+                Text(text = session.sessionName, style = MaterialTheme.typography.titleMedium, color = Color.White)
+                Text(text = "Usuari: ${session.userId}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
+                Text(text = dateString, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f))
             }
 
-            // Botons d'acció
             Row {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar")
+                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White)
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Esborrar")
+                    Icon(Icons.Default.Delete, contentDescription = "Esborrar", tint = Color.White)
                 }
             }
         }

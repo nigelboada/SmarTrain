@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -43,33 +44,38 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
         viewModel.startNewSession("usuari_proves_123") // Inicialitzem amb un ID dummy
     }
 
-    Column(
+    Surface(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        color = Color(0xFFFAFAFA) // Això agafa el color del teu tema!
     ) {
-        Text(text = "Sessió en curs...", color = Color.Red)
-        Text(text = "00:00:00", style = MaterialTheme.typography.displayLarge)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Sessió en curs...", color = MaterialTheme.colorScheme.onBackground)
+            Text(text = "00:00:00", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.onBackground)
 
-        Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
-        Button(onClick = {
-            permissionLauncher.launch(arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ))
-        }) {
-            Text(text = "COMENÇAR SENSORITZACIÓ")
-        }
+            Button(onClick = {
+                permissionLauncher.launch(arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ))
+            }) {
+                Text(text = "COMENÇAR SENSORITZACIÓ")
+            }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Button(onClick = {
-            Log.d("DEBUG_CLICK", "S'ha clicat el botó de finalitzar!")
-            viewModel.finishAndSaveSession(context)
-            onStopSession()
-        }) {
-            Text("Finalitzar Entrenament")
+            Button(onClick = {
+                viewModel.finishAndSaveSession(context)
+                onStopSession()
+            }) {
+                Text("Finalitzar Entrenament")
+            }
         }
     }
+
 }

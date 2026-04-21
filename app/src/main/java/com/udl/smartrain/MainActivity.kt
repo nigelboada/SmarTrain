@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
+
 @Composable
 fun SmarTrainApp(viewModel: MainViewModel) {
     val navController = rememberNavController()
@@ -74,10 +75,8 @@ fun SmarTrainApp(viewModel: MainViewModel) {
         }
         composable(Screen.Session.route) {
             SessionScreen(
-                viewModel = viewModel, // PASSA EL VIEWMODEL AQUÍ
-                onStopSession = {
-                    navController.popBackStack()
-                }
+                viewModel = viewModel,
+                onStopSession = { navController.popBackStack() }
             )
         }
     }
