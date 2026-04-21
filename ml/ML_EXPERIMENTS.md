@@ -50,6 +50,30 @@ El procés d'entrenament seguirà aquest flux:
 
     Quantització: Conversió a INT8 per optimitzar la mida (< 2MB) i la latència en el mòbil.
 
+### 5. Anàlisi Exploratòria de Dades (EDA)
+
+L'objectiu d'aquesta fase és entendre la distribució de les dades del dataset UCI HAR per detectar possibles biaixos o problemes abans de l'entrenament.
+
+#### 5.1 Distribució de les classes
+És vital assegurar que el dataset estigui equilibrat. Una distribució desequilibrada podria fer que el model esdevingui "mandrós" i només aprengui a predir l'activitat més freqüent.
+
+
+
+* **Observacions:** Hem analitzat el recompte d'instàncies per cada activitat (Caminar, Trotar, Repòs).
+* **Conclusió:** [Escriu aquí si estan equilibrades o si una predomina].
+
+#### 5.2 Visualització de senyals temporals
+Hem representat gràficament un segment de 2 segons (100 mostres) de l'acceleròmetre per visualitzar les diferències entre activitats.
+
+* **Eixos:** L'eix X representa el temps, l'eix Y l'acceleració en 'g'.
+* **Resultats:** S'observa que el senyal de "Esprint" mostra pics d'amplitud molt més elevats que "Caminar". Això confirma que el model hauria de poder distingir-los fàcilment.
+
+#### 5.3 Correlació d'eixos
+Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si hi ha dependències innecessàries.
+
+* **Resultat:** [Comenta si els eixos estan molt correlacionats entre ells].
+
+
 --------------------------
 
 ### Experiment 1: Baseline amb Random Forest (UCI HAR Dataset)
