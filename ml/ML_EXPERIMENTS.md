@@ -1,5 +1,13 @@
 ## Documentació d'experimentació ML - SmarTrain
 
+### 🔄 Estat del projecte
+| Fitxer | Estat | Tasca principal |
+| :--- | :--- | :--- |
+| `preprocess.py` | ✅ Complet | Neteja i segmentació (windowing) |
+| `train_baseline.py` | ✅ Complet | Random Forest (UCI HAR) |
+| `train_cnn.py` | ⏳ En curs | Disseny arquitectura CNN 1D |
+| `model_v1.tflite` | ❌ Pendent | Exportació des de CNN |
+
 ### 1. Problema a resoldre
 
 L'objectiu d'aquest mòdul de Machine Learning és la Classificació d'Activitat Humana (HAR) aplicada al futbol amateur. El sistema ha de ser capaç d'identificar en temps real, mitjançant les dades de l'acceleròmetre del dispositiu mòbil, en quin dels següents 3 estats es troba el jugador:
