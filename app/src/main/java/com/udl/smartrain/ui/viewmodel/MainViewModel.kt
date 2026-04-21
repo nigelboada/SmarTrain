@@ -12,7 +12,7 @@ import com.udl.smartrain.domain.model.Session
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
+import com.google.firebase.auth.FirebaseAuth
 import androidx.lifecycle.ViewModelProvider
 import com.udl.smartrain.service.TrackingService
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +25,9 @@ class MainViewModel(
 
     private val _currentSession = MutableStateFlow<Session?>(null)
     val currentSession: StateFlow<Session?> = _currentSession
+
+    val currentUserEmail: String?
+        get() = FirebaseAuth.getInstance().currentUser?.email
 
     val sessionsHistory = repository.getSessionHistory("usuari_id_actual")
         .stateIn(

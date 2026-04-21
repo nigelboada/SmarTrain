@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.Card
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -16,7 +15,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +47,8 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var sessionToDelete by remember { mutableStateOf<Session?>(null) }
+
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     var showDialog by remember { mutableStateOf(false) }
     var sessionToEdit by remember { mutableStateOf<Session?>(null) }
@@ -119,7 +119,12 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
             AppHeader(
                 title = "Dashboard",
                 onLanguageSelected = { /* Lògica canvi idioma */ },
-                onSettingsClick = { /* Lògica anar a perfil */ }
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onLogoutClick = {
+                    showLogoutDialog = true
+                }
             )
         },
         containerColor = Color.Transparent,
@@ -171,6 +176,32 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
             }
         }
     }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Tancar sessió") },
+            text = { Text("Estàs segur que vols tancar la sessió? Hauràs de tornar a iniciar-la.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    // Lògica per tornar al Login
+                    navController.navigate(Screen.Login.route) {
+                        // Això és molt important: esborra l'historial perquè l'usuari no pugui tornar enrere amb el botó "back"
+                        popUpTo(0) { inclusive = true }
+                    }
+                }) {
+                    Text("Sí, sortir")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel·lar")
+                }
+            }
+        )
+    }
+
 }
 
 

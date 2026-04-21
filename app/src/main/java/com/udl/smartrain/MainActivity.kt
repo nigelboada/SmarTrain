@@ -19,6 +19,7 @@ import com.udl.smartrain.data.repository.SessionRepositoryImpl
 import com.udl.smartrain.ui.navigation.Screen
 import com.udl.smartrain.ui.screens.DashboardScreen
 import com.udl.smartrain.ui.screens.LoginScreen
+import com.udl.smartrain.ui.screens.ProfileScreen
 import com.udl.smartrain.ui.screens.SessionScreen
 import com.udl.smartrain.ui.theme.SmarTrainTheme
 import com.udl.smartrain.ui.viewmodel.MainViewModel
@@ -71,6 +72,12 @@ fun SmarTrainApp(viewModel: MainViewModel) {
             SessionScreen(
                 viewModel = viewModel,
                 onStopSession = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                viewModel = viewModel,
+                navController = navController
             )
         }
     }

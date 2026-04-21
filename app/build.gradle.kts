@@ -43,7 +43,6 @@ android {
 }
 
 dependencies {
-    // Aquí aniran les llibreries de Room i Firebase que necessites per la 2B
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -52,26 +51,22 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
-    // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.firestore)
-
-    implementation(libs.play.services.location)
-
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.room3.common.jvm)
-
+    implementation(libs.play.services.location)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.adapters)
-    implementation(libs.locationdelegation)
-    implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.activity.ktx)
     ksp(libs.androidx.room.compiler)
 
-    implementation(libs.androidx.activity.ktx)
+    // --- SOLUCIÓ FIREBASE ---
+    // Importa el BoM (Bill of Materials)
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
 
-    implementation(libs.androidx.material.icons.extended)
+    // Afegeix les llibreries sense especificar versió (el BoM ja ho fa per tu)
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")
 
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
 }

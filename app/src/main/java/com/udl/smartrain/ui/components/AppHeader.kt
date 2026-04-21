@@ -11,13 +11,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AppHeader(title: String, onLanguageSelected: (String) -> Unit, onSettingsClick: () -> Unit) {
+fun AppHeader(title: String,
+              onLanguageSelected: (String) -> Unit,
+              onProfileClick: () -> Unit,
+              onLogoutClick: () -> Unit )
+
+{
     var showLanguageMenu by remember { mutableStateOf(false) }
     var showSettingsMenu by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .statusBarsPadding()
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -47,8 +53,8 @@ fun AppHeader(title: String, onLanguageSelected: (String) -> Unit, onSettingsCli
                     Icon(Icons.Default.Settings, "Configuració")
                 }
                 DropdownMenu(expanded = showSettingsMenu, onDismissRequest = { showSettingsMenu = false }) {
-                    DropdownMenuItem(text = { Text("Perfil") }, onClick = { onSettingsClick(); showSettingsMenu = false })
-                    DropdownMenuItem(text = { Text("Tancar sessió") }, onClick = { /* Lògica logout */ showSettingsMenu = false })
+                    DropdownMenuItem(text = { Text("Perfil") }, onClick = { onProfileClick(); showSettingsMenu = false })
+                    DropdownMenuItem(text = { Text("Tancar sessió") }, onClick = { onLogoutClick(); showSettingsMenu = false })
                 }
             }
         }
