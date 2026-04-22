@@ -1,12 +1,15 @@
 ## Documentació d'experimentació ML - SmarTrain
 
 ### 🔄 Estat del projecte
+
 | Fitxer | Estat | Tasca principal |
 | :--- | :--- | :--- |
 | `preprocess.py` | ✅ Complet | Neteja i segmentació (windowing) |
+| `eda.py` | ✅ Complet | Anàlisi (EDA, Distribució, PCA) |
 | `train_baseline.py` | ✅ Complet | Random Forest (UCI HAR) |
 | `train_cnn.py` | ⏳ En curs | Disseny arquitectura CNN 1D |
 | `model_v1.tflite` | ❌ Pendent | Exportació des de CNN |
+
 
 ### 1. Problema a resoldre
 
@@ -36,7 +39,19 @@ Per a aquest problema de sèries temporals, s'han seleccionat els següents mode
 
     TensorFlow Lite Converter: Per a la quantització i exportació del model final al format mòbil.
 
+    # Mòdul de Machine Learning - SmarTrain
+
+#### 3.1 Dataset
+
+    Hem utilitzat el dataset **UCI Human Activity Recognition (HAR)**.
+
+    * **Enllaç:** [UCI HAR Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+polar+smart+shirts)
+
+    * **Descripció:** El dataset conté gravacions de 30 persones realitzant activitats quotidianes (caminar, seure, estar dret, etc.) amb un smartphone a la cintura. Les dades d'acceleròmetre i giroscopi han estat pre-processades i segmentades en finestres fixes.
+
 ### 4. Pipeline d'entrenament
+
+S'han transformat els fitxers de text bruts (`Inertial Signals`) en tensors de 3 dimensions `(mostres, 128, 3)`. Aquest format és l'òptim per a les capes de convolució 1D, ja que respecta la naturalesa temporal del senyal i permet a la CNN aprendre patrons espacials (entre eixos) i temporals (evolució del moviment).
 
 El procés d'entrenament seguirà aquest flux:
 
@@ -54,25 +69,43 @@ El procés d'entrenament seguirà aquest flux:
 
 L'objectiu d'aquesta fase és entendre la distribució de les dades del dataset UCI HAR per detectar possibles biaixos o problemes abans de l'entrenament.
 
+S'ha realitzat una inspecció visual de les dades del dataset UCI HAR per validar la qualitat del senyal i la distribució de les etiquetes.
+
+He calculat les estadístiques bàsiques (mitjana, desviació estàndard, valors mínims/màxims) dels senyals bruts per verificar si les dades estan dins del rang esperat [-1, 1].
+
+* **Troballa:** [Ex: Els valors de l'acceleròmetre es troben majoritàriament entre -0.5 i 0.5 g, indicant un moviment normal].
+
 #### 5.1 Distribució de les classes
 És vital assegurar que el dataset estigui equilibrat. Una distribució desequilibrada podria fer que el model esdevingui "mandrós" i només aprengui a predir l'activitat més freqüent.
 
+S'ha generat un recompte de les instàncies per a les 6 activitats (1: Caminar, 2: Caminar pujant, 3: Caminar baixant, 4: Dret, 5: Seure, 6: Estirat).
 
+* **Observacions:** Hem analitzat el recompte d'instàncies per cada activitat (Caminar, Trotar, Repòs). El dataset presenta una distribució equilibrada, amb una lleugera majoria per a les classes 6 i 5.
+* **Imatge:** Referència a `class_distribution.png`.
 
-* **Observacions:** Hem analitzat el recompte d'instàncies per cada activitat (Caminar, Trotar, Repòs).
-* **Conclusió:** [Escriu aquí si estan equilibrades o si una predomina].
+#### 5.2 Anàlisi del senyal
+S'ha visualitzat una finestra de 128 mostres (corresponent a 2.56 segons de dades del sensor).
+* **Observacions:** El senyal mostra un nivell de soroll baix, la qual cosa facilita l'extracció de característiques per part del model CNN.
+* **Imatge:** Referència a `signal_sample.png`.
 
-#### 5.2 Visualització de senyals temporals
+#### 5.3 Visualització de senyals temporals
 Hem representat gràficament un segment de 2 segons (100 mostres) de l'acceleròmetre per visualitzar les diferències entre activitats.
 
 * **Eixos:** L'eix X representa el temps, l'eix Y l'acceleració en 'g'.
 * **Resultats:** S'observa que el senyal de "Esprint" mostra pics d'amplitud molt més elevats que "Caminar". Això confirma que el model hauria de poder distingir-los fàcilment.
 
-#### 5.3 Correlació d'eixos
+#### 5.4 Correlació d'eixos
 Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si hi ha dependències innecessàries.
 
 * **Resultat:** [Comenta si els eixos estan molt correlacionats entre ells].
 
+#### 5.5 Distribució de classes
+
+![Distribució de classes](../data/processed/class_distribution.png)
+
+#### 5.6 Visualització PCA
+
+![PCA dels senyals](../data/processed/pca_visualization.png)
 
 --------------------------
 

@@ -2,35 +2,32 @@ import pandas as pd
 import numpy as np
 import os
 
-def create_windows(data, window_size=50, stride=25):
-    """
-    Divideix les dades en finestres temporals (windowing).
-    A 50Hz, 50 mostres = 1 segon.
-    """
-    windows = []
-    labels = []
+# Ruta base del dataset
+base_path = '../data/raw/train/Inertial Signals'
 
-    # Suposem que les dades tenen columnes 'accX', 'accY', 'accZ' i 'label'
-    for i in range(0, len(data) - window_size, stride):
-        window = data.iloc[i:i + window_size][['accX', 'accY', 'accZ']].values
-        # Agafem la moda de les etiquetes en aquesta finestra
-        label = data.iloc[i:i + window_size]['label'].mode()[0]
-        windows.append(window)
-        labels.append(label)
+def load_data():
+    # Carreguem els 3 eixos de l'acceleròmetre
+    acc_x = pd.read_csv(os.path.join(base_path, 'total_acc_x_train.txt'), sep=r'\s+', header=None).values
+    acc_y = pd.read_csv(os.path.join(base_path, 'total_acc_y_train.txt'), sep=r'\s+', header=None).values
+    acc_z = pd.read_csv(os.path.join(base_path, 'total_acc_z_train.txt'), sep=r'\s+', header=None).values
+    
+    # Carreguem les etiquetes (y_train)
+    y = pd.read_csv('../data/raw/train/y_train.txt', header=None).values.flatten() - 1 # Restem 1 per a que comencin a 0
+    
+    # Apilem els eixos per tenir una forma (samples, 128, 3)
+    # np.stack ens permet posar els 3 arrays junts
+    X = np.stack([acc_x, acc_y, acc_z], axis=2)
+    
+    return X, y
 
-    return np.array(windows), np.array(labels)
+# Execució
+print("Processant dades UCI HAR...")
+X, y = load_data()
 
-# 1. Carregar dades raw
-raw_data_path = '../data/raw/raw_sensor_data.csv'
-if os.path.exists(raw_data_path):
-    df = pd.read_csv(raw_data_path)
+# Guardar
+np.save('../data/processed/X_train.npy', X)
+np.save('../data/processed/y_train.npy', y)
 
-    # 2. Processar
-    X, y = create_windows(df)
-
-    # 3. Guardar per a l'entrenament
-    np.save('../data/processed/X_data.npy', X)
-    np.save('../data/processed/y_data.npy', y)
-    print(f"Dades processades amb èxit. Forma: {X.shape}")
-else:
-    print("Error: No s'ha trobat el fitxer de dades raw.")
+print(f"Dades processades correctament!")
+print(f"Forma de X: {X.shape}") # Hauria de ser (7352, 128, 3)
+print(f"Forma de y: {y.shape}")
