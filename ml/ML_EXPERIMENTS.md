@@ -141,3 +141,23 @@ Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si 
 Els resultats són molt satisfactoris per a un model inicial. S'observa que el model identifica perfectament l'estat de repòs total (activitat 6), però té lleugeres confusions en activitats dinàmiques similars (escales vs caminar). 
 
 **Pla d'acció:** Tot i l'alta precisió, el model Random Forest genera un fitxer de gran mida que pot ser ineficient en dispositius mòbils. El següent experiment es basarà en una **CNN 1D** per intentar mantenir o millorar aquest 92% però optimitzant el pes per a l'exportació a **TensorFlow Lite**.
+
+--------------------------
+
+### Experiment 2: CNN 1D (Model Definitiu)
+* **Data:** 23/04/2026
+* **Script utilitzat:** `/ml/scripts/train_cnn.py`
+* **Arquitectura:** Conv1D -> MaxPooling -> Flatten -> Dense -> Dropout(0.5)
+
+##### Resultats obtinguts
+| Mètrica | Valor |
+| :--- | :--- |
+| **Accuracy (Train)** | **90.94%** |
+| **Accuracy (Val)** | **86.13%** |
+
+##### Conclusions i Comparativa
+* **Comparació:** El model Random Forest (Baseline) va obtenir una accuracy del 92%, lleugerament superior a la CNN (86% validació). Això indica un lleuger *overfitting* a la CNN. 
+* **Justificació:** Tot i que el Random Forest és més precís en dades estàtiques, la **CNN 1D** és el model triat per a l'aplicació mòbil perquè té una estructura que permet una latència més baixa i una millor escalabilitat per a dades de sèries temporals en temps real.
+* **Optimització:** S'ha exportat el model a format `.tflite` per garantir que el pes sigui mínim (< 2MB) i permeti la inferència en temps real a dins del dispositiu Android sense dependre de servidors externs.
+
+--------------------------
