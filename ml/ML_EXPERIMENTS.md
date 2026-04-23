@@ -1,16 +1,5 @@
 ## Documentació d'experimentació ML - SmarTrain
 
-### 🔄 Estat del projecte
-
-| Fitxer | Estat | Tasca principal |
-| :--- | :--- | :--- |
-| `preprocess.py` | ✅ Complet | Neteja i segmentació (windowing) |
-| `eda.py` | ✅ Complet | Anàlisi (EDA, Distribució, PCA) |
-| `train_baseline.py` | ✅ Complet | Random Forest (UCI HAR) |
-| `train_cnn.py` | ✅ Complet | Disseny arquitectura CNN 1D |
-| `model_v1.tflite` | ✅ Complet | Exportació des de CNN |
-
-
 ### 1. Problema a resoldre
 
 L'objectiu d'aquest mòdul de Machine Learning és la Classificació d'Activitat Humana (HAR) aplicada al futbol amateur. El sistema ha de ser capaç d'identificar en temps real, mitjançant les dades de l'acceleròmetre del dispositiu mòbil, en quin dels següents 3 estats es troba el jugador:
@@ -45,9 +34,12 @@ Per a aquest problema de sèries temporals, s'han seleccionat els següents mode
 
     Hem utilitzat el dataset **UCI Human Activity Recognition (HAR)**.
 
-    * **Enllaç:** [UCI HAR Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+polar+smart+shirts)
 
-    * **Descripció:** El dataset conté gravacions de 30 persones realitzant activitats quotidianes (caminar, seure, estar dret, etc.) amb un smartphone a la cintura. Les dades d'acceleròmetre i giroscopi han estat pre-processades i segmentades en finestres fixes.
+* **Origen:** [UCI Human Activity Recognition Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+polar+smart+shirts)
+* **Descripció:** El dataset conté gravacions de 30 persones realitzant activitats quotidianes (caminar, seure, estar dret, etc.) amb un smartphone a la cintura. Les dades d'acceleròmetre i giroscopi han estat pre-processades i segmentades en finestres fixes.
+* **Número de mostres:** 10,299 instàncies totals (7,352 entrenament / 2,947 test).
+* **Característiques principals:** Dades d'acceleròmetre i giroscopi a 3 eixos (X, Y, Z). Les dades estan normalitzades entre [-1, 1].
+* **Etiquetes:** 6 activitats (1: Caminar, 2: Caminar pujant, 3: Caminar baixant, 4: Dret, 5: Seure, 6: Estirat).
 
 ### 4. Pipeline d'entrenament
 
@@ -107,6 +99,13 @@ Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si 
 
 ![PCA dels senyals](../data/processed/pca_visualization.png)
 
+### 6. Preprocessament
+
+* **Neteja:** Eliminació de valors nuls i validació de rangs de sensor.
+* **Transformacions:** * **Windowing:** Segmentació en finestres de temps de 128 mostres (2.56 segons al 50Hz).
+    * **Stacking:** Combinació dels eixos X, Y i Z en un tensor tridimensional `(samples, 128, 3)`.
+    * **Normalització:** Ajustat segons el format original del dataset per garantir la consistència.
+
 --------------------------
 
 ### Experiment 1: Baseline amb Random Forest (UCI HAR Dataset)
@@ -138,16 +137,20 @@ Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si 
 * **Estirat (6):** 1.00 (Precisió perfecta)
 
 ##### Conclusions de l'experiment 1
+
 Els resultats són molt satisfactoris per a un model inicial. S'observa que el model identifica perfectament l'estat de repòs total (activitat 6), però té lleugeres confusions en activitats dinàmiques similars (escales vs caminar). 
+
+És un model robust per dades estructurades, però amb una petjada de memòria elevada (fitxer .pkl gran), poc apte per a entorns mòbils amb limitacions de recursos.
 
 **Pla d'acció:** Tot i l'alta precisió, el model Random Forest genera un fitxer de gran mida que pot ser ineficient en dispositius mòbils. El següent experiment es basarà en una **CNN 1D** per intentar mantenir o millorar aquest 92% però optimitzant el pes per a l'exportació a **TensorFlow Lite**.
 
 --------------------------
 
 ### Experiment 2: CNN 1D (Model Definitiu)
-* **Data:** 23/04/2026
+* **Data:** 29/03/2026
 * **Script utilitzat:** `/ml/scripts/train_cnn.py`
-* **Arquitectura:** Conv1D -> MaxPooling -> Flatten -> Dense -> Dropout(0.5)
+* **Configuració i arquitectura:** * Capes: `Conv1D(64, 3)` -> `MaxPooling1D(2)` -> `Flatten()` -> `Dense(64)` -> `Dropout(0.5)` -> `Dense(6, softmax)`.
+    * Optimizer: Adam, 15 èpoques.
 
 ##### Resultats obtinguts
 | Mètrica | Valor |
@@ -156,8 +159,14 @@ Els resultats són molt satisfactoris per a un model inicial. S'observa que el m
 | **Accuracy (Val)** | **86.13%** |
 
 ##### Conclusions i Comparativa
+
 * **Comparació:** El model Random Forest (Baseline) va obtenir una accuracy del 92%, lleugerament superior a la CNN (86% validació). Això indica un lleuger *overfitting* a la CNN. 
 * **Justificació:** Tot i que el Random Forest és més precís en dades estàtiques, la **CNN 1D** és el model triat per a l'aplicació mòbil perquè té una estructura que permet una latència més baixa i una millor escalabilitat per a dades de sèries temporals en temps real.
 * **Optimització:** S'ha exportat el model a format `.tflite` per garantir que el pes sigui mínim (< 2MB) i permeti la inferència en temps real a dins del dispositiu Android sense dependre de servidors externs.
+
+| Model | Tipus | Accuracy | Mida (.tflite/pkl) | Apte per a Mòbil |
+| :--- | :--- | :--- | :--- | :--- |
+| Random Forest | Baseline | 92.06% | > 10 MB | No |
+| **CNN 1D** | **Deep Learning** | **86.13%** | **< 2 MB** | **Sí** |
 
 --------------------------
