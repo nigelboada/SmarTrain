@@ -93,7 +93,7 @@ Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si 
 
 #### 5.5 Distribució de classes
 
-![Distribució de classes](../data/processed/class_distribution.png)
+![alt text](image.png)
 
 #### 5.6 Visualització PCA
 
