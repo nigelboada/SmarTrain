@@ -7,8 +7,8 @@
 | `preprocess.py` | ✅ Complet | Neteja i segmentació (windowing) |
 | `eda.py` | ✅ Complet | Anàlisi (EDA, Distribució, PCA) |
 | `train_baseline.py` | ✅ Complet | Random Forest (UCI HAR) |
-| `train_cnn.py` | ⏳ En curs | Disseny arquitectura CNN 1D |
-| `model_v1.tflite` | ❌ Pendent | Exportació des de CNN |
+| `train_cnn.py` | ✅ Complet | Disseny arquitectura CNN 1D |
+| `model_v1.tflite` | ✅ Complet | Exportació des de CNN |
 
 
 ### 1. Problema a resoldre
