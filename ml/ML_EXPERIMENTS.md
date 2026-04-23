@@ -97,7 +97,7 @@ Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si 
 
 #### 5.6 Visualització PCA
 
-![PCA dels senyals](../data/processed/pca_visualization.png)
+![alt text](image.png)
 
 ### 6. Preprocessament
 
