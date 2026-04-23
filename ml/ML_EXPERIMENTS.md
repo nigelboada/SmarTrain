@@ -91,13 +91,11 @@ Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si 
 
 * **Resultat:** [Comenta si els eixos estan molt correlacionats entre ells].
 
-#### 5.5 Distribució de classes
+#### 5.5 Visualitzacions de suport
 
-![alt text](image.png)
+* **Distribució de classes:** ![Distribució](../data/processed/class_distribution.png)
 
-#### 5.6 Visualització PCA
-
-![alt text](image.png)
+* **PCA (Separabilitat):** ![PCA](../data/processed/pca_visualization.png)
 
 ### 6. Preprocessament
 
