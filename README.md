@@ -75,7 +75,12 @@ El sistema segueix un flux circular per garantir la integritat de les dades:
 
     Recuperació: En obrir l'historial, l'aplicació prioritza les dades de Firestore per oferir una experiència multi-dispositiu.
 
+#### Progrés de desenvolupament
 
+- [x] UI del Dashboard i Perfil
+- [x] Servei de seguiment (TrackingService)
+- [x] Entrenament model ML (UCI HAR)
+- [ ] **Integració IA (TFLite):** En curs. S'han afegit les dependències de TensorFlow Lite.
 
 
 ### Instruccions per executar l'app 

@@ -69,4 +69,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
 
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
+
+    // TensorFlow Lite
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
 }
