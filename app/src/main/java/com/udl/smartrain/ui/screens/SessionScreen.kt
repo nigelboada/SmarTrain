@@ -64,7 +64,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
     }
 
     LaunchedEffect(Unit) {
-        viewModel.startNewSession("usuari_proves_123")
+        viewModel.startNewSession()
     }
 
     LaunchedEffect(trackingMetrics.isTracking) {

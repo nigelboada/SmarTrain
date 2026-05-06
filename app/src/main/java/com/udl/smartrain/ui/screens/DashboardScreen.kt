@@ -186,6 +186,7 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
+                    viewModel.signOut()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
