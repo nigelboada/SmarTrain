@@ -32,7 +32,9 @@ class MainActivity : ComponentActivity() {
         val db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java, "smartrain-db"
-        ).build()
+        )
+            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
 
         val firestore = Firebase.firestore
         val repository = SessionRepositoryImpl(db.sessionDao(), firestore)

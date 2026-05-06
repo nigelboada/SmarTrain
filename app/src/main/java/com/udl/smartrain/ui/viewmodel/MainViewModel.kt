@@ -2,22 +2,23 @@ package com.udl.smartrain.ui.viewmodel
 
 import android.content.Context
 import android.content.Intent
-import java.util.UUID
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.udl.smartrain.data.repository.SessionRepository
-import com.udl.smartrain.data.local.LocationProvider
-import com.udl.smartrain.domain.model.Session
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.udl.smartrain.data.local.LocationProvider
+import com.udl.smartrain.data.repository.SessionRepository
+import com.udl.smartrain.domain.model.Session
+import com.udl.smartrain.ml.ActivityRecognitionState
 import com.udl.smartrain.service.TrackingService
+import java.util.UUID
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val repository: SessionRepository,
@@ -26,9 +27,7 @@ class MainViewModel(
 
     private val _currentSession = MutableStateFlow<Session?>(null)
 
-
-    var currentUserName by mutableStateOf("Usuari Actual") // Placeholder, pots obtenir-ho de FirebaseAuth o d'una font de dades
-
+    var currentUserName by mutableStateOf("Usuari Actual")
 
     val sessionsHistory = repository.getSessionHistory("usuari_id_actual")
         .stateIn(
@@ -38,7 +37,6 @@ class MainViewModel(
         )
 
     fun startNewSession(userId: String) {
-        // Generem un ID únic i l'assignem a la sessió
         val newSessionId = UUID.randomUUID().toString()
 
         _currentSession.value = Session(
@@ -57,11 +55,21 @@ class MainViewModel(
 
         val current = _currentSession.value
         if (current == null) {
-            Log.e("DEBUG_VM", "Error: _currentSession és NULL! No es pot guardar res.")
+            Log.e("DEBUG_VM", "Error: _currentSession es NULL. No es pot guardar res.")
         } else {
-            Log.d("DEBUG_VM", "Sessió trobada, guardant: ${current.id}")
+            val mlSummary = ActivityRecognitionState.buildSessionSummary()
+            val sessionWithMlResults = current.copy(
+                dominantActivity = mlSummary.dominantActivity,
+                avgMlConfidence = mlSummary.avgMlConfidence,
+                mlPredictionCount = mlSummary.mlPredictionCount,
+                highIntensityCount = mlSummary.highIntensityCount,
+                activityTimeline = mlSummary.activityTimeline,
+                intensityScore = mlSummary.avgMlConfidence
+            )
+
+            Log.d("DEBUG_VM", "Sessio trobada, guardant: ${sessionWithMlResults.id}")
             viewModelScope.launch {
-                repository.saveSession(current)
+                repository.saveSession(sessionWithMlResults)
                 _currentSession.value = null
             }
         }
@@ -81,10 +89,8 @@ class MainViewModel(
 
     fun updateUserName(newName: String) {
         currentUserName = newName
-        // Aquí en el futur es podria afegir codi per guardar-ho a Firebase o Room
         Log.d("DEBUG_VM", "Nom d'usuari actualitzat a: $newName")
     }
-
 }
 
 class MainViewModelFactory(

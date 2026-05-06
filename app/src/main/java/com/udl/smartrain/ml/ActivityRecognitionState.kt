@@ -22,4 +22,46 @@ object ActivityRecognitionState {
         _currentPrediction.value = null
         _predictionHistory.value = emptyList()
     }
+
+    fun buildSessionSummary(): ActivitySessionSummary {
+        val predictions = _predictionHistory.value
+        if (predictions.isEmpty()) {
+            return ActivitySessionSummary()
+        }
+
+        val dominantActivity = predictions
+            .groupingBy { it.label }
+            .eachCount()
+            .maxByOrNull { it.value }
+            ?.key
+            .orEmpty()
+
+        val avgConfidence = predictions
+            .map { it.confidence.toDouble() }
+            .average()
+
+        val highIntensityCount = predictions.count { prediction ->
+            prediction.label == "Pujar escales" || prediction.label == "Baixar escales"
+        }
+
+        val timeline = predictions.joinToString(separator = "|") { prediction ->
+            "${prediction.timestampMillis},${prediction.classIndex},${prediction.label},${prediction.confidence}"
+        }
+
+        return ActivitySessionSummary(
+            dominantActivity = dominantActivity,
+            avgMlConfidence = avgConfidence,
+            mlPredictionCount = predictions.size,
+            highIntensityCount = highIntensityCount,
+            activityTimeline = timeline
+        )
+    }
 }
+
+data class ActivitySessionSummary(
+    val dominantActivity: String = "",
+    val avgMlConfidence: Double = 0.0,
+    val mlPredictionCount: Int = 0,
+    val highIntensityCount: Int = 0,
+    val activityTimeline: String = ""
+)
