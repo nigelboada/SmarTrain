@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.location.Location
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -29,6 +30,8 @@ class TrackingService : Service() {
 
     private lateinit var sensorProvider: SensorProvider
     private lateinit var locationProvider: LocationProvider
+    private var lastLocation: Location? = null
+    private var distanceMeters: Double = 0.0
 
     private val channelId = "tracking_channel"
     private val notificationId = 1
@@ -46,6 +49,9 @@ class TrackingService : Service() {
         sensorProvider.startListening()
         locationProvider.startTracking()
         ActivityRecognitionState.reset()
+        lastLocation = null
+        distanceMeters = 0.0
+        TrackingSessionState.start()
 
         serviceScope.launch {
             sensorProvider.accelerometerData.collect { values ->
@@ -71,6 +77,18 @@ class TrackingService : Service() {
             }
         }
 
+        serviceScope.launch {
+            locationProvider.currentLocation.collect { location ->
+                if (location == null) return@collect
+
+                lastLocation?.let { previousLocation ->
+                    distanceMeters += previousLocation.distanceTo(location).toDouble()
+                    TrackingSessionState.updateDistance(distanceMeters)
+                }
+                lastLocation = location
+            }
+        }
+
         return START_STICKY
     }
 
@@ -80,6 +98,7 @@ class TrackingService : Service() {
 
         sensorProvider.stopListening()
         locationProvider.stopTracking()
+        TrackingSessionState.stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
         serviceScope.cancel()
     }

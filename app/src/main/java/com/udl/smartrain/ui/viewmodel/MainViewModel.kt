@@ -14,6 +14,7 @@ import com.udl.smartrain.data.repository.SessionRepository
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.ActivityRecognitionState
 import com.udl.smartrain.service.TrackingService
+import com.udl.smartrain.service.TrackingSessionState
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -58,7 +59,14 @@ class MainViewModel(
             Log.e("DEBUG_VM", "Error: _currentSession es NULL. No es pot guardar res.")
         } else {
             val mlSummary = ActivityRecognitionState.buildSessionSummary()
+            val trackingMetrics = TrackingSessionState.metrics.value
+            val durationSeconds = trackingMetrics.startedAtMillis
+                ?.let { (System.currentTimeMillis() - it) / 1000 }
+                ?: current.durationSeconds
+
             val sessionWithMlResults = current.copy(
+                durationSeconds = durationSeconds,
+                distanceMetres = trackingMetrics.distanceMeters,
                 dominantActivity = mlSummary.dominantActivity,
                 avgMlConfidence = mlSummary.avgMlConfidence,
                 mlPredictionCount = mlSummary.mlPredictionCount,
