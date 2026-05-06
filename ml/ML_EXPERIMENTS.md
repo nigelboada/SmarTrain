@@ -1,177 +1,198 @@
-## Documentació d'experimentació ML - SmarTrain
+# Documentacio d'experimentacio ML - SmarTrain
 
-### 1. Problema a resoldre
+## 1. Problema
 
-L'objectiu d'aquest mòdul de Machine Learning és la Classificació d'Activitat Humana (HAR) aplicada al futbol amateur. El sistema ha de ser capaç d'identificar en temps real, mitjançant les dades de l'acceleròmetre del dispositiu mòbil, en quin dels següents 3 estats es troba el jugador:
+SmarTrain necessita classificar activitat humana a partir de l'accelerometre del mobil per enriquir una sessio esportiva amb senyals d'intensitat. L'objectiu funcional de producte es descriu en tres nivells:
 
-    Repòs: Jugador aturat o caminant molt lentament (fase de recuperació).
+- Repos: recuperacio o activitat molt baixa.
+- Desplacament suau: caminar o moviment continu moderat.
+- Alta intensitat: canvis de ritme o accions explosives.
 
-    Caminar/Trote: Desplaçaments a intensitat mitjana.
+El model disponible per a l'entrega 3A no esta entrenat encara amb dades reals de futbol. Per aquest motiu s'ha utilitzat UCI HAR com a dataset public de preentrenament i validacio tecnica. UCI HAR te 6 classes, no 3. La integracio Android mostra aquestes 6 classes i les utilitza com a aproximacio inicial:
 
-    Esprint: Curses d'alta intensitat (accions explosives).
-
-### 2. Models candidats
-
-Per a aquest problema de sèries temporals, s'han seleccionat els següents models per a l'experimentació:
-
-    CNN 1D (Xarxa Neuronal Convolucional 1D): Model principal per la seva capacitat d'extreure característiques automàticament de les finestres temporals dels sensors.
-
-    Random Forest: Com a model de referència (baseline) per comparar la precisió d'un mètode clàssic basat en característiques estadístiques (mitjana, variància, etc.).
-
-### 3. Eines utilitzades
-
-    Google Colab / Jupyter Notebooks: Per a l'entrenament i visualització de dades.
-
-    Python (TensorFlow & Keras): Per a la construcció i entrenament del model CNN.
-
-    Scikit-learn: Per al preprocessament i el model Random Forest.
-
-    TensorFlow Lite Converter: Per a la quantització i exportació del model final al format mòbil.
-
-    # Mòdul de Machine Learning - SmarTrain
-
-#### 3.1 Dataset
-
-    Hem utilitzat el dataset **UCI Human Activity Recognition (HAR)**.
-
-
-* **Origen:** [UCI Human Activity Recognition Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+polar+smart+shirts)
-* **Descripció:** El dataset conté gravacions de 30 persones realitzant activitats quotidianes (caminar, seure, estar dret, etc.) amb un smartphone a la cintura. Les dades d'acceleròmetre i giroscopi han estat pre-processades i segmentades en finestres fixes.
-* **Número de mostres:** 10,299 instàncies totals (7,352 entrenament / 2,947 test).
-* **Característiques principals:** Dades d'acceleròmetre i giroscopi a 3 eixos (X, Y, Z). Les dades estan normalitzades entre [-1, 1].
-* **Etiquetes:** 6 activitats (1: Caminar, 2: Caminar pujant, 3: Caminar baixant, 4: Dret, 5: Seure, 6: Estirat).
-
-### 4. Pipeline d'entrenament
-
-S'han transformat els fitxers de text bruts (`Inertial Signals`) en tensors de 3 dimensions `(mostres, 128, 3)`. Aquest format és l'òptim per a les capes de convolució 1D, ja que respecta la naturalesa temporal del senyal i permet a la CNN aprendre patrons espacials (entre eixos) i temporals (evolució del moviment).
-
-El procés d'entrenament seguirà aquest flux:
-
-    Càrrega del Dataset: Ús del UCI HAR Dataset (públic) per al pre-entrenament.
-
-    Segmentació: Divisió del senyal en finestres de 2 segons (100 mostres a 50Hz).
-
-    Normalització: Ajust dels valors de l'acceleròmetre entre -1 i 1.
-
-    Entrenament: Ajust de paràmetres (epochs, batch size) per maximitzar l'F1-Score.
-
-    Quantització: Conversió a INT8 per optimitzar la mida (< 2MB) i la latència en el mòbil.
-
-### 5. Anàlisi Exploratòria de Dades (EDA)
-
-L'objectiu d'aquesta fase és entendre la distribució de les dades del dataset UCI HAR per detectar possibles biaixos o problemes abans de l'entrenament.
-
-S'ha realitzat una inspecció visual de les dades del dataset UCI HAR per validar la qualitat del senyal i la distribució de les etiquetes.
-
-He calculat les estadístiques bàsiques (mitjana, desviació estàndard, valors mínims/màxims) dels senyals bruts per verificar si les dades estan dins del rang esperat [-1, 1].
-
-* **Troballa:** [Ex: Els valors de l'acceleròmetre es troben majoritàriament entre -0.5 i 0.5 g, indicant un moviment normal].
-
-#### 5.1 Distribució de les classes
-És vital assegurar que el dataset estigui equilibrat. Una distribució desequilibrada podria fer que el model esdevingui "mandrós" i només aprengui a predir l'activitat més freqüent.
-
-S'ha generat un recompte de les instàncies per a les 6 activitats (1: Caminar, 2: Caminar pujant, 3: Caminar baixant, 4: Dret, 5: Seure, 6: Estirat).
-
-* **Observacions:** Hem analitzat el recompte d'instàncies per cada activitat (Caminar, Trotar, Repòs). El dataset presenta una distribució equilibrada, amb una lleugera majoria per a les classes 6 i 5.
-* **Imatge:** Referència a `class_distribution.png`.
-
-#### 5.2 Anàlisi del senyal
-S'ha visualitzat una finestra de 128 mostres (corresponent a 2.56 segons de dades del sensor).
-* **Observacions:** El senyal mostra un nivell de soroll baix, la qual cosa facilita l'extracció de característiques per part del model CNN.
-* **Imatge:** Referència a `signal_sample.png`.
-
-#### 5.3 Visualització de senyals temporals
-Hem representat gràficament un segment de 2 segons (100 mostres) de l'acceleròmetre per visualitzar les diferències entre activitats.
-
-* **Eixos:** L'eix X representa el temps, l'eix Y l'acceleració en 'g'.
-* **Resultats:** S'observa que el senyal de "Esprint" mostra pics d'amplitud molt més elevats que "Caminar". Això confirma que el model hauria de poder distingir-los fàcilment.
-
-#### 5.4 Correlació d'eixos
-Hem calculat la matriu de correlació entre els eixos X, Y i Z per verificar si hi ha dependències innecessàries.
-
-* **Resultat:** [Comenta si els eixos estan molt correlacionats entre ells].
-
-#### 5.5 Visualitzacions de suport
-
-* **Distribució de classes:** ![Distribució](../data/processed/class_distribution.png)
-
-* **PCA (Separabilitat):** ![PCA](../data/processed/pca_visualization.png)
-
-### 6. Preprocessament
-
-* **Neteja:** Eliminació de valors nuls i validació de rangs de sensor.
-* **Transformacions:** * **Windowing:** Segmentació en finestres de temps de 128 mostres (2.56 segons al 50Hz).
-    * **Stacking:** Combinació dels eixos X, Y i Z en un tensor tridimensional `(samples, 128, 3)`.
-    * **Normalització:** Ajustat segons el format original del dataset per garantir la consistència.
-
---------------------------
-
-### Experiment 1: Baseline amb Random Forest (UCI HAR Dataset)
-
-* **Data:** 29/03/2026
-* **Script utilitzat:** `/ml/scripts/train_baseline.py`
-* **Dataset:** UCI Human Activity Recognition (7,352 entrenament / 2,947 test).
-
-##### Configuració del pipeline
-| Paràmetre | Valor |
+| Classe UCI HAR | Interpretacio a SmarTrain |
 | :--- | :--- |
-| **Model** | Random Forest Classifier |
-| **Estimadors (n_estimators)** | 100 |
-| **Profunditat màxima (max_depth)** | 10 |
-| **Segmentació** | Finestres de 128 mostres (2.56s) |
-| **Llibreries** | Scikit-learn, Pandas, Numpy |
+| Caminar | Desplacament suau |
+| Pujar escales | Alta intensitat aproximada |
+| Baixar escales | Alta intensitat aproximada |
+| Seure | Repos |
+| Dret | Repos |
+| Estirat | Repos |
 
-##### Resultats obtinguts
-| Mètrica | Valor real |
+La discrepancia queda assumida com una limitacio del prototip: el sistema valida el flux ML end-to-end, pero no substitueix encara un model entrenat amb dades especifiques de futbol.
+
+## 2. Dataset
+
+Dataset utilitzat: UCI Human Activity Recognition using Smartphones.
+
+- Mostres totals: 10.299.
+- Entrenament original: 7.352 mostres.
+- Test original: 2.947 mostres.
+- Frequencia: 50 Hz.
+- Finestra: 128 mostres, aproximadament 2,56 segons.
+- Sensors: accelerometre i giroscopi; per a la integracio mobil actual s'utilitzen els 3 eixos d'acceleracio total.
+- Classes: caminar, pujar escales, baixar escales, seure, dret, estirat.
+
+En aquest repositori hi ha dades processades a:
+
+- `ml/data/processed/X_train.npy`
+- `ml/data/processed/y_train.npy`
+
+## 3. Preprocessament
+
+Script principal: `ml/scripts/preprocess.py`.
+
+El preprocessament carrega els fitxers `total_acc_x_train.txt`, `total_acc_y_train.txt` i `total_acc_z_train.txt`, els apila en tensors `(samples, 128, 3)` i ajusta les etiquetes per comencar a 0. Aquest format coincideix amb l'entrada del model TensorFlow Lite integrat a Android: `[1][128][3]`.
+
+Punts importants:
+
+- Les finestres mantenen l'ordre temporal.
+- Les dades UCI ja venen normalitzades.
+- La inferencia a Android usa finestres lliscants de 128 lectures d'accelerometre.
+
+## 4. Models Avaluats
+
+### Model 1: Random Forest baseline
+
+Script: `ml/scripts/train_baseline.py`.
+
+Model classic sobre caracteristiques tabulars UCI HAR. Serveix com a referencia de precisio, pero no es el candidat final per a mobil per mida i portabilitat.
+
+Resultats historics documentats:
+
+| Metrica | Valor |
 | :--- | :--- |
-| **Accuracy total** | **92.06%** |
-| **F1-Score (Weighted)** | **0.92** |
-| **Precision (Mitjana)** | **0.92** |
+| Accuracy | 92,06% |
+| F1 weighted | 0,92 |
+| Precision mitjana | 0,92 |
 
-###### Detall per activitats (F1-Score):
-* **Caminar (1):** 0.92
-* **Pujar/Baixar escales (2, 3):** 0.89
-* **Estar dret/Seure (4, 5):** 0.90 / 0.91
-* **Estirat (6):** 1.00 (Precisió perfecta)
+### Model 2: CNN 1D inicial
 
-##### Conclusions de l'experiment 1
+Script: `ml/scripts/train_cnn.py`.
 
-Els resultats són molt satisfactoris per a un model inicial. S'observa que el model identifica perfectament l'estat de repòs total (activitat 6), però té lleugeres confusions en activitats dinàmiques similars (escales vs caminar). 
+Arquitectura:
 
-És un model robust per dades estructurades, però amb una petjada de memòria elevada (fitxer .pkl gran), poc apte per a entorns mòbils amb limitacions de recursos.
+`Conv1D(64, 3)` -> `MaxPooling1D(2)` -> `Flatten()` -> `Dense(64)` -> `Dropout(0.5)` -> `Dense(6, softmax)`
 
-**Pla d'acció:** Tot i l'alta precisió, el model Random Forest genera un fitxer de gran mida que pot ser ineficient en dispositius mòbils. El següent experiment es basarà en una **CNN 1D** per intentar mantenir o millorar aquest 92% però optimitzant el pes per a l'exportació a **TensorFlow Lite**.
+Resultats historics documentats:
 
---------------------------
-
-### Experiment 2: CNN 1D (Model Definitiu)
-* **Data:** 29/03/2026
-* **Script utilitzat:** `/ml/scripts/train_cnn.py`
-* **Configuració i arquitectura:** * Capes: `Conv1D(64, 3)` -> `MaxPooling1D(2)` -> `Flatten()` -> `Dense(64)` -> `Dropout(0.5)` -> `Dense(6, softmax)`.
-    * Optimizer: Adam, 15 èpoques.
-
-##### Resultats obtinguts
-| Mètrica | Valor |
+| Metrica | Valor |
 | :--- | :--- |
-| **Accuracy (Train)** | **90.94%** |
-| **Accuracy (Val)** | **86.13%** |
+| Accuracy train | 90,94% |
+| Accuracy validation | 86,13% |
+| Exportacio | `ml/models/model_v1.tflite` |
+| Mida TFLite actual | 1.041.524 bytes |
 
-##### Conclusions i Comparativa
+### Model 3: variants CNN per a comparacio
 
-* **Comparació:** El model Random Forest (Baseline) va obtenir una accuracy del 92%, lleugerament superior a la CNN (86% validació). Això indica un lleuger *overfitting* a la CNN. 
-* **Justificació:** Tot i que el Random Forest és més precís en dades estàtiques, la **CNN 1D** és el model triat per a l'aplicació mòbil perquè té una estructura que permet una latència més baixa i una millor escalabilitat per a dades de sèries temporals en temps real.
-* **Optimització:** S'ha exportat el model a format `.tflite` per garantir que el pes sigui mínim (< 2MB) i permeti la inferència en temps real a dins del dispositiu Android sense dependre de servidors externs.
+Nou script: `ml/scripts/train_model_comparison.py`.
 
-| Model | Tipus | Accuracy | Mida (.tflite/pkl) | Apte per a Mòbil |
-| :--- | :--- | :--- | :--- | :--- |
-| Random Forest | Baseline | 92.06% | > 10 MB | No |
-| **CNN 1D** | **Deep Learning** | **86.13%** | **< 2 MB** | **Sí** |
+Aquest script afegeix tres variants comparables i selecciona automaticament la millor segons F1 weighted:
 
---------------------------
-
-### 🔄 Estat del projecte
-| Fitxer | Estat | Tasca principal |
+| Variant | Arquitectura | Objectiu |
 | :--- | :--- | :--- |
-| `model_v1.tflite` | ✅ Integrat | Afegit a `/assets` |
-| `ActivityClassifier.kt` | ✅ Creat | Lògica d'inferència |
-| **Integració Android** | ✅ Completat | Integració via Coroutines/Flow al `TrackingService` |
+| `cnn_lite` | Conv1D + GlobalAveragePooling | Model petit i estable per mobil |
+| `cnn_deep` | Conv1D + BatchNorm + mes filtres | Millorar capacitat del model |
+| `cnn_separable` | SeparableConv1D | Reduir parametres i cost d'inferencia |
+
+Sortides esperades:
+
+- `ml/results/model_comparison.json`
+- `ml/results/confusion_matrix_cnn_lite.png`
+- `ml/models/model_v1.tflite`
+- `app/src/main/assets/model_v1.tflite`
+
+## 5. Hiperparametres
+
+| Experiment | Epochs | Batch | Optimizer | Regularitzacio | Criteri |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Random Forest | N/A | N/A | N/A | `max_depth=10` | Accuracy/F1 |
+| CNN inicial | 15 | 32 | Adam | Dropout 0,5 | Validation accuracy |
+| CNN lite | fins a 30 | 32 | Adam | Dropout 0,3 + EarlyStopping | F1 weighted |
+| CNN deep | fins a 30 | 32 | Adam | BatchNorm + Dropout 0,4 + EarlyStopping | F1 weighted |
+| CNN separable | fins a 30 | 32 | Adam | Dropout 0,35 + EarlyStopping | F1 weighted |
+
+## 6. Metriques
+
+Metriques utilitzades:
+
+- Accuracy.
+- F1 weighted.
+- Classification report per classe.
+- Matriu de confusio.
+- Mida del model exportat.
+- Temps mitja d'inferencia TFLite.
+
+El nou script calcula les metriques amb un split estratificat 70/15/15 a partir de les dades processades. La matriu de confusio s'exporta com a imatge per facilitar la revisio al document final.
+
+## 7. Comparacio Actual
+
+| Model | Accuracy/F1 disponible | Mida | Apte mobil | Estat |
+| :--- | :--- | :--- | :--- | :--- |
+| Random Forest | Accuracy 92,06%, F1 0,92 | Alta, no exportat a TFLite | No | Baseline |
+| CNN 1D inicial | Val accuracy 86,13% | 1.041.524 bytes | Si | Integrat a Android |
+| CNN lite/deep/separable | Calculat per `train_model_comparison.py` | Exportat per script | Si | Preparat per executar |
+
+En aquesta sessio no s'han executat els nous entrenaments perque l'entorn local no te instal.lat TensorFlow ni scikit-learn. El script queda preparat per executar-se en Colab o en un entorn Python amb les dependencies ML.
+
+## 8. Optimitzacio per Mobil
+
+El model final s'exporta a TensorFlow Lite. El script de comparacio aplica `tf.lite.Optimize.DEFAULT` per reduir la mida i preparar inferencia eficient al dispositiu.
+
+La integracio Android carrega `app/src/main/assets/model_v1.tflite` amb `Interpreter`, genera finestres de 128 mostres i publica:
+
+- activitat actual,
+- confianca,
+- historic recent,
+- resum persistent dins la sessio.
+
+## 9. Resultats Experimentals
+
+Resultats confirmats fins ara:
+
+- Random Forest baseline: 92,06% accuracy.
+- CNN inicial: 86,13% validation accuracy.
+- Model TFLite integrat: 1.041.524 bytes.
+- Flux Android: sensors -> buffer -> TFLite -> UI -> Room/Firebase.
+
+Resultats pendents de generar amb `train_model_comparison.py`:
+
+- F1 weighted de `cnn_lite`, `cnn_deep` i `cnn_separable`.
+- Matriu de confusio final.
+- Temps d'inferencia TFLite en l'entorn d'execucio.
+
+## 10. Justificacio del Model Final
+
+Per a l'entrega 3A es mante la CNN 1D exportada a TFLite com a model final integrat. Tot i que el Random Forest te millor accuracy historica, no es tan adequat per a una app Android amb inferencia local, exportacio senzilla i flux en temps real.
+
+La decisio final es:
+
+- usar CNN 1D per la integracio mobil,
+- mantenir Random Forest com a baseline,
+- deixar preparades variants CNN per seleccionar una versio millor quan es pugui executar l'entrenament complet,
+- documentar que les 6 classes UCI HAR son una aproximacio tecnica al problema de 3 nivells esportius.
+
+## 11. Reproduccio
+
+Des de `ml/scripts`:
+
+```bash
+python preprocess.py
+python train_baseline.py
+python train_cnn.py
+python train_model_comparison.py
+```
+
+Dependencies necessaries:
+
+- numpy
+- pandas
+- scikit-learn
+- tensorflow
+- matplotlib
+
+El script `train_model_comparison.py` copia automaticament el model seleccionat a `app/src/main/assets/model_v1.tflite`.
+
+## 12. Conclusions
+
+El modul ML ja cobreix el cicle minim necessari per a 3A: preprocessament, baseline, CNN exportada, integracio TFLite i documentacio de la discrepancia entre dataset generic i cas futbolistic. La millora principal pendent es executar la comparacio nova en un entorn amb dependencies ML i substituir el model integrat si alguna variant CNN supera la versio actual mantenint una mida i latencia adequades.
