@@ -6,12 +6,27 @@ import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
+data class ActivityPrediction(
+    val classIndex: Int,
+    val label: String,
+    val confidence: Float,
+    val timestampMillis: Long = System.currentTimeMillis()
+)
+
 class ActivityClassifier(context: Context) {
 
-    private var interpreter: Interpreter? = null
+    private val interpreter: Interpreter
+
+    private val labels = listOf(
+        "Caminar",
+        "Pujar escales",
+        "Baixar escales",
+        "Seure",
+        "Dret",
+        "Repos"
+    )
 
     init {
-        // Carreguem el model des de la carpeta assets
         val modelBuffer = loadModelFile(context, "model_v1.tflite")
         interpreter = Interpreter(modelBuffer)
     }
@@ -20,16 +35,25 @@ class ActivityClassifier(context: Context) {
         val fileDescriptor = context.assets.openFd(fileName)
         val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
         val fileChannel = inputStream.channel
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, fileDescriptor.startOffset, fileDescriptor.declaredLength)
+        return fileChannel.map(
+            FileChannel.MapMode.READ_ONLY,
+            fileDescriptor.startOffset,
+            fileDescriptor.declaredLength
+        )
     }
 
-    fun classify(inputData: Array<Array<FloatArray>>): Int {
-        // Tenim 6 classes. Sortida de l'intèrpret: [1, 6]
-        val output = Array(1) { FloatArray(6) }
+    fun classify(inputData: Array<Array<FloatArray>>): ActivityPrediction {
+        val output = Array(1) { FloatArray(labels.size) }
 
-        interpreter?.run(inputData, output)
+        interpreter.run(inputData, output)
 
-        // Retornem l'índex de la classe amb més probabilitat (argmax)
-        return output[0].indices.maxByOrNull { output[0][it] } ?: -1
+        val classIndex = output[0].indices.maxByOrNull { output[0][it] } ?: -1
+        val confidence = output[0].getOrNull(classIndex) ?: 0f
+
+        return ActivityPrediction(
+            classIndex = classIndex,
+            label = labels.getOrElse(classIndex) { "Desconeguda" },
+            confidence = confidence
+        )
     }
 }

@@ -1,9 +1,10 @@
 package com.udl.smartrain.service
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Intent
-import android.hardware.Sensor
-import android.hardware.SensorEvent
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -11,6 +12,7 @@ import com.udl.smartrain.R
 import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.local.SensorProvider
 import com.udl.smartrain.ml.ActivityClassifier
+import com.udl.smartrain.ml.ActivityRecognitionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class TrackingService : Service() {
 
-    private val classifier = ActivityClassifier(this)
+    private lateinit var classifier: ActivityClassifier
     private val buffer = mutableListOf<FloatArray>()
 
     private val serviceJob = SupervisorJob()
@@ -28,49 +30,46 @@ class TrackingService : Service() {
     private lateinit var sensorProvider: SensorProvider
     private lateinit var locationProvider: LocationProvider
 
-    private val CHANNEL_ID = "tracking_channel"
-    private val NOTIFICATION_ID = 1
+    private val channelId = "tracking_channel"
+    private val notificationId = 1
 
     override fun onCreate() {
         super.onCreate()
+        classifier = ActivityClassifier(applicationContext)
         sensorProvider = SensorProvider(this)
         locationProvider = LocationProvider(this)
         createNotificationChannel()
     }
 
-    // Dins de TrackingService.kt, en el mètode onStartCommand:
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, createNotification())
+        startForeground(notificationId, createNotification())
         sensorProvider.startListening()
         locationProvider.startTracking()
+        ActivityRecognitionState.reset()
 
-        // --- NOU: Escoltem el flux de dades (Flow) ---
         serviceScope.launch {
             sensorProvider.accelerometerData.collect { values ->
                 val x = values[0]
                 val y = values[1]
                 val z = values[2]
 
-                // Afegim al buffer
                 buffer.add(floatArrayOf(x, y, z))
 
-                // Quan tenim 128 dades, fem inferència
-                if (buffer.size >= 128) {
-                    // Transformem la llista a l'array 3D: [1][128][3]
+                if (buffer.size >= WINDOW_SIZE) {
                     val inputArray = arrayOf(buffer.toTypedArray())
+                    val prediction = classifier.classify(inputArray)
 
-                    // Classifiquem
-                    val activityIndex = classifier.classify(inputArray)
+                    ActivityRecognitionState.publish(prediction)
 
-                    Log.d("ML_TRACKING", "Activitat detectada: $activityIndex")
+                    Log.d(
+                        "ML_TRACKING",
+                        "Activitat detectada: ${prediction.label} (${prediction.confidence})"
+                    )
 
-                    // Lliscament de la finestra: eliminem la primera dada
                     buffer.removeAt(0)
                 }
             }
         }
-        // ----------------------------------------------
 
         return START_STICKY
     }
@@ -88,21 +87,25 @@ class TrackingService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotification(): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        return NotificationCompat.Builder(this, channelId)
             .setContentTitle("SmarTrain en curs")
             .setContentText("Recollint dades de l'entrenament...")
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Assegura't que la icona existeix
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .build()
     }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID,
+            channelId,
             "Canal de Tracking SmarTrain",
             NotificationManager.IMPORTANCE_LOW
         )
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
+    }
+
+    private companion object {
+        const val WINDOW_SIZE = 128
     }
 }
