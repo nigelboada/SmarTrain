@@ -2,18 +2,25 @@ package com.udl.smartrain.service
 
 import android.app.*
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.udl.smartrain.R
 import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.local.SensorProvider
+import com.udl.smartrain.ml.ActivityClassifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class TrackingService : Service() {
+
+    private val classifier = ActivityClassifier(this)
+    private val buffer = mutableListOf<FloatArray>()
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
@@ -31,11 +38,39 @@ class TrackingService : Service() {
         createNotificationChannel()
     }
 
+    // Dins de TrackingService.kt, en el mètode onStartCommand:
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, createNotification())
-
         sensorProvider.startListening()
         locationProvider.startTracking()
+
+        // --- NOU: Escoltem el flux de dades (Flow) ---
+        serviceScope.launch {
+            sensorProvider.accelerometerData.collect { values ->
+                val x = values[0]
+                val y = values[1]
+                val z = values[2]
+
+                // Afegim al buffer
+                buffer.add(floatArrayOf(x, y, z))
+
+                // Quan tenim 128 dades, fem inferència
+                if (buffer.size >= 128) {
+                    // Transformem la llista a l'array 3D: [1][128][3]
+                    val inputArray = arrayOf(buffer.toTypedArray())
+
+                    // Classifiquem
+                    val activityIndex = classifier.classify(inputArray)
+
+                    Log.d("ML_TRACKING", "Activitat detectada: $activityIndex")
+
+                    // Lliscament de la finestra: eliminem la primera dada
+                    buffer.removeAt(0)
+                }
+            }
+        }
+        // ----------------------------------------------
 
         return START_STICKY
     }

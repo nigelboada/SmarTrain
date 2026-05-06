@@ -169,11 +169,9 @@ Els resultats són molt satisfactoris per a un model inicial. S'observa que el m
 
 --------------------------
 
-#### 🔄 Estat del projecte
-
+### 🔄 Estat del projecte
 | Fitxer | Estat | Tasca principal |
 | :--- | :--- | :--- |
-| `preprocess.py` | ✅ Complet | Neteja i segmentació |
-| `train_cnn.py` | ✅ Complet | Arquitectura CNN 1D |
-| `model_v1.tflite` | ✅ Integrat | Exportat i afegit a `/assets` |
-| **Integració Android** | ⏳ **En curs** | Càrrega i inferència via TFLite |
+| `model_v1.tflite` | ✅ Integrat | Afegit a `/assets` |
+| `ActivityClassifier.kt` | ✅ Creat | Lògica d'inferència |
+| **Integració Android** | ✅ Completat | Integració via Coroutines/Flow al `TrackingService` |

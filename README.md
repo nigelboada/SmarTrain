@@ -19,6 +19,11 @@ El projecte segueix una arquitectura Client-Servidor amb processament a l'extrem
 
     Wearable: Integració amb Wear OS per a la captura de la freqüència cardíaca via Bluetooth.
 
+Arquitectura del sistema:
+
+- **SensorProvider:** Exposa les dades a través d'un `StateFlow` (Programació reactiva).
+- **TrackingService:** Consumeix el flux de dades mitjançant `Coroutines`, gestionant el buffer i la inferència en segon pla sense bloquejar l'UI.
+
 ### Estructura del projecte 
 
 El repositori està organitzat seguint el patró d'rquitectura Clean Architecture aplicada a MVVM, garantint la separació de responsabilitats:
@@ -80,8 +85,10 @@ El sistema segueix un flux circular per garantir la integritat de les dades:
 - [x] UI del Dashboard i Perfil
 - [x] Servei de seguiment (TrackingService)
 - [x] Entrenament model ML (UCI HAR)
-- [ ] **Integració IA (TFLite):** En curs. S'han afegit les dependències de TensorFlow Lite.
-
+- [x] **Integració IA (TFLite):**
+    - Dependències afegides.
+    - Creada l'arquitectura del paquet `ml`.
+    - **Connectat:** Implementat el buffer de dades i la inferència al `TrackingService`.
 
 ### Instruccions per executar l'app 
 
