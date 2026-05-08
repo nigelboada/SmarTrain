@@ -6,7 +6,7 @@ Execucio recomanada des de la carpeta `ml/scripts`:
 
 Sortides generades:
     ml/results/model_comparison.json
-    ml/results/confusion_matrix_cnn_lite.png
+    ml/results/confusion_matrix_final.png
     ml/models/model_v1.tflite
     app/src/main/assets/model_v1.tflite
 """
@@ -221,7 +221,7 @@ def main() -> None:
     tflite_model = export_tflite(best["model"], final_model_path)
     (APP_ASSETS_DIR / "model_v1.tflite").write_bytes(tflite_model)
     inference_ms = benchmark_tflite(tflite_model, data[2][:1])
-    save_confusion_matrix(best["confusion_matrix"], RESULTS_DIR / "confusion_matrix_cnn_lite.png")
+    save_confusion_matrix(best["confusion_matrix"], RESULTS_DIR / "confusion_matrix_final.png")
 
     serializable_results = []
     for result in results:

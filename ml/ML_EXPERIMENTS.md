@@ -8,7 +8,9 @@ SmarTrain necessita classificar activitat humana a partir de l'accelerometre del
 - Desplacament suau: caminar o moviment continu moderat.
 - Alta intensitat: canvis de ritme o accions explosives.
 
-El model disponible per a l'entrega 3A no esta entrenat encara amb dades reals de futbol. Per aquest motiu s'ha utilitzat UCI HAR com a dataset public de preentrenament i validacio tecnica. UCI HAR te 6 classes, no 3. La integracio Android mostra aquestes 6 classes i les utilitza com a aproximacio inicial:
+El model entrenat per a l'entrega 3A utilitza el dataset public UCI HAR. Aquest dataset no conte accions especifiques de futbol i te 6 classes, no 3. Per tant, el model integrat valida el flux ML end-to-end de l'app, pero encara no substitueix un classificador final entrenat amb dades reals de futbol.
+
+Mapeig conceptual utilitzat:
 
 | Classe UCI HAR | Interpretacio a SmarTrain |
 | :--- | :--- |
@@ -19,8 +21,6 @@ El model disponible per a l'entrega 3A no esta entrenat encara amb dades reals d
 | Dret | Repos |
 | Estirat | Repos |
 
-La discrepancia queda assumida com una limitacio del prototip: el sistema valida el flux ML end-to-end, pero no substitueix encara un model entrenat amb dades especifiques de futbol.
-
 ## 2. Dataset
 
 Dataset utilitzat: UCI Human Activity Recognition using Smartphones.
@@ -30,10 +30,11 @@ Dataset utilitzat: UCI Human Activity Recognition using Smartphones.
 - Test original: 2.947 mostres.
 - Frequencia: 50 Hz.
 - Finestra: 128 mostres, aproximadament 2,56 segons.
-- Sensors: accelerometre i giroscopi; per a la integracio mobil actual s'utilitzen els 3 eixos d'acceleracio total.
+- Sensors: accelerometre i giroscopi.
+- Entrada usada al model Android: acceleracio total en 3 eixos.
 - Classes: caminar, pujar escales, baixar escales, seure, dret, estirat.
 
-En aquest repositori hi ha dades processades a:
+Dades processades:
 
 - `ml/data/processed/X_train.npy`
 - `ml/data/processed/y_train.npy`
@@ -58,7 +59,7 @@ Script: `ml/scripts/train_baseline.py`.
 
 Model classic sobre caracteristiques tabulars UCI HAR. Serveix com a referencia de precisio, pero no es el candidat final per a mobil per mida i portabilitat.
 
-Resultats historics documentats:
+Resultats historics:
 
 | Metrica | Valor |
 | :--- | :--- |
@@ -74,20 +75,19 @@ Arquitectura:
 
 `Conv1D(64, 3)` -> `MaxPooling1D(2)` -> `Flatten()` -> `Dense(64)` -> `Dropout(0.5)` -> `Dense(6, softmax)`
 
-Resultats historics documentats:
+Resultats historics:
 
 | Metrica | Valor |
 | :--- | :--- |
 | Accuracy train | 90,94% |
 | Accuracy validation | 86,13% |
-| Exportacio | `ml/models/model_v1.tflite` |
-| Mida TFLite actual | 1.041.524 bytes |
+| Mida TFLite anterior | 1.041.524 bytes |
 
-### Model 3: variants CNN per a comparacio
+### Model 3: variants CNN
 
-Nou script: `ml/scripts/train_model_comparison.py`.
+Script: `ml/scripts/train_model_comparison.py`.
 
-Aquest script afegeix tres variants comparables i selecciona automaticament la millor segons F1 weighted:
+Aquest script compara tres arquitectures CNN i selecciona automaticament la millor segons F1 weighted:
 
 | Variant | Arquitectura | Objectiu |
 | :--- | :--- | :--- |
@@ -95,10 +95,11 @@ Aquest script afegeix tres variants comparables i selecciona automaticament la m
 | `cnn_deep` | Conv1D + BatchNorm + mes filtres | Millorar capacitat del model |
 | `cnn_separable` | SeparableConv1D | Reduir parametres i cost d'inferencia |
 
-Sortides esperades:
+Sortides generades:
 
 - `ml/results/model_comparison.json`
-- `ml/results/confusion_matrix_cnn_lite.png`
+- `ml/results/confusion_matrix_final.png`
+- `ml/results/confusion_matrix_cnn_lite.png` (nom historic; correspon al model final d'aquesta execucio)
 - `ml/models/model_v1.tflite`
 - `app/src/main/assets/model_v1.tflite`
 
@@ -118,59 +119,83 @@ Metriques utilitzades:
 
 - Accuracy.
 - F1 weighted.
-- Classification report per classe.
+- Precision, recall i F1 per classe.
 - Matriu de confusio.
+- Temps d'entrenament.
 - Mida del model exportat.
 - Temps mitja d'inferencia TFLite.
 
-El nou script calcula les metriques amb un split estratificat 70/15/15 a partir de les dades processades. La matriu de confusio s'exporta com a imatge per facilitar la revisio al document final.
+El script `train_model_comparison.py` calcula les metriques amb un split estratificat 70/15/15 a partir de les dades processades. L'execucio s'ha fet a Google Colab amb TensorFlow.
 
-## 7. Comparacio Actual
+## 7. Resultats de l'Execucio a Colab
 
-| Model | Accuracy/F1 disponible | Mida | Apte mobil | Estat |
-| :--- | :--- | :--- | :--- | :--- |
-| Random Forest | Accuracy 92,06%, F1 0,92 | Alta, no exportat a TFLite | No | Baseline |
-| CNN 1D inicial | Val accuracy 86,13% | 1.041.524 bytes | Si | Integrat a Android |
-| CNN lite/deep/separable | Calculat per `train_model_comparison.py` | Exportat per script | Si | Preparat per executar |
+Fitxer de resultats: `ml/results/model_comparison.json`.
 
-En aquesta sessio no s'han executat els nous entrenaments perque l'entorn local no te instal.lat TensorFlow ni scikit-learn. El script queda preparat per executar-se en Colab o en un entorn Python amb les dependencies ML.
+| Model | Accuracy test | F1 weighted | Temps entrenament | Estat |
+| :--- | ---: | ---: | ---: | :--- |
+| `cnn_lite` | 94,83% | 94,84% | 50,83 s | Candidat mobil |
+| `cnn_deep` | **96,01%** | **96,02%** | **41,92 s** | **Seleccionat** |
+| `cnn_separable` | 91,39% | 91,35% | 52,91 s | Descartat |
 
-## 8. Optimitzacio per Mobil
+Model seleccionat: `cnn_deep`.
 
-El model final s'exporta a TensorFlow Lite. El script de comparacio aplica `tf.lite.Optimize.DEFAULT` per reduir la mida i preparar inferencia eficient al dispositiu.
+| Metrica final | Valor |
+| :--- | :--- |
+| Accuracy test | 96,01% |
+| F1 weighted | 96,02% |
+| Mida TFLite | 55.208 bytes |
+| Inferencia mitjana TFLite | 0,078 ms |
+| Mostres de test | 1.103 |
+| Matriu de confusio | `ml/results/confusion_matrix_final.png` |
 
-La integracio Android carrega `app/src/main/assets/model_v1.tflite` amb `Interpreter`, genera finestres de 128 mostres i publica:
+La mida del model final baixa de 1.041.524 bytes a 55.208 bytes, una reduccio aproximada del 94,7%.
+
+## 8. Matriu de Confusio
+
+La matriu de confusio del model final mostra resultats molt bons en classes dinamiques i una confusio moderada entre `Seure` i `Dret`, que son classes posturals similars.
+
+Matriu del model `cnn_deep`:
+
+| Real \ Prediccio | Caminar | Pujar | Baixar | Seure | Dret | Estirat |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Caminar | 183 | 0 | 0 | 0 | 1 | 0 |
+| Pujar escales | 0 | 161 | 0 | 0 | 0 | 0 |
+| Baixar escales | 0 | 0 | 148 | 0 | 0 | 0 |
+| Seure | 0 | 0 | 0 | 171 | 22 | 0 |
+| Dret | 0 | 0 | 0 | 21 | 185 | 0 |
+| Estirat | 0 | 0 | 0 | 0 | 0 | 211 |
+
+Imatge exportada: `ml/results/confusion_matrix_final.png`.
+
+## 9. Optimitzacio per Mobil
+
+El model final s'ha exportat a TensorFlow Lite amb `tf.lite.Optimize.DEFAULT`. El fitxer exportat s'ha copiat a:
+
+- `ml/models/model_v1.tflite`
+- `app/src/main/assets/model_v1.tflite`
+
+Els dos fitxers tenen el mateix hash SHA-256:
+
+`3A0176C01ACE86F258E87B9B60763C44A2216AC70A04F0A3D685210577BC00B8`
+
+A Android, el model es carrega amb `Interpreter`, rep finestres de 128 mostres i publica:
 
 - activitat actual,
 - confianca,
 - historic recent,
 - resum persistent dins la sessio.
 
-## 9. Resultats Experimentals
+## 10. Comparacio i Seleccio Final
 
-Resultats confirmats fins ara:
+| Model | Resultat | Mida/exportacio | Decisio |
+| :--- | :--- | :--- | :--- |
+| Random Forest | Accuracy 92,06% | No exportat a TFLite | Baseline |
+| CNN inicial | Validation accuracy 86,13% | 1.041.524 bytes | Substituit |
+| CNN lite | F1 94,84% | Exportable | No seleccionat |
+| CNN deep | F1 96,02% | 55.208 bytes | Seleccionat |
+| CNN separable | F1 91,35% | Exportable | No seleccionat |
 
-- Random Forest baseline: 92,06% accuracy.
-- CNN inicial: 86,13% validation accuracy.
-- Model TFLite integrat: 1.041.524 bytes.
-- Flux Android: sensors -> buffer -> TFLite -> UI -> Room/Firebase.
-
-Resultats pendents de generar amb `train_model_comparison.py`:
-
-- F1 weighted de `cnn_lite`, `cnn_deep` i `cnn_separable`.
-- Matriu de confusio final.
-- Temps d'inferencia TFLite en l'entorn d'execucio.
-
-## 10. Justificacio del Model Final
-
-Per a l'entrega 3A es mante la CNN 1D exportada a TFLite com a model final integrat. Tot i que el Random Forest te millor accuracy historica, no es tan adequat per a una app Android amb inferencia local, exportacio senzilla i flux en temps real.
-
-La decisio final es:
-
-- usar CNN 1D per la integracio mobil,
-- mantenir Random Forest com a baseline,
-- deixar preparades variants CNN per seleccionar una versio millor quan es pugui executar l'entrenament complet,
-- documentar que les 6 classes UCI HAR son una aproximacio tecnica al problema de 3 nivells esportius.
+La decisio final per a 3A es utilitzar `cnn_deep`, perque combina millor rendiment, mida molt baixa i inferencia rapida. El Random Forest es mante com a baseline historic, pero no es el candidat final per a l'app Android.
 
 ## 11. Reproduccio
 
@@ -183,16 +208,14 @@ python train_cnn.py
 python train_model_comparison.py
 ```
 
-Dependencies necessaries:
+Dependencies:
 
-- numpy
-- pandas
-- scikit-learn
-- tensorflow
-- matplotlib
+```bash
+pip install -r ml/requirements.txt
+```
 
 El script `train_model_comparison.py` copia automaticament el model seleccionat a `app/src/main/assets/model_v1.tflite`.
 
 ## 12. Conclusions
 
-El modul ML ja cobreix el cicle minim necessari per a 3A: preprocessament, baseline, CNN exportada, integracio TFLite i documentacio de la discrepancia entre dataset generic i cas futbolistic. La millora principal pendent es executar la comparacio nova en un entorn amb dependencies ML i substituir el model integrat si alguna variant CNN supera la versio actual mantenint una mida i latencia adequades.
+El pas ML queda complet per a l'entrega 3A: hi ha baseline, CNN inicial, variants CNN, comparacio amb metriques reals, matriu de confusio, exportacio TFLite i integracio amb l'app. La limitacio principal continua sent el dataset: UCI HAR valida la classificacio d'activitat i el flux tecnic, pero una versio final de producte hauria d'entrenar-se amb dades reals de futbolistes i etiquetes especifiques del domini.
