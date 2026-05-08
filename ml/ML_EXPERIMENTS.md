@@ -197,7 +197,130 @@ A Android, el model es carrega amb `Interpreter`, rep finestres de 128 mostres i
 
 La decisio final per a 3A es utilitzar `cnn_deep`, perque combina millor rendiment, mida molt baixa i inferencia rapida. El Random Forest es mante com a baseline historic, pero no es el candidat final per a l'app Android.
 
-## 11. Reproduccio
+## 11. RAG per a l'Aplicacio
+
+### 11.1 Problema i Abordatge
+
+El bloc RAG s'ha definit com un sistema documental per interpretar resultats de sessio i donar recomanacions basades en context. L'objectiu no es substituir el model ML, sino complementar-lo: el model classifica activitat i el RAG ajuda a explicar que pot significar una sessio amb molta activitat de repos, alta intensitat aproximada o baixa confiança.
+
+Abast triat per a 3A:
+
+- Recuperar fragments documentals sobre interpretacio del model.
+- Explicar limitacions del dataset UCI HAR.
+- Proposar recomanacions d'entrenament generals.
+- Evitar respostes no suportades pel corpus.
+
+### 11.2 Dades Generades o Usades
+
+S'ha creat una base documental propia amb 12 fragments. Cada fragment conte:
+
+- `id`
+- `title`
+- `category`
+- `text`
+
+Categories principals:
+
+- `training_recommendation`
+- `model_interpretation`
+- `ml_experiment`
+- `rag_design`
+
+Fitxer principal:
+
+`ml/rag/data/knowledge_base.jsonl`
+
+També s'ha creat un conjunt petit d'avaluacio amb 6 preguntes i documents esperats:
+
+`ml/rag/eval/questions.jsonl`
+
+### 11.3 Estructura de Carpetes
+
+```text
+ml/rag/
+  data/
+    knowledge_base.jsonl
+  eval/
+    questions.jsonl
+  scripts/
+    evaluate_rag.py
+  results/
+    rag_evaluation.json
+```
+
+### 11.4 Tecnologia Usada
+
+Per mantenir el RAG reproduible i lleuger, s'ha implementat sense serveis externs:
+
+- Python standard library.
+- Tokenitzacio simple amb regex.
+- Recuperador `keyword_overlap`.
+- Recuperador `tfidf_cosine`.
+- Generacio extractiva: la resposta es construeix amb els fragments recuperats.
+
+En una versio de producte es podria substituir el recuperador per embeddings semantics i afegir un LLM generatiu, pero per a l'entrega 3A aquesta versio permet demostrar el flux RAG sense dependencies d'API.
+
+### 11.5 Experimentacio
+
+Script:
+
+`ml/rag/scripts/evaluate_rag.py`
+
+Execucio:
+
+```bash
+python ml/rag/scripts/evaluate_rag.py
+```
+
+Sortida:
+
+`ml/rag/results/rag_evaluation.json`
+
+Metriques:
+
+- Hit@3: percentatge de preguntes on almenys un document esperat apareix al top 3.
+- MRR: mean reciprocal rank, que premia recuperar el document correcte en primera posicio.
+
+### 11.6 Comparacio entre Models de Recuperacio
+
+| Recuperador | Top K | Hit@3 | MRR | Decisio |
+| :--- | ---: | ---: | ---: | :--- |
+| `keyword_overlap` | 3 | 100% | 0,83 | Baseline |
+| `tfidf_cosine` | 3 | 100% | 1,00 | Seleccionat |
+
+El recuperador `tfidf_cosine` es selecciona perque recupera el document esperat en primera posicio per a totes les preguntes d'avaluacio. `keyword_overlap` tambe troba documents rellevants, pero sovint no els ordena tan be.
+
+### 11.7 Resultats Experimentals RAG
+
+Exemples de recuperacio:
+
+| Pregunta | Top documents recuperats |
+| :--- | :--- |
+| Que vol dir si la sessio te molta alta intensitat? | `kb_003`, `kb_009`, `kb_001` |
+| Per que el model pot confondre seure i dret? | `kb_006`, `kb_004`, `kb_005` |
+| Quin model final s'ha seleccionat i quines metriques te? | `kb_007`, `kb_004`, `kb_010` |
+
+La primera pregunta recupera fragments sobre alta intensitat aproximada i recomanacio post sessio. La segona recupera la limitacio concreta observada a la matriu de confusio. La tercera recupera les metriques del model final `cnn_deep`.
+
+### 11.8 Discussio RAG
+
+El RAG actual es adequat per al prototip perque:
+
+- Es transparent: es pot inspeccionar quin document dona suport a cada resposta.
+- Es reproduible: no depen de credencials ni serveis externs.
+- Connecta ML i experiencia d'usuari: interpreta prediccions, confiança i limitacions.
+- Es facil d'ampliar: afegir documents nous al JSONL no requereix canviar el codi.
+
+Limitacions:
+
+- Corpus petit.
+- No hi ha embeddings semantics reals.
+- No hi ha generacio natural amb LLM.
+- L'avaluacio usa nomes 6 preguntes.
+
+Per a una versio posterior, el pas natural seria comparar aquest TF-IDF amb embeddings multilingues i connectar la resposta RAG a una pantalla d'interpretacio post sessio.
+
+## 12. Reproduccio
 
 Des de `ml/scripts`:
 
@@ -216,6 +339,14 @@ pip install -r ml/requirements.txt
 
 El script `train_model_comparison.py` copia automaticament el model seleccionat a `app/src/main/assets/model_v1.tflite`.
 
-## 12. Conclusions
+Per reproduir el RAG:
 
-El pas ML queda complet per a l'entrega 3A: hi ha baseline, CNN inicial, variants CNN, comparacio amb metriques reals, matriu de confusio, exportacio TFLite i integracio amb l'app. La limitacio principal continua sent el dataset: UCI HAR valida la classificacio d'activitat i el flux tecnic, pero una versio final de producte hauria d'entrenar-se amb dades reals de futbolistes i etiquetes especifiques del domini.
+```bash
+python ml/rag/scripts/evaluate_rag.py
+```
+
+## 13. Conclusions
+
+El pas ML queda complet per a l'entrega 3A: hi ha baseline, CNN inicial, variants CNN, comparacio amb metriques reals, matriu de confusio, exportacio TFLite i integracio amb l'app. A mes, s'ha incorporat un RAG documental reproduible per interpretar resultats i recomanacions.
+
+La limitacio principal continua sent el dataset: UCI HAR valida la classificacio d'activitat i el flux tecnic, pero una versio final de producte hauria d'entrenar-se amb dades reals de futbolistes i etiquetes especifiques del domini. En el mateix sentit, el RAG actual valida l'arquitectura documental, pero en una versio de produccio caldria ampliar el corpus i avaluar embeddings semantics.
