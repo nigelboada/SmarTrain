@@ -34,6 +34,7 @@ class TrackingService : Service() {
 
     private lateinit var sensorProvider: SensorProvider
     private lateinit var locationProvider: LocationProvider
+    private var lastAcceptedSensorTimestampNanos: Long = 0L
     private var lastLocation: Location? = null
     private var distanceMeters: Double = 0.0
 
@@ -53,12 +54,19 @@ class TrackingService : Service() {
         sensorProvider.startListening()
         locationProvider.startTracking()
         ActivityRecognitionState.reset()
+        buffer.clear()
+        lastAcceptedSensorTimestampNanos = 0L
         lastLocation = null
         distanceMeters = 0.0
         TrackingSessionState.start()
 
         serviceScope.launch {
-            sensorProvider.accelerometerData.collect { values ->
+            sensorProvider.accelerometerData.collect { sample ->
+                if (!shouldAcceptSensorSample(sample.timestampNanos)) {
+                    return@collect
+                }
+
+                val values = sample.values
                 val x = values[0] / SensorManager.GRAVITY_EARTH
                 val y = values[1] / SensorManager.GRAVITY_EARTH
                 val z = values[2] / SensorManager.GRAVITY_EARTH
@@ -140,6 +148,25 @@ class TrackingService : Service() {
         manager.createNotificationChannel(channel)
     }
 
+    private fun shouldAcceptSensorSample(timestampNanos: Long): Boolean {
+        if (timestampNanos == 0L) {
+            return false
+        }
+
+        if (lastAcceptedSensorTimestampNanos == 0L) {
+            lastAcceptedSensorTimestampNanos = timestampNanos
+            return true
+        }
+
+        val elapsedNanos = timestampNanos - lastAcceptedSensorTimestampNanos
+        if (elapsedNanos < TARGET_SAMPLING_PERIOD_NANOS) {
+            return false
+        }
+
+        lastAcceptedSensorTimestampNanos = timestampNanos
+        return true
+    }
+
     private fun normalizeWindowForUciModel(window: List<FloatArray>): List<FloatArray> {
         val axisMeans = FloatArray(AXIS_COUNT) { axis ->
             window.map { sample -> sample[axis] }.average().toFloat()
@@ -187,6 +214,7 @@ class TrackingService : Service() {
         const val WINDOW_SIZE = 128
         const val AXIS_COUNT = 3
         const val REST_CLASS_INDEX = 3
+        const val TARGET_SAMPLING_PERIOD_NANOS = 20_000_000L
         const val STATIONARY_MAGNITUDE_STD_THRESHOLD = 0.035f
     }
 }

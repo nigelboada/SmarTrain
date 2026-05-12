@@ -113,6 +113,7 @@ S'ha aplicat un preprocessament a l'app abans de la inferencia:
 - normalitzacio basica de l'orientacio dominant de la gravetat per aproximar el format UCI HAR;
 - deteccio de repos quan la magnitud de l'acceleracio es estable.
 - mapatge de les 6 classes UCI HAR a 3 categories SmarTrain: `Repos`, `Desplacament suau` i `Alta intensitat`.
+- mostreig aproximat a 50 Hz amb timestamps del sensor per mantenir finestres de 128 mostres similars a UCI HAR.
 
 Limitacions actuals:
 

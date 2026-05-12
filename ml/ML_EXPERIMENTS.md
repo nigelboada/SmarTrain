@@ -50,6 +50,7 @@ Punts importants:
 - Les finestres mantenen l'ordre temporal.
 - Les dades UCI ja venen normalitzades.
 - La inferencia a Android usa finestres lliscants de 128 lectures d'accelerometre.
+- L'app demana mostres a 50 Hz (`20.000 us`) i filtra les lectures amb el timestamp del sensor per evitar finestres massa rapides quan el dispositiu entrega esdeveniments per sobre de la frequencia objectiu.
 
 ## 4. Models Avaluats
 
@@ -202,6 +203,7 @@ Per reduir aquesta diferencia s'ha afegit preprocessament a l'app abans d'invoca
 - normalitzacio basica de l'eix dominant de gravetat per aproximar el format UCI HAR;
 - regla de repos quan la magnitud de l'acceleracio es gairebe constant.
 - mapatge de les classes UCI HAR a categories finals de producte: `Repos`, `Desplacament suau` i `Alta intensitat`.
+- throttling temporal a 50 Hz amb `SensorEvent.timestamp` per construir finestres de 128 mostres comparables a les del dataset.
 
 Despres d'aquest ajust, la deteccio en repos i el comportament general del model en moviment son mes coherents. L'app mostra les categories SmarTrain a l'usuari i conserva la classe UCI original en el registre intern de prediccions per facilitar la depuracio. Tot i aixi, les prediccions continuen sent orientatives, perque el model final encara no ha estat entrenat amb dades reals de futbolistes ni amb totes les orientacions possibles del dispositiu.
 
