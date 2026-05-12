@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.IBinder
 import android.util.Log
@@ -13,7 +14,10 @@ import com.udl.smartrain.R
 import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.local.SensorProvider
 import com.udl.smartrain.ml.ActivityClassifier
+import com.udl.smartrain.ml.ActivityPrediction
 import com.udl.smartrain.ml.ActivityRecognitionState
+import kotlin.math.abs
+import kotlin.math.sqrt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -55,21 +59,32 @@ class TrackingService : Service() {
 
         serviceScope.launch {
             sensorProvider.accelerometerData.collect { values ->
-                val x = values[0]
-                val y = values[1]
-                val z = values[2]
+                val x = values[0] / SensorManager.GRAVITY_EARTH
+                val y = values[1] / SensorManager.GRAVITY_EARTH
+                val z = values[2] / SensorManager.GRAVITY_EARTH
 
                 buffer.add(floatArrayOf(x, y, z))
 
                 if (buffer.size >= WINDOW_SIZE) {
-                    val inputArray = arrayOf(buffer.toTypedArray())
-                    val prediction = classifier.classify(inputArray)
+                    val normalizedWindow = normalizeWindowForUciModel(buffer)
+                    val inputArray = arrayOf(normalizedWindow.toTypedArray())
+                    val modelPrediction = classifier.classify(inputArray)
+                    val prediction = if (isStationary(buffer)) {
+                        ActivityPrediction(
+                            classIndex = REST_CLASS_INDEX,
+                            label = "Repos",
+                            confidence = stationaryConfidence(buffer)
+                        )
+                    } else {
+                        modelPrediction
+                    }
 
                     ActivityRecognitionState.publish(prediction)
 
                     Log.d(
                         "ML_TRACKING",
-                        "Activitat detectada: ${prediction.label} (${prediction.confidence})"
+                        "Activitat detectada: ${prediction.label} (${prediction.confidence}) " +
+                            "model=${modelPrediction.label} raw=${values.joinToString()}"
                     )
 
                     buffer.removeAt(0)
@@ -124,7 +139,53 @@ class TrackingService : Service() {
         manager.createNotificationChannel(channel)
     }
 
+    private fun normalizeWindowForUciModel(window: List<FloatArray>): List<FloatArray> {
+        val axisMeans = FloatArray(AXIS_COUNT) { axis ->
+            window.map { sample -> sample[axis] }.average().toFloat()
+        }
+        val gravityAxis = axisMeans.indices.maxByOrNull { axis -> abs(axisMeans[axis]) } ?: 0
+        val gravitySign = if (axisMeans[gravityAxis] >= 0f) 1f else -1f
+        val remainingAxes = (0 until AXIS_COUNT).filter { axis -> axis != gravityAxis }
+
+        return window.map { sample ->
+            floatArrayOf(
+                sample[gravityAxis] * gravitySign,
+                sample[remainingAxes[0]] * gravitySign,
+                sample[remainingAxes[1]] * gravitySign
+            )
+        }
+    }
+
+    private fun isStationary(window: List<FloatArray>): Boolean {
+        return magnitudeStd(window) < STATIONARY_MAGNITUDE_STD_THRESHOLD
+    }
+
+    private fun stationaryConfidence(window: List<FloatArray>): Float {
+        val confidence = 1f - (magnitudeStd(window) / STATIONARY_MAGNITUDE_STD_THRESHOLD)
+        return confidence.coerceIn(0.65f, 0.99f)
+    }
+
+    private fun magnitudeStd(window: List<FloatArray>): Float {
+        val magnitudes = window.map { sample ->
+            sqrt(
+                sample[0] * sample[0] +
+                    sample[1] * sample[1] +
+                    sample[2] * sample[2]
+            )
+        }
+        val mean = magnitudes.average().toFloat()
+        val variance = magnitudes
+            .map { magnitude -> (magnitude - mean) * (magnitude - mean) }
+            .average()
+            .toFloat()
+
+        return sqrt(variance)
+    }
+
     private companion object {
         const val WINDOW_SIZE = 128
+        const val AXIS_COUNT = 3
+        const val REST_CLASS_INDEX = 3
+        const val STATIONARY_MAGNITUDE_STD_THRESHOLD = 0.035f
     }
 }

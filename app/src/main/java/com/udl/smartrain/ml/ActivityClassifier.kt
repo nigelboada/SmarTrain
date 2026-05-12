@@ -23,7 +23,7 @@ class ActivityClassifier(context: Context) {
         "Baixar escales",
         "Seure",
         "Dret",
-        "Repos"
+        "Estirat"
     )
 
     init {
