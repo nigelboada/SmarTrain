@@ -90,6 +90,36 @@ El sistema segueix un flux circular per garantir la integritat de les dades:
     - Creada l'arquitectura del paquet `ml`.
     - **Connectat:** Implementat el buffer de dades i la inferència al `TrackingService`.
 
+#### Validacio end-to-end en dispositiu real
+
+S'ha validat el flux complet de l'aplicacio en un dispositiu Android real:
+
+| Prova | Resultat |
+| :--- | :--- |
+| Login i sessio Firebase | OK |
+| Permisos de localitzacio i foreground service | OK |
+| Captura de sensor i GPS | OK |
+| Inferencia ML en directe amb TensorFlow Lite | OK |
+| Finalitzacio de sessio | OK |
+| Persistencia local amb Room | OK |
+| Visualitzacio de l'historial | OK |
+| Sincronitzacio amb Cloud Firestore | OK pendent de revisio visual al panell Firebase |
+
+Durant la prova real s'ha detectat que enviar directament l'accelerometre Android al model provocava prediccions poc realistes, especialment `Baixar escales`, fins i tot amb el mobil quiet. La causa principal era la diferencia d'escala i orientacio entre les dades UCI HAR i el sensor del dispositiu.
+
+S'ha aplicat un preprocessament a l'app abans de la inferencia:
+
+- conversio de m/s2 a unitats `g`;
+- normalitzacio basica de l'orientacio dominant de la gravetat per aproximar el format UCI HAR;
+- deteccio de repos quan la magnitud de l'acceleracio es estable.
+
+Limitacions actuals:
+
+- el model final esta entrenat amb UCI HAR, no amb dades reals de futbol;
+- les classes `Pujar escales` i `Baixar escales` s'interpreten com una aproximacio d'alta intensitat;
+- la posicio del mobil al cos encara pot afectar les prediccions;
+- els resultats ML s'han de considerar orientatius dins del prototip.
+
 ### Instruccions per executar l'app 
 
     Clonar el repositori: git clone https://github.com/el-teu-usuari/SmarTrain.git.

@@ -185,6 +185,25 @@ A Android, el model es carrega amb `Interpreter`, rep finestres de 128 mostres i
 - historic recent,
 - resum persistent dins la sessio.
 
+### 9.1 Validacio en dispositiu real
+
+La integracio s'ha provat en un dispositiu Android real dins del flux complet de l'aplicacio: login Firebase, inici de sessio esportiva, permisos, foreground service, lectura de sensors, inferencia ML, finalitzacio, persistencia local amb Room, historial i sincronitzacio amb Firestore.
+
+Durant aquesta prova inicial es va observar que el model tendia a predir `Baixar escales` o `Pujar escales` encara que el mobil estigues quiet o caminant. Aquest comportament no indicava necessàriament un error del sensor, sino una diferencia entre el domini d'entrenament i el domini real d'inferencia:
+
+- Android entrega l'accelerometre en m/s2.
+- UCI HAR esta representat aproximadament en unitats `g`.
+- En UCI HAR la gravetat acostuma a quedar alineada amb un eix concret segons la posicio de captura.
+- En l'app real, l'orientacio del mobil a la cintura o a la butxaca canvia els eixos del senyal.
+
+Per reduir aquesta diferencia s'ha afegit preprocessament a l'app abans d'invocar TensorFlow Lite:
+
+- conversio de m/s2 a `g`;
+- normalitzacio basica de l'eix dominant de gravetat per aproximar el format UCI HAR;
+- regla de repos quan la magnitud de l'acceleracio es gairebe constant.
+
+Despres d'aquest ajust, la deteccio en repos i el comportament general del model en moviment son mes coherents. Tot i aixi, les prediccions continuen sent orientatives, perque el model final encara no ha estat entrenat amb dades reals de futbolistes ni amb totes les orientacions possibles del dispositiu.
+
 ## 10. Comparacio i Seleccio Final
 
 | Model | Resultat | Mida/exportacio | Decisio |
