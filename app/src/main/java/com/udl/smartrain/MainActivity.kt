@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import androidx.room.Room
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -21,6 +23,7 @@ import com.udl.smartrain.ui.navigation.Screen
 import com.udl.smartrain.ui.screens.DashboardScreen
 import com.udl.smartrain.ui.screens.LoginScreen
 import com.udl.smartrain.ui.screens.ProfileScreen
+import com.udl.smartrain.ui.screens.SessionDetailScreen
 import com.udl.smartrain.ui.screens.SessionScreen
 import com.udl.smartrain.ui.theme.SmarTrainTheme
 import com.udl.smartrain.ui.viewmodel.MainViewModel
@@ -81,6 +84,21 @@ fun SmarTrainApp(viewModel: MainViewModel) {
             SessionScreen(
                 viewModel = viewModel,
                 onStopSession = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.SessionDetail.route,
+            arguments = listOf(navArgument(Screen.SessionDetail.ARG_SESSION_ID) {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments
+                ?.getString(Screen.SessionDetail.ARG_SESSION_ID)
+                .orEmpty()
+            SessionDetailScreen(
+                viewModel = viewModel,
+                sessionId = sessionId,
+                navController = navController
             )
         }
         composable(Screen.Profile.route) {

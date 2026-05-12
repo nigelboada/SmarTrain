@@ -8,7 +8,7 @@ SmarTrain necessita classificar activitat humana a partir de l'accelerometre del
 - Desplacament suau: caminar o moviment continu moderat.
 - Alta intensitat: canvis de ritme o accions explosives.
 
-El model entrenat per a l'entrega 3A utilitza el dataset public UCI HAR. Aquest dataset no conte accions especifiques de futbol i te 6 classes, no 3. Per tant, el model integrat valida el flux ML end-to-end de l'app, pero encara no substitueix un classificador final entrenat amb dades reals de futbol.
+El model entrenat per a l'entrega final utilitza el dataset public UCI HAR. Aquest dataset no conte accions especifiques de futbol i te 6 classes, no 3. Per tant, el model integrat valida el flux ML end-to-end de l'app, pero encara no substitueix un classificador final entrenat amb dades reals de futbol.
 
 Mapeig conceptual utilitzat:
 
@@ -217,7 +217,7 @@ Despres d'aquest ajust, la deteccio en repos i el comportament general del model
 | CNN deep | F1 96,02% | 55.208 bytes | Seleccionat |
 | CNN separable | F1 91,35% | Exportable | No seleccionat |
 
-La decisio final per a 3A es utilitzar `cnn_deep`, perque combina millor rendiment, mida molt baixa i inferencia rapida. El Random Forest es mante com a baseline historic, pero no es el candidat final per a l'app Android.
+La decisio final per a l'entrega final es utilitzar `cnn_deep`, perque combina millor rendiment, mida molt baixa i inferencia rapida. El Random Forest es mante com a baseline historic, pero no es el candidat final per a l'app Android.
 
 ## 11. RAG per a l'Aplicacio
 
@@ -225,7 +225,7 @@ La decisio final per a 3A es utilitzar `cnn_deep`, perque combina millor rendime
 
 El bloc RAG s'ha definit com un sistema documental per interpretar resultats de sessio i donar recomanacions basades en context. L'objectiu no es substituir el model ML, sino complementar-lo: el model classifica activitat i el RAG ajuda a explicar que pot significar una sessio amb molta activitat de repos, alta intensitat aproximada o baixa confianca.
 
-Abast triat per a 3A:
+Abast triat per a l'entrega final:
 
 - Recuperar fragments documentals sobre interpretacio del model.
 - Explicar limitacions del dataset UCI HAR.
@@ -280,7 +280,7 @@ Per mantenir el RAG reproduible i lleuger, s'ha implementat sense serveis extern
 - Recuperador `tfidf_cosine`.
 - Generacio extractiva: la resposta es construeix amb els fragments recuperats.
 
-En una versio de producte es podria substituir el recuperador per embeddings semantics i afegir un LLM generatiu, pero per a l'entrega 3A aquesta versio permet demostrar el flux RAG sense dependencies d'API.
+En una versio de producte es podria substituir el recuperador per embeddings semantics i afegir un LLM generatiu, pero per a l'entrega final aquesta versio permet demostrar el flux RAG sense dependencies d'API.
 
 ### 11.5 Experimentacio
 
@@ -383,6 +383,6 @@ python ml/rag/scripts/evaluate_rag.py
 
 ## 13. Conclusions
 
-El pas ML queda complet per a l'entrega 3A: hi ha baseline, CNN inicial, variants CNN, comparacio amb metriques reals, matriu de confusio, exportacio TFLite i integracio amb l'app. A mes, s'ha incorporat un RAG documental reproduible per interpretar resultats i recomanacions.
+El pas ML queda complet per a l'entrega final: hi ha baseline, CNN inicial, variants CNN, comparacio amb metriques reals, matriu de confusio, exportacio TFLite i integracio amb l'app. A mes, s'ha incorporat un RAG documental reproduible per interpretar resultats i recomanacions.
 
 La limitacio principal continua sent el dataset: UCI HAR valida la classificacio d'activitat i el flux tecnic, pero una versio final de producte hauria d'entrenar-se amb dades reals de futbolistes i etiquetes especifiques del domini. En el mateix sentit, el RAG actual valida l'arquitectura documental, pero en una versio de produccio caldria ampliar el corpus i avaluar embeddings semantics.

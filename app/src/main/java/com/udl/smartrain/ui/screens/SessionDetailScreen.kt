@@ -1,0 +1,229 @@
+package com.udl.smartrain.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.udl.smartrain.domain.model.Session
+import com.udl.smartrain.ml.SessionRagRecommender
+import com.udl.smartrain.ui.components.GlassCard
+import com.udl.smartrain.ui.theme.DarkBlueSecondary
+import com.udl.smartrain.ui.theme.PurplePrimary
+import com.udl.smartrain.ui.viewmodel.MainViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+
+@Composable
+fun SessionDetailScreen(
+    viewModel: MainViewModel,
+    sessionId: String,
+    navController: NavController
+) {
+    val sessions by viewModel.sessionsHistory.collectAsState(initial = emptyList())
+    val session = sessions.firstOrNull { it.id == sessionId }
+
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary))
+        )
+    ) { paddingValues ->
+        if (session == null) {
+            SessionNotFound(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                onBack = { navController.popBackStack() }
+            )
+        } else {
+            SessionDetailContent(
+                session = session,
+                onBack = { navController.popBackStack() },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SessionDetailContent(
+    session: Session,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+    val insight = remember(session) { SessionRagRecommender.buildInsight(session) }
+
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Tornar", tint = Color.White)
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = session.sessionName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = dateFormat.format(session.startTime),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.72f)
+                    )
+                }
+            }
+        }
+
+        item {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Text(
+                        text = "Metricas de sessio",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        DetailMetric("Temps", formatDurationShort(session.durationSeconds), Modifier.weight(1f))
+                        DetailMetric("Distancia", formatDistance(session.distanceMetres), Modifier.weight(1f))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        DetailMetric("Activitat", session.dominantActivity.ifBlank { "Sense ML" }, Modifier.weight(1f))
+                        DetailMetric("Confianca", "${(session.avgMlConfidence * 100).toInt()}%", Modifier.weight(1f))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        DetailMetric("Prediccions", session.mlPredictionCount.toString(), Modifier.weight(1f))
+                        DetailMetric("Alta intensitat", session.highIntensityCount.toString(), Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+
+        item {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = insight.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = insight.answer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.88f)
+                    )
+                    if (insight.sourceTitles.isNotEmpty()) {
+                        Text(
+                            text = "Fonts recuperades",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        insight.sourceTitles.forEach { source ->
+                            Text(
+                                text = source,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.72f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailMetric(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White.copy(alpha = 0.68f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun SessionNotFound(modifier: Modifier = Modifier, onBack: () -> Unit) {
+    Column(
+        modifier = modifier.padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Tornar", tint = Color.White)
+        }
+        Text(
+            text = "Sessio no trobada",
+            style = MaterialTheme.typography.headlineSmall,
+            color = Color.White
+        )
+    }
+}
+
+private fun formatDistance(distanceMetres: Double): String {
+    return if (distanceMetres >= 1000.0) {
+        "${"%.2f".format(distanceMetres / 1000.0)} km"
+    } else {
+        "${distanceMetres.toInt()} m"
+    }
+}
+
+private fun formatDurationShort(totalSeconds: Long): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return if (minutes > 0) {
+        "${minutes}m ${seconds}s"
+    } else {
+        "${seconds}s"
+    }
+}
