@@ -73,7 +73,8 @@ class TrackingService : Service() {
                         ActivityPrediction(
                             classIndex = REST_CLASS_INDEX,
                             label = "Repos",
-                            confidence = stationaryConfidence(buffer)
+                            confidence = stationaryConfidence(buffer),
+                            modelLabel = "Repos estable"
                         )
                     } else {
                         modelPrediction
@@ -84,7 +85,7 @@ class TrackingService : Service() {
                     Log.d(
                         "ML_TRACKING",
                         "Activitat detectada: ${prediction.label} (${prediction.confidence}) " +
-                            "model=${modelPrediction.label} raw=${values.joinToString()}"
+                            "model=${modelPrediction.modelLabel} raw=${values.joinToString()}"
                     )
 
                     buffer.removeAt(0)

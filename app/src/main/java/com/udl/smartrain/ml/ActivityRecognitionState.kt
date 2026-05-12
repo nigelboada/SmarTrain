@@ -41,11 +41,11 @@ object ActivityRecognitionState {
             .average()
 
         val highIntensityCount = predictions.count { prediction ->
-            prediction.label == "Pujar escales" || prediction.label == "Baixar escales"
+            prediction.label == "Alta intensitat"
         }
 
         val timeline = predictions.joinToString(separator = "|") { prediction ->
-            "${prediction.timestampMillis},${prediction.classIndex},${prediction.label},${prediction.confidence}"
+            "${prediction.timestampMillis},${prediction.classIndex},${prediction.label},${prediction.modelLabel},${prediction.confidence}"
         }
 
         return ActivitySessionSummary(

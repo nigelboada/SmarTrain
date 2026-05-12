@@ -10,6 +10,7 @@ data class ActivityPrediction(
     val classIndex: Int,
     val label: String,
     val confidence: Float,
+    val modelLabel: String,
     val timestampMillis: Long = System.currentTimeMillis()
 )
 
@@ -24,6 +25,15 @@ class ActivityClassifier(context: Context) {
         "Seure",
         "Dret",
         "Estirat"
+    )
+
+    private val smarTrainLabels = listOf(
+        "Desplacament suau",
+        "Alta intensitat",
+        "Alta intensitat",
+        "Repos",
+        "Repos",
+        "Repos"
     )
 
     init {
@@ -49,11 +59,13 @@ class ActivityClassifier(context: Context) {
 
         val classIndex = output[0].indices.maxByOrNull { output[0][it] } ?: -1
         val confidence = output[0].getOrNull(classIndex) ?: 0f
+        val modelLabel = labels.getOrElse(classIndex) { "Desconeguda" }
 
         return ActivityPrediction(
             classIndex = classIndex,
-            label = labels.getOrElse(classIndex) { "Desconeguda" },
-            confidence = confidence
+            label = smarTrainLabels.getOrElse(classIndex) { "Desconeguda" },
+            confidence = confidence,
+            modelLabel = modelLabel
         )
     }
 }

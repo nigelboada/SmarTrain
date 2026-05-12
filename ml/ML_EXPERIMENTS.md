@@ -201,8 +201,9 @@ Per reduir aquesta diferencia s'ha afegit preprocessament a l'app abans d'invoca
 - conversio de m/s2 a `g`;
 - normalitzacio basica de l'eix dominant de gravetat per aproximar el format UCI HAR;
 - regla de repos quan la magnitud de l'acceleracio es gairebe constant.
+- mapatge de les classes UCI HAR a categories finals de producte: `Repos`, `Desplacament suau` i `Alta intensitat`.
 
-Despres d'aquest ajust, la deteccio en repos i el comportament general del model en moviment son mes coherents. Tot i aixi, les prediccions continuen sent orientatives, perque el model final encara no ha estat entrenat amb dades reals de futbolistes ni amb totes les orientacions possibles del dispositiu.
+Despres d'aquest ajust, la deteccio en repos i el comportament general del model en moviment son mes coherents. L'app mostra les categories SmarTrain a l'usuari i conserva la classe UCI original en el registre intern de prediccions per facilitar la depuracio. Tot i aixi, les prediccions continuen sent orientatives, perque el model final encara no ha estat entrenat amb dades reals de futbolistes ni amb totes les orientacions possibles del dispositiu.
 
 ## 10. Comparacio i Seleccio Final
 

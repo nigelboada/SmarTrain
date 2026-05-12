@@ -112,11 +112,12 @@ S'ha aplicat un preprocessament a l'app abans de la inferencia:
 - conversio de m/s2 a unitats `g`;
 - normalitzacio basica de l'orientacio dominant de la gravetat per aproximar el format UCI HAR;
 - deteccio de repos quan la magnitud de l'acceleracio es estable.
+- mapatge de les 6 classes UCI HAR a 3 categories SmarTrain: `Repos`, `Desplacament suau` i `Alta intensitat`.
 
 Limitacions actuals:
 
 - el model final esta entrenat amb UCI HAR, no amb dades reals de futbol;
-- les classes `Pujar escales` i `Baixar escales` s'interpreten com una aproximacio d'alta intensitat;
+- les classes UCI originals es conserven per depuracio, pero la UI mostra categories SmarTrain;
 - la posicio del mobil al cos encara pot afectar les prediccions;
 - els resultats ML s'han de considerar orientatius dins del prototip.
 
