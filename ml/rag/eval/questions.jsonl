@@ -1,0 +1,6 @@
+{"id":"q_001","question":"Que vol dir si la sessio te molta alta intensitat?","expected_ids":["kb_003","kb_009"]}
+{"id":"q_002","question":"Per que el model pot confondre seure i dret?","expected_ids":["kb_006"]}
+{"id":"q_003","question":"Quin model final s'ha seleccionat i quines metriques te?","expected_ids":["kb_007"]}
+{"id":"q_004","question":"Quines limitacions te UCI HAR per al futbol?","expected_ids":["kb_008","kb_005"]}
+{"id":"q_005","question":"Com s'ha d'interpretar una confiança baixa del model?","expected_ids":["kb_004"]}
+{"id":"q_006","question":"On es guarda la base documental del RAG?","expected_ids":["kb_011"]}

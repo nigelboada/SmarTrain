@@ -70,8 +70,8 @@ dependencies {
 
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
 
-    // TensorFlow Lite
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    // TensorFlow Lite. Keep this aligned with the TensorFlow version used to export
+    // app/src/main/assets/model_v1.tflite.
+    implementation("org.tensorflow:tensorflow-lite:2.17.0")
 
 }

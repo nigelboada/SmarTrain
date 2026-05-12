@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import com.udl.smartrain.data.local.AppDatabase
 import com.udl.smartrain.data.local.LocationProvider
@@ -32,14 +33,17 @@ class MainActivity : ComponentActivity() {
         val db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java, "smartrain-db"
-        ).build()
+        )
+            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
 
         val firestore = Firebase.firestore
         val repository = SessionRepositoryImpl(db.sessionDao(), firestore)
         val locationProvider = LocationProvider(applicationContext)
+        val auth = FirebaseAuth.getInstance()
 
         val viewModel: MainViewModel by viewModels {
-            MainViewModelFactory(repository, locationProvider)
+            MainViewModelFactory(repository, locationProvider, auth)
         }
 
         setContent {
@@ -58,12 +62,17 @@ fun SmarTrainApp(viewModel: MainViewModel) {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = if (viewModel.isAuthenticated) Screen.Dashboard.route else Screen.Login.route
     ) {
         composable(Screen.Login.route) {
-            LoginScreen(onLoginSuccess = {
-                navController.navigate(Screen.Dashboard.route)
-            })
+            LoginScreen(
+                viewModel = viewModel,
+                onLoginSuccess = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Screen.Dashboard.route) {
             DashboardScreen(viewModel = viewModel, navController = navController)

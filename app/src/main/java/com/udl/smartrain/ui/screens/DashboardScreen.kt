@@ -1,17 +1,23 @@
 package com.udl.smartrain.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,8 +26,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,9 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
+import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.navigation.Screen
@@ -47,45 +59,48 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var sessionToDelete by remember { mutableStateOf<Session?>(null) }
-
     var showLogoutDialog by remember { mutableStateOf(false) }
-
-    var showDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var sessionToEdit by remember { mutableStateOf<Session?>(null) }
-
-    // Nous estats per als camps d'edició
+    var sessionToExplain by remember { mutableStateOf<Session?>(null) }
     var editUserName by remember { mutableStateOf("") }
     var editSessionName by remember { mutableStateOf("") }
 
-    if (showDialog && sessionToEdit != null) {
+    if (showEditDialog && sessionToEdit != null) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("Editar Sessió") },
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Editar sessio") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextField(
                         value = editUserName,
                         onValueChange = { editUserName = it },
-                        label = { Text("Nom d'usuari") }
+                        label = { Text("Usuari") }
                     )
                     TextField(
                         value = editSessionName,
                         onValueChange = { editSessionName = it },
-                        label = { Text("Nom de la sessió") }
+                        label = { Text("Nom de la sessio") }
                     )
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    viewModel.updateSession(sessionToEdit!!.copy(
-                        userId = editUserName,
-                        sessionName = editSessionName
-                    ))
-                    showDialog = false
-                }) { Text("Guardar") }
+                    viewModel.updateSession(
+                        sessionToEdit!!.copy(
+                            userId = editUserName,
+                            sessionName = editSessionName
+                        )
+                    )
+                    showEditDialog = false
+                }) {
+                    Text("Guardar")
+                }
             },
             dismissButton = {
-                Button(onClick = { showDialog = false }) { Text("Cancel·lar") }
+                TextButton(onClick = { showEditDialog = false }) {
+                    Text("Cancelar")
+                }
             }
         )
     }
@@ -93,8 +108,8 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     if (showDeleteDialog && sessionToDelete != null) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Confirmar esborrat") },
-            text = { Text("Segur que vols esborrar la sessió '${sessionToDelete?.sessionName}'? Aquesta acció no es pot desfer.") },
+            title = { Text("Esborrar sessio") },
+            text = { Text("Segur que vols esborrar '${sessionToDelete?.sessionName}'?") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -108,9 +123,16 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel·lar")
+                    Text("Cancelar")
                 }
             }
+        )
+    }
+
+    sessionToExplain?.let { session ->
+        SessionInsightDialog(
+            session = session,
+            onDismiss = { sessionToExplain = null }
         )
     }
 
@@ -118,46 +140,37 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
         topBar = {
             AppHeader(
                 title = "Dashboard",
-                onLanguageSelected = { /* Lògica canvi idioma */ },
-                onProfileClick = {
-                    navController.navigate(Screen.Profile.route)
-                },
-                onLogoutClick = {
-                    showLogoutDialog = true
-                }
+                onLanguageSelected = { },
+                onProfileClick = { navController.navigate(Screen.Profile.route) },
+                onLogoutClick = { showLogoutDialog = true }
             )
         },
         containerColor = Color.Transparent,
         modifier = Modifier.background(
             Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary))
         ),
-        // Afegim el botó flotant que havíem perdut
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.Session.route) },
                 containerColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nova Sessió", tint = PurplePrimary)
+                Icon(Icons.Default.Add, contentDescription = "Nova sessio", tint = PurplePrimary)
             }
         }
     ) { paddingValues ->
-        // Si no hi ha sessions, mostrem un missatge perquè l'usuari sàpiga que funciona
         if (sessions.isEmpty()) {
-            Box(
+            EmptyDashboard(paddingValues)
+        } else {
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentAlignment = Alignment.Center
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "No hi ha sessions enregistrades.\nClica el botó + per començar!",
-                    color = Color.White.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        } else {
-            // Si hi ha sessions, mostrem la llista
-            LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                item {
+                    DashboardSummary(sessions = sessions)
+                }
                 items(sessions) { session ->
                     SessionItem(
                         session = session,
@@ -169,7 +182,10 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                             sessionToEdit = session
                             editUserName = session.userId
                             editSessionName = session.sessionName
-                            showDialog = true
+                            showEditDialog = true
+                        },
+                        onInsight = {
+                            sessionToExplain = session
                         }
                     )
                 }
@@ -180,69 +196,198 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Tancar sessió") },
-            text = { Text("Estàs segur que vols tancar la sessió? Hauràs de tornar a iniciar-la.") },
+            title = { Text("Tancar sessio") },
+            text = { Text("Segur que vols tancar la sessio?") },
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
-                    // Lògica per tornar al Login
+                    viewModel.signOut()
                     navController.navigate(Screen.Login.route) {
-                        // Això és molt important: esborra l'historial perquè l'usuari no pugui tornar enrere amb el botó "back"
                         popUpTo(0) { inclusive = true }
                     }
                 }) {
-                    Text("Sí, sortir")
+                    Text("Sortir")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel·lar")
+                    Text("Cancelar")
                 }
             }
         )
     }
-
 }
 
+@Composable
+private fun SessionInsightDialog(session: Session, onDismiss: () -> Unit) {
+    val insight = remember(session) {
+        SessionRagRecommender.buildInsight(session)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(insight.title) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = insight.answer,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (insight.sourceTitles.isNotEmpty()) {
+                    Text(
+                        text = "Fonts recuperades",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    insight.sourceTitles.forEach { source ->
+                        Text(
+                            text = source,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Tancar")
+            }
+        }
+    )
+}
 
 @Composable
-fun SessionItem(session: Session, onDelete: () -> Unit, onEdit: () -> Unit) {
+private fun EmptyDashboard(paddingValues: PaddingValues) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "No hi ha sessions enregistrades.\nClica el boto + per comencar.",
+            color = Color.White.copy(alpha = 0.74f),
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+private fun DashboardSummary(sessions: List<Session>) {
+    val sessionsWithMl = sessions.count { it.mlPredictionCount > 0 }
+    val averageConfidence = sessions
+        .filter { it.mlPredictionCount > 0 }
+        .map { it.avgMlConfidence }
+        .takeIf { it.isNotEmpty() }
+        ?.average() ?: 0.0
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Resum",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SummaryMetric(
+                    label = "Sessions",
+                    value = sessions.size.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+                SummaryMetric(
+                    label = "Amb ML",
+                    value = sessionsWithMl.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+                SummaryMetric(
+                    label = "Conf.",
+                    value = "${(averageConfidence * 100).toInt()}%",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryMetric(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White.copy(alpha = 0.68f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun SessionItem(
+    session: Session,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit,
+    onInsight: () -> Unit
+) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
 
-    GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(20.dp), // Més padding intern = més elegància
+            modifier = Modifier.padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Columna principal amb espaiat entre línies
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp) // Aire entre les línies de text
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 Text(
                     text = session.sessionName,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
-                )
-                Text(
-                    text = "Usuari: ${session.userId}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.85f) // Lleugera transparència
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = dateString,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.6f) // Encara més subtil
+                    color = Color.White.copy(alpha = 0.64f)
                 )
+                if (session.mlPredictionCount > 0) {
+                    Text(
+                        text = "ML: ${session.dominantActivity} - ${(session.avgMlConfidence * 100).toInt()}% - ${session.mlPredictionCount} prediccions",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.88f)
+                    )
+                } else {
+                    Text(
+                        text = "Sense resum ML",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.58f)
+                    )
+                }
             }
 
-            // Botons d'acció amb mida optimitzada
             Row {
+                IconButton(
+                    onClick = onInsight,
+                    enabled = session.mlPredictionCount > 0
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = "Resum RAG", tint = Color.White)
+                }
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White)
                 }

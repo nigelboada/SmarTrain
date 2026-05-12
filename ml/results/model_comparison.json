@@ -1,0 +1,336 @@
+{
+  "labels": [
+    "Caminar",
+    "Pujar escales",
+    "Baixar escales",
+    "Seure",
+    "Dret",
+    "Estirat"
+  ],
+  "selected_model": "cnn_deep",
+  "selected_model_size_bytes": 55208,
+  "selected_model_tflite_inference_ms": 0.0782690799996999,
+  "results": [
+    {
+      "name": "cnn_lite",
+      "accuracy": 0.9483227561196736,
+      "weighted_f1": 0.9483753475630776,
+      "training_seconds": 50.83479485800012,
+      "classification_report": {
+        "Caminar": {
+          "precision": 0.9523809523809523,
+          "recall": 0.9782608695652174,
+          "f1-score": 0.9651474530831099,
+          "support": 184.0
+        },
+        "Pujar escales": {
+          "precision": 0.9743589743589743,
+          "recall": 0.9440993788819876,
+          "f1-score": 0.9589905362776026,
+          "support": 161.0
+        },
+        "Baixar escales": {
+          "precision": 1.0,
+          "recall": 0.9932432432432432,
+          "f1-score": 0.9966101694915255,
+          "support": 148.0
+        },
+        "Seure": {
+          "precision": 0.8706467661691543,
+          "recall": 0.9067357512953368,
+          "f1-score": 0.8883248730964467,
+          "support": 193.0
+        },
+        "Dret": {
+          "precision": 0.9095477386934674,
+          "recall": 0.8786407766990292,
+          "f1-score": 0.8938271604938272,
+          "support": 206.0
+        },
+        "Estirat": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 211.0
+        },
+        "accuracy": 0.9483227561196736,
+        "macro avg": {
+          "precision": 0.9511557386004247,
+          "recall": 0.9501633366141357,
+          "f1-score": 0.9504833654070852,
+          "support": 1103.0
+        },
+        "weighted avg": {
+          "precision": 0.9487865368552956,
+          "recall": 0.9483227561196736,
+          "f1-score": 0.9483753475630776,
+          "support": 1103.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          180,
+          4,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          152,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          147,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          175,
+          18,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          25,
+          181,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          211
+        ]
+      ]
+    },
+    {
+      "name": "cnn_deep",
+      "accuracy": 0.9601087941976428,
+      "weighted_f1": 0.9601532852579985,
+      "training_seconds": 41.92252655800007,
+      "classification_report": {
+        "Caminar": {
+          "precision": 1.0,
+          "recall": 0.9945652173913043,
+          "f1-score": 0.997275204359673,
+          "support": 184.0
+        },
+        "Pujar escales": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 161.0
+        },
+        "Baixar escales": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 148.0
+        },
+        "Seure": {
+          "precision": 0.890625,
+          "recall": 0.8860103626943006,
+          "f1-score": 0.8883116883116883,
+          "support": 193.0
+        },
+        "Dret": {
+          "precision": 0.8894230769230769,
+          "recall": 0.8980582524271845,
+          "f1-score": 0.893719806763285,
+          "support": 206.0
+        },
+        "Estirat": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 211.0
+        },
+        "accuracy": 0.9601087941976428,
+        "macro avg": {
+          "precision": 0.9633413461538461,
+          "recall": 0.9631056387521316,
+          "f1-score": 0.9632177832391077,
+          "support": 1103.0
+        },
+        "weighted avg": {
+          "precision": 0.960210134946649,
+          "recall": 0.9601087941976428,
+          "f1-score": 0.9601532852579985,
+          "support": 1103.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          183,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          161,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          148,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          171,
+          22,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          21,
+          185,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          211
+        ]
+      ]
+    },
+    {
+      "name": "cnn_separable",
+      "accuracy": 0.9138712601994561,
+      "weighted_f1": 0.9135359994202912,
+      "training_seconds": 52.91243712100004,
+      "classification_report": {
+        "Caminar": {
+          "precision": 0.9451219512195121,
+          "recall": 0.842391304347826,
+          "f1-score": 0.8908045977011494,
+          "support": 184.0
+        },
+        "Pujar escales": {
+          "precision": 0.8820224719101124,
+          "recall": 0.9751552795031055,
+          "f1-score": 0.9262536873156342,
+          "support": 161.0
+        },
+        "Baixar escales": {
+          "precision": 0.9271523178807947,
+          "recall": 0.9459459459459459,
+          "f1-score": 0.9364548494983278,
+          "support": 148.0
+        },
+        "Seure": {
+          "precision": 0.8601036269430051,
+          "recall": 0.8601036269430051,
+          "f1-score": 0.8601036269430051,
+          "support": 193.0
+        },
+        "Dret": {
+          "precision": 0.8689320388349514,
+          "recall": 0.8689320388349514,
+          "f1-score": 0.8689320388349514,
+          "support": 206.0
+        },
+        "Estirat": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 211.0
+        },
+        "accuracy": 0.9138712601994561,
+        "macro avg": {
+          "precision": 0.9138887344647294,
+          "recall": 0.9154213659291391,
+          "f1-score": 0.9137581333821779,
+          "support": 1103.0
+        },
+        "weighted avg": {
+          "precision": 0.9148926564354269,
+          "recall": 0.9138712601994561,
+          "f1-score": 0.9135359994202912,
+          "support": 1103.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          155,
+          18,
+          11,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          157,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          5,
+          3,
+          140,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          166,
+          27,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          27,
+          179,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          211
+        ]
+      ]
+    }
+  ]
+}

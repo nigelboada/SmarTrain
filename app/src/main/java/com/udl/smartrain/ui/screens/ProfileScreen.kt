@@ -1,36 +1,38 @@
 package com.udl.smartrain.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Brush
 import androidx.navigation.NavController
 import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.components.ProfileField
+import com.udl.smartrain.ui.navigation.Screen
 import com.udl.smartrain.ui.theme.DarkBlueSecondary
 import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 
 @Composable
 fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
-    // Estats locals per als camps
     var userName by remember { mutableStateOf(viewModel.currentUserName) }
-    var userPassword by remember { mutableStateOf("********") } // Exemple
-
+    var userPassword by remember { mutableStateOf("********") }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showSaveConfirmation by remember { mutableStateOf(false) }
 
@@ -38,7 +40,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
         topBar = {
             AppHeader(
                 title = "Perfil",
-                onLanguageSelected = { /* ... */ },
+                onLanguageSelected = { },
                 onProfileClick = { },
                 onLogoutClick = { showLogoutDialog = true }
             )
@@ -49,15 +51,17 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
             .background(Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary)))
     ) { paddingValues ->
         Column(
-            modifier = Modifier.padding(paddingValues).padding(16.dp)
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(16.dp)
         ) {
-            ProfileField("Nom d'usuari", userName) { userName = it }
+            ProfileField("Usuari", userName) { userName = it }
             ProfileField("Contrasenya", userPassword) { userPassword = it }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { showSaveConfirmation = true }, // Obrim diàleg de confirmació
+                onClick = { showSaveConfirmation = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Guardar canvis")
@@ -65,39 +69,48 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
         }
     }
 
-    // Diàleg de Confirmació de Guardat
     if (showSaveConfirmation) {
         AlertDialog(
             onDismissRequest = { showSaveConfirmation = false },
             title = { Text("Confirmar canvis") },
-            text = { Text("Estàs segur que vols aplicar els canvis al teu perfil?") },
+            text = { Text("Vols aplicar els canvis al perfil?") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.updateUserName(userName)
                     showSaveConfirmation = false
-                    navController.popBackStack() // Tornem enrere un cop confirmat
-                }) { Text("Confirmar") }
+                    navController.popBackStack()
+                }) {
+                    Text("Confirmar")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showSaveConfirmation = false }) { Text("Cancel·lar") }
+                TextButton(onClick = { showSaveConfirmation = false }) {
+                    Text("Cancelar")
+                }
             }
         )
     }
 
-    // Diàleg de sortida (manteníem la consistència)
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Tancar sessió") },
-            text = { Text("Estàs segur que vols tancar la sessió?") },
+            title = { Text("Tancar sessio") },
+            text = { Text("Segur que vols tancar la sessio?") },
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
-                    // Lògica logout...
-                }) { Text("Sí, sortir") }
+                    viewModel.signOut()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }) {
+                    Text("Sortir")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel·lar") }
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancelar")
+                }
             }
         )
     }

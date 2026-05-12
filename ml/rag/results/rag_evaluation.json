@@ -1,0 +1,212 @@
+{
+  "corpus_documents": 12,
+  "questions": 6,
+  "evaluations": [
+    {
+      "retriever": "keyword_overlap",
+      "top_k": 3,
+      "hit_rate": 1.0,
+      "mrr": 0.8333333333333334,
+      "details": [
+        {
+          "question_id": "q_001",
+          "question": "Que vol dir si la sessio te molta alta intensitat?",
+          "expected_ids": [
+            "kb_003",
+            "kb_009"
+          ],
+          "retrieved_ids": [
+            "kb_001",
+            "kb_003",
+            "kb_009"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_002",
+          "question": "Per que el model pot confondre seure i dret?",
+          "expected_ids": [
+            "kb_006"
+          ],
+          "retrieved_ids": [
+            "kb_004",
+            "kb_006",
+            "kb_002"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_003",
+          "question": "Quin model final s'ha seleccionat i quines metriques te?",
+          "expected_ids": [
+            "kb_007"
+          ],
+          "retrieved_ids": [
+            "kb_007",
+            "kb_008",
+            "kb_010"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_004",
+          "question": "Quines limitacions te UCI HAR per al futbol?",
+          "expected_ids": [
+            "kb_008",
+            "kb_005"
+          ],
+          "retrieved_ids": [
+            "kb_005",
+            "kb_008",
+            "kb_006"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_005",
+          "question": "Com s'ha d'interpretar una confiança baixa del model?",
+          "expected_ids": [
+            "kb_004"
+          ],
+          "retrieved_ids": [
+            "kb_004",
+            "kb_002",
+            "kb_008"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_006",
+          "question": "On es guarda la base documental del RAG?",
+          "expected_ids": [
+            "kb_011"
+          ],
+          "retrieved_ids": [
+            "kb_011",
+            "kb_010",
+            "kb_001"
+          ],
+          "hit": true
+        }
+      ]
+    },
+    {
+      "retriever": "tfidf_cosine",
+      "top_k": 3,
+      "hit_rate": 1.0,
+      "mrr": 1.0,
+      "details": [
+        {
+          "question_id": "q_001",
+          "question": "Que vol dir si la sessio te molta alta intensitat?",
+          "expected_ids": [
+            "kb_003",
+            "kb_009"
+          ],
+          "retrieved_ids": [
+            "kb_003",
+            "kb_009",
+            "kb_001"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_002",
+          "question": "Per que el model pot confondre seure i dret?",
+          "expected_ids": [
+            "kb_006"
+          ],
+          "retrieved_ids": [
+            "kb_006",
+            "kb_004",
+            "kb_005"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_003",
+          "question": "Quin model final s'ha seleccionat i quines metriques te?",
+          "expected_ids": [
+            "kb_007"
+          ],
+          "retrieved_ids": [
+            "kb_007",
+            "kb_004",
+            "kb_010"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_004",
+          "question": "Quines limitacions te UCI HAR per al futbol?",
+          "expected_ids": [
+            "kb_008",
+            "kb_005"
+          ],
+          "retrieved_ids": [
+            "kb_008",
+            "kb_005",
+            "kb_010"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_005",
+          "question": "Com s'ha d'interpretar una confiança baixa del model?",
+          "expected_ids": [
+            "kb_004"
+          ],
+          "retrieved_ids": [
+            "kb_004",
+            "kb_005",
+            "kb_012"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_006",
+          "question": "On es guarda la base documental del RAG?",
+          "expected_ids": [
+            "kb_011"
+          ],
+          "retrieved_ids": [
+            "kb_011",
+            "kb_010",
+            "kb_001"
+          ],
+          "hit": true
+        }
+      ]
+    }
+  ],
+  "selected_retriever": "tfidf_cosine",
+  "examples": [
+    {
+      "question": "Que vol dir si la sessio te molta alta intensitat?",
+      "retrieved_ids": [
+        "kb_003",
+        "kb_009",
+        "kb_001"
+      ],
+      "answer": "Pregunta: Que vol dir si la sessio te molta alta intensitat?\nResposta basada en context: Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients. Despres d'una sessio amb alta intensitat, es recomana incloure recuperacio, hidratacio i analisi de carrega. Si hi ha massa blocs intensos seguits, la propera sessio pot prioritzar tecnica, mobilitat o treball aerobi suau."
+    },
+    {
+      "question": "Per que el model pot confondre seure i dret?",
+      "retrieved_ids": [
+        "kb_006",
+        "kb_004",
+        "kb_005"
+      ],
+      "answer": "Pregunta: Per que el model pot confondre seure i dret?\nResposta basada en context: La matriu de confusio mostra que les classes seure i dret son les mes similars. Aquesta confusio es esperable perque totes dues son posturals i tenen patrons d'acceleracio amb poca variacio. Per futbol, totes dues es poden agrupar com baixa intensitat o repos. Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu."
+    },
+    {
+      "question": "Quin model final s'ha seleccionat i quines metriques te?",
+      "retrieved_ids": [
+        "kb_007",
+        "kb_004",
+        "kb_010"
+      ],
+      "answer": "Pregunta: Quin model final s'ha seleccionat i quines metriques te?\nResposta basada en context: El model seleccionat per a l'entrega 3A es cnn_deep. Obte 96,01 per cent d'accuracy, 96,02 per cent de F1 weighted, ocupa 55.208 bytes en format TFLite i te una inferencia mitjana de 0,078 ms en l'entorn d'avaluacio. Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu."
+    }
+  ]
+}

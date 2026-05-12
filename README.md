@@ -1,94 +1,325 @@
-## SmarTrain - Sistema de monitorització de rendiment
+# SmarTrain
 
-Repositori per al projecte SmarTrain de l'assignatura Plataformes en Xarxa.
+SmarTrain es una aplicacio Android per monitoritzar sessions esportives i enriquir-les amb analisi ML local. L'app captura accelerometre i localitzacio, executa un model TensorFlow Lite al dispositiu, guarda les sessions amb Room, sincronitza amb Firebase Firestore i mostra una recomanacio post-sessio basada en un RAG local.
 
-SmarTrain és una plataforma de seguiment esportiu per a futbolistes que combina la captura de dades sensorials amb Intel·ligència Artificial per analitzar la càrrega física i el posicionament en temps real.
+## Funcionalitats
 
+- Autenticacio d'usuaris amb Firebase Authentication.
+- Registre de sessions esportives amb foreground service.
+- Captura de localitzacio i accelerometre.
+- Inferencia ML local amb TensorFlow Lite.
+- Persistencia local amb Room.
+- Sincronitzacio remota amb Cloud Firestore.
+- Historial de sessions amb resum ML.
+- RAG local per interpretar resultats i donar recomanacions post-sessio.
 
+## Arquitectura
 
+```text
+SmarTrain/
+  app/
+    src/main/java/com/udl/smartrain/
+      data/
+        local/          Room, sensors i localitzacio
+        repository/     sincronitzacio Room/Firestore
+      domain/model/     model de domini Session
+      ml/               classificador TFLite i RAG local
+      service/          TrackingService i estat de sessio
+      ui/               pantalles Jetpack Compose
+      MainActivity.kt
+    src/main/assets/
+      model_v1.tflite
+  ml/
+    data/
+      raw/
+      processed/
+    models/
+      model_v1.tflite
+      model_cnn.h5
+    rag/
+      data/
+      eval/
+      scripts/
+      results/
+    results/
+    scripts/
+    ML_EXPERIMENTS.md
+```
 
-### Arquitectura general del sistema 
+## Prerequisits
 
-El projecte segueix una arquitectura Client-Servidor amb processament a l'extrem (Edge Computing):
+Per executar l'app:
 
-    Client (Android App): Desenvolupada en Kotlin seguint el patró MVVM (Model-View-ViewModel).
+- Android Studio Ladybug o superior.
+- JDK compatible amb Gradle del projecte.
+- Dispositiu Android real amb Android 10+ recomanat.
+- Projecte Firebase configurat.
+- Fitxer `app/google-services.json` present.
+- Firebase Authentication habilitat amb email/contrasenya.
+- Cloud Firestore creat en mode natiu.
 
-    Edge IA: El mòdul de TensorFlow Lite s'executa localment al dispositiu per classificar el moviment sense dependre de la xarxa.
+Per reproduir ML:
 
-    Backend (Firebase): Utilitzat per a l'autenticació, la persistència de dades (Cloud Firestore) i les notificacions push.
+- Python 3.10+ recomanat.
+- Dependencies de `ml/requirements.txt`.
+- Dataset UCI HAR ubicat dins de `ml/data/raw/train/`.
 
-    Wearable: Integració amb Wear OS per a la captura de la freqüència cardíaca via Bluetooth.
+## Configuracio Firebase
 
-### Estructura del projecte 
+El projecte Android utilitza el paquet:
 
-El repositori està organitzat seguint el patró d'rquitectura Clean Architecture aplicada a MVVM, garantint la separació de responsabilitats:
+```text
+com.udl.smartrain
+```
 
-    SmarTrain/
-    ├── app/
-    │   ├── src/main/java/com/udl/smartrain/
-    │   │   ├── data/
-    │   │   │   ├── local/          # Persistència: Room (Entities, DAOs, Converters)
-    │   │   │   └── repository/     # Repository Pattern (Sincronització Firebase/Room)
-    │   │   ├── domain.model/       # Entitats del domini (Data classes)
-    │   │   ├── service/            # Serveis en segon pla (TrackingService, Location)
-    │   │   ├── ui/
-    │   │   │   ├── screens/        # Interfície d'usuari (Jetpack Compose)
-    │   │   │   ├── theme/          # Definició de colors i estils
-    │   │   │   └── viewmodel/      # Lògica d'estat (MainViewModel)
-    │   │   └── MainActivity.kt     # Punt d'entrada de l'App
-    │   └── google-services.json    # Credencials Firebase
-    └── ml/
-        ├── experiments/            # Notebooks de recerca i datasets
-        ├── scripts/                # Scripts de preprocessament i transformació
-        └── ML_EXPERIMENTS.md       # Documentació del cicle de vida del model ML
+Firestore ha de permetre que cada usuari autenticat llegeixi i escrigui les seves sessions. Exemple de rules:
 
-Especificacions:
+```js
+rules_version = '2';
 
-    /app: Conté el projecte d'Android Studio, la interfície d'usuari (UI), i els serveis de captura (GPS/Acceleròmetre).
-    
-    /data: Capa de dades. És la responsable de decidir si l'app ha de llegir de la memòria local (Room) o del núvol (Firestore).
-    
-    /ui: Capa de presentació. Utilitza StateFlow per mantenir la interfície sincronitzada amb les dades en temps real.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /sessions/{sessionId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
 
-    /ml: Mòdul independent que conté tot el cicle de vida de la Intel·ligència Artificial: datasets, notebooks d'experimentació i models TFLite.
+      allow read, update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+}
+```
 
+Despres de publicar les rules, l'app crea automaticament la col.leccio `sessions` quan es guarda una sessio.
 
-#### Descripció del Backend
+## Executar l'app Android
 
-El backend de SmarTrain s'ha implementat utilitzant Firebase (Google Cloud Platform), escollit per la seva capacitat de sincronització en temps real i la seva escalabilitat. Els serveis utilitzats són:
+Des de l'arrel del projecte:
 
-    Cloud Firestore: Base de dades NoSQL basada en documents per a l'emmagatzematge de les sessions d'entrenament, rutes GPS i mètriques de rendiment.
+```bash
+./gradlew :app:assembleDebug
+```
 
-    Firebase Authentication: Gestió del registre i inici de sessió d'usuaris de forma segura.
+En Windows:
 
-#### Flux de dades del sistema
+```powershell
+.\gradlew.bat :app:assembleDebug
+```
 
-El sistema segueix un flux circular per garantir la integritat de les dades:
+Tambe es pot obrir el projecte amb Android Studio i executar `app` sobre un dispositiu real.
 
-    Captura: El LocationProvider i el SensorProvider recullen dades en brut (GPS, ritme cardíac).
+Flux validat:
 
-    Processament: El MainViewModel rep les dades i actualitza l'estat de la UI.
+1. Iniciar sessio o crear compte.
+2. Obrir una nova sessio.
+3. Concedir permisos de localitzacio i notificacions.
+4. Comencar la sensoritzacio.
+5. Veure prediccions ML en directe.
+6. Finalitzar i guardar.
+7. Consultar l'historial.
+8. Revisar la sessio a Room i Firestore.
+9. Obrir el resum RAG amb la icona d'informacio.
 
-    Persistència Local (Room): En finalitzar l'entrenament, el SessionRepository guarda la sessió a la base de dades local SQLite (via Room). Això assegura que l'usuari no perdi informació en zones sense cobertura.
+## Permisos Android
 
-    Sincronització Remota: El Repositori intenta immediatament una operació d'escriptura a Firestore. Si l'operació té èxit, marca la sessió com a isSynced = true.
+L'app declara:
 
-    Recuperació: En obrir l'historial, l'aplicació prioritza les dades de Firestore per oferir una experiència multi-dispositiu.
+- `ACCESS_FINE_LOCATION`
+- `ACCESS_COARSE_LOCATION`
+- `POST_NOTIFICATIONS`
+- `FOREGROUND_SERVICE`
+- `FOREGROUND_SERVICE_LOCATION`
+- `INTERNET`
 
-#### Progrés de desenvolupament
+La localitzacio es obligatoria per iniciar el tracking. En Android 13+, l'app tambe demana notificacions perque el foreground service pugui mostrar la notificacio persistent.
 
-- [x] UI del Dashboard i Perfil
-- [x] Servei de seguiment (TrackingService)
-- [x] Entrenament model ML (UCI HAR)
-- [ ] **Integració IA (TFLite):** En curs. S'han afegit les dependències de TensorFlow Lite.
+## Flux App-Model
 
+El flux end-to-end es:
 
-### Instruccions per executar l'app 
+```text
+SensorProvider
+  -> TrackingService
+  -> buffer de 128 mostres
+  -> preprocessament Android
+  -> ActivityClassifier TensorFlow Lite
+  -> ActivityRecognitionState
+  -> UI en temps real
+  -> resum de sessio
+  -> Room
+  -> Firestore
+```
 
-    Clonar el repositori: git clone https://github.com/el-teu-usuari/SmarTrain.git.
+Preprocessament aplicat a Android:
 
-    Obrir la carpeta /app amb Android Studio (versió Ladybug o superior).
+- conversio de m/s2 a unitats `g`;
+- mostreig aproximat a 50 Hz amb `SensorEvent.timestamp`;
+- finestres lliscants de 128 mostres;
+- normalitzacio basica de l'eix dominant de gravetat;
+- deteccio de repos quan la magnitud de l'acceleracio es estable;
+- mapatge de 6 classes UCI HAR a 3 categories SmarTrain.
 
-    Configurar el fitxer google-services.json de Firebase a la carpeta app/.
+Categories finals mostrades a l'usuari:
 
-    Compilar i executar en un dispositiu físic amb Android 10+ (necessari per al Foreground Service).
+| Classe UCI HAR | Categoria SmarTrain |
+| :--- | :--- |
+| Caminar | Desplacament suau |
+| Pujar escales | Alta intensitat |
+| Baixar escales | Alta intensitat |
+| Seure | Repos |
+| Dret | Repos |
+| Estirat | Repos |
+
+## Executar preprocessament ML
+
+Instal.lar dependencies:
+
+```bash
+pip install -r ml/requirements.txt
+```
+
+Executar preprocessament:
+
+```bash
+cd ml/scripts
+python preprocess.py
+```
+
+Sortides:
+
+```text
+ml/data/processed/X_train.npy
+ml/data/processed/y_train.npy
+```
+
+## Entrenar models
+
+Des de `ml/scripts`:
+
+```bash
+python train_baseline.py
+python train_cnn.py
+python train_model_comparison.py
+```
+
+El script principal per a la comparacio final es:
+
+```bash
+python train_model_comparison.py
+```
+
+Aquest script entrena i compara:
+
+- `cnn_lite`
+- `cnn_deep`
+- `cnn_separable`
+
+La seleccio es fa segons F1 weighted.
+
+## Exportar TensorFlow Lite
+
+`train_model_comparison.py` exporta automaticament el millor model a:
+
+```text
+ml/models/model_v1.tflite
+app/src/main/assets/model_v1.tflite
+```
+
+El fitxer dins de `app/src/main/assets/` es el que carrega Android amb TensorFlow Lite.
+
+## Reproduir RAG experimental
+
+El RAG experimental esta a:
+
+```text
+ml/rag/
+  data/knowledge_base.jsonl
+  eval/questions.jsonl
+  scripts/evaluate_rag.py
+  results/rag_evaluation.json
+```
+
+Executar:
+
+```bash
+python ml/rag/scripts/evaluate_rag.py
+```
+
+El script compara recuperadors simples i genera:
+
+```text
+ml/rag/results/rag_evaluation.json
+```
+
+## RAG integrat a l'app
+
+A Android hi ha una versio local i lleugera del RAG a:
+
+```text
+app/src/main/java/com/udl/smartrain/ml/SessionRagRecommender.kt
+```
+
+Quan l'usuari obre l'historial, cada sessio amb prediccions ML mostra una icona d'informacio. Aquesta accio genera una recomanacio post-sessio a partir de:
+
+- activitat dominant;
+- confianca mitjana;
+- nombre de prediccions;
+- nombre de blocs d'alta intensitat;
+- fragments documentals locals.
+
+La resposta mostra interpretacio i fonts recuperades.
+
+## Resultats validats
+
+Validacio en dispositiu real:
+
+| Component | Estat |
+| :--- | :--- |
+| Login Firebase | OK |
+| Permisos Android | OK |
+| Foreground service | OK |
+| Prediccions ML en directe | OK |
+| Guardat local Room | OK |
+| Sincronitzacio Firestore | OK |
+| Historial de sessions | OK |
+| Resum RAG post-sessio | OK |
+
+Resultat ML final:
+
+| Model | Accuracy | F1 weighted | Mida TFLite |
+| :--- | ---: | ---: | ---: |
+| `cnn_deep` | 96,01% | 96,02% | 55.208 bytes |
+
+Mes detalls a `ml/ML_EXPERIMENTS.md`.
+
+## Limitacions conegudes
+
+- El model esta entrenat amb UCI HAR, no amb dades reals de futbol.
+- Les categories d'alta intensitat son una aproximacio basada en pujar/baixar escales.
+- La posicio del mobil al cos pot afectar la prediccio.
+- El preprocessament Android redueix diferencies d'escala i orientacio, pero no elimina completament el canvi de domini.
+- El RAG integrat es local, extractiu i amb corpus petit.
+- No hi ha embeddings semantics ni LLM generatiu dins de l'app.
+- Les recomanacions son orientatives i no substitueixen criteri professional d'entrenament.
+
+## Fora d'abast actual
+
+El prototip actual no implementa encara:
+
+- integracio Wear OS;
+- captura real de frequencia cardiaca;
+- notificacions push remotes;
+- emmagatzematge de rutes GPS completes punt a punt.
+
+La localitzacio s'utilitza per calcular distancia aproximada durant la sessio, pero la sessio guardada nomes persisteix el resum de distancia, durada i resultats ML. El camp `avgBpm` existeix al model de dades com a extensio futura, pero actualment no es calcula ni es mostra com a metrica funcional.
+
+## Fitxers principals
+
+- `app/src/main/java/com/udl/smartrain/service/TrackingService.kt`
+- `app/src/main/java/com/udl/smartrain/data/local/SensorProvider.kt`
+- `app/src/main/java/com/udl/smartrain/ml/ActivityClassifier.kt`
+- `app/src/main/java/com/udl/smartrain/ml/SessionRagRecommender.kt`
+- `app/src/main/java/com/udl/smartrain/data/repository/SessionRepository.kt`
+- `ml/scripts/train_model_comparison.py`
+- `ml/rag/scripts/evaluate_rag.py`
+- `ml/ML_EXPERIMENTS.md`
