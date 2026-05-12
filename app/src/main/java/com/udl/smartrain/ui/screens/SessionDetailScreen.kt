@@ -154,7 +154,11 @@ private fun SessionDetailContent(
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )
-                    ActivityTimelineChart(timeline)
+                    ActivityTimelineChart(
+                        points = timeline,
+                        totalPredictions = session.mlPredictionCount,
+                        averageConfidence = session.avgMlConfidence
+                    )
                 }
             }
         }
@@ -198,7 +202,11 @@ private fun SessionDetailContent(
 }
 
 @Composable
-private fun ActivityTimelineChart(points: List<ActivityTimelinePoint>) {
+private fun ActivityTimelineChart(
+    points: List<ActivityTimelinePoint>,
+    totalPredictions: Int,
+    averageConfidence: Double
+) {
     if (points.isEmpty()) {
         Text(
             text = "Sense dades temporals ML per aquesta sessio.",
@@ -209,10 +217,6 @@ private fun ActivityTimelineChart(points: List<ActivityTimelinePoint>) {
     }
 
     val categories = remember(points) { points.map { it.label }.distinct() }
-    val averageConfidence = remember(points) {
-        points.map { it.confidence.toDouble() }.average().takeIf { !it.isNaN() } ?: 0.0
-    }
-
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,7 +233,7 @@ private fun ActivityTimelineChart(points: List<ActivityTimelinePoint>) {
     }
 
     Text(
-        text = "${points.size} prediccions - confianca mitjana ${(averageConfidence * 100).toInt()}%",
+        text = "${points.size} punts del timeline - $totalPredictions prediccions totals - confianca mitjana ${(averageConfidence * 100).toInt()}%",
         style = MaterialTheme.typography.bodySmall,
         color = Color.White.copy(alpha = 0.72f)
     )
