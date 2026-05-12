@@ -114,6 +114,7 @@ S'ha aplicat un preprocessament a l'app abans de la inferencia:
 - deteccio de repos quan la magnitud de l'acceleracio es estable.
 - mapatge de les 6 classes UCI HAR a 3 categories SmarTrain: `Repos`, `Desplacament suau` i `Alta intensitat`.
 - mostreig aproximat a 50 Hz amb timestamps del sensor per mantenir finestres de 128 mostres similars a UCI HAR.
+- recomanacio post-sessio amb RAG local: l'historial recupera fragments documentals segons activitat dominant, confianca i blocs d'alta intensitat.
 
 Limitacions actuals:
 

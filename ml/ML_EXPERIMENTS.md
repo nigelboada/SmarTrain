@@ -333,6 +333,20 @@ El RAG actual es adequat per al prototip perque:
 - Connecta ML i experiencia d'usuari: interpreta prediccions, confiança i limitacions.
 - Es facil d'ampliar: afegir documents nous al JSONL no requereix canviar el codi.
 
+### 11.9 Integracio del RAG a Android
+
+Per connectar el RAG amb l'aplicacio, s'ha afegit una versio local i lleugera dins del paquet Android `ml`. Aquesta integracio reutilitza el mateix enfocament documental de l'experiment Python: documents curts, recuperacio per paraules clau i resposta extractiva basada en fragments.
+
+La pantalla d'historial mostra un boto de resum per a cada sessio amb prediccions ML. Quan l'usuari l'obre, l'app genera una recomanacio post-sessio a partir de:
+
+- activitat dominant de la sessio;
+- confiança mitjana del model;
+- nombre de prediccions ML;
+- nombre de blocs d'alta intensitat;
+- fragments documentals locals sobre recuperacio, desplacament suau, alta intensitat, confiança i limitacions UCI HAR.
+
+La resposta mostra una interpretacio de la sessio i les fonts documentals recuperades. Aquesta decisio evita dependencies d'API, funciona offline i manté la traçabilitat entre resultats ML i recomanacions visibles a l'usuari.
+
 Limitacions:
 
 - Corpus petit.
@@ -340,7 +354,7 @@ Limitacions:
 - No hi ha generacio natural amb LLM.
 - L'avaluacio usa nomes 6 preguntes.
 
-Per a una versio posterior, el pas natural seria comparar aquest TF-IDF amb embeddings multilingues i connectar la resposta RAG a una pantalla d'interpretacio post sessio.
+Per a una versio posterior, el pas natural seria comparar aquest TF-IDF amb embeddings multilingues, ampliar el corpus i substituir la resposta extractiva local per una generacio controlada amb un model de llenguatge.
 
 ## 12. Reproduccio
 

@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -40,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
+import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.navigation.Screen
@@ -58,6 +62,7 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var sessionToEdit by remember { mutableStateOf<Session?>(null) }
+    var sessionToExplain by remember { mutableStateOf<Session?>(null) }
     var editUserName by remember { mutableStateOf("") }
     var editSessionName by remember { mutableStateOf("") }
 
@@ -124,6 +129,13 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
         )
     }
 
+    sessionToExplain?.let { session ->
+        SessionInsightDialog(
+            session = session,
+            onDismiss = { sessionToExplain = null }
+        )
+    }
+
     Scaffold(
         topBar = {
             AppHeader(
@@ -171,6 +183,9 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                             editUserName = session.userId
                             editSessionName = session.sessionName
                             showEditDialog = true
+                        },
+                        onInsight = {
+                            sessionToExplain = session
                         }
                     )
                 }
@@ -201,6 +216,47 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
             }
         )
     }
+}
+
+@Composable
+private fun SessionInsightDialog(session: Session, onDismiss: () -> Unit) {
+    val insight = remember(session) {
+        SessionRagRecommender.buildInsight(session)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(insight.title) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = insight.answer,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (insight.sourceTitles.isNotEmpty()) {
+                    Text(
+                        text = "Fonts recuperades",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    insight.sourceTitles.forEach { source ->
+                        Text(
+                            text = source,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Tancar")
+            }
+        }
+    )
 }
 
 @Composable
@@ -281,7 +337,12 @@ private fun SummaryMetric(label: String, value: String, modifier: Modifier = Mod
 }
 
 @Composable
-fun SessionItem(session: Session, onDelete: () -> Unit, onEdit: () -> Unit) {
+fun SessionItem(
+    session: Session,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit,
+    onInsight: () -> Unit
+) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
 
@@ -321,6 +382,12 @@ fun SessionItem(session: Session, onDelete: () -> Unit, onEdit: () -> Unit) {
             }
 
             Row {
+                IconButton(
+                    onClick = onInsight,
+                    enabled = session.mlPredictionCount > 0
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = "Resum RAG", tint = Color.White)
+                }
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White)
                 }
