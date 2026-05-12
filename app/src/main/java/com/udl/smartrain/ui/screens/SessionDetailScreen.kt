@@ -1,5 +1,6 @@
 package com.udl.smartrain.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,7 +8,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
@@ -21,6 +24,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.SessionRagRecommender
+import com.udl.smartrain.ml.SessionRagInsight
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.theme.DarkBlueSecondary
 import com.udl.smartrain.ui.theme.PurplePrimary
@@ -76,7 +82,8 @@ private fun SessionDetailContent(
     modifier: Modifier = Modifier
 ) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
-    val insight = remember(session) { SessionRagRecommender.buildInsight(session) }
+    val insight = remember(session) { session.persistedOrGeneratedRagInsight() }
+    val timeline = remember(session.activityTimeline) { parseActivityTimeline(session.activityTimeline) }
 
     LazyColumn(
         modifier = modifier,
@@ -114,7 +121,7 @@ private fun SessionDetailContent(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Metricas de sessio",
+                        text = "Mètriques de sessió",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
@@ -131,6 +138,23 @@ private fun SessionDetailContent(
                         DetailMetric("Prediccions", session.mlPredictionCount.toString(), Modifier.weight(1f))
                         DetailMetric("Alta intensitat", session.highIntensityCount.toString(), Modifier.weight(1f))
                     }
+                }
+            }
+        }
+
+        item {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Categories ML en el temps",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    ActivityTimelineChart(timeline)
                 }
             }
         }
@@ -168,6 +192,64 @@ private fun SessionDetailContent(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActivityTimelineChart(points: List<ActivityTimelinePoint>) {
+    if (points.isEmpty()) {
+        Text(
+            text = "Sense dades temporals ML per aquesta sessio.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White.copy(alpha = 0.72f)
+        )
+        return
+    }
+
+    val categories = remember(points) { points.map { it.label }.distinct() }
+    val averageConfidence = remember(points) {
+        points.map { it.confidence.toDouble() }.average().takeIf { !it.isNaN() } ?: 0.0
+    }
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp)
+    ) {
+        val barWidth = (size.width / points.size).coerceAtLeast(3f)
+        points.forEachIndexed { index, point ->
+            drawRect(
+                color = colorForActivity(point.label),
+                topLeft = Offset(index * barWidth, 0f),
+                size = Size(width = barWidth + 1f, height = size.height)
+            )
+        }
+    }
+
+    Text(
+        text = "${points.size} prediccions - confianca mitjana ${(averageConfidence * 100).toInt()}%",
+        style = MaterialTheme.typography.bodySmall,
+        color = Color.White.copy(alpha = 0.72f)
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        categories.forEach { category ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Canvas(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .width(10.dp)
+                        .height(10.dp)
+                ) {
+                    drawRect(color = colorForActivity(category), size = size)
+                }
+                Text(
+                    text = "$category: ${points.count { it.label == category }}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.82f)
+                )
             }
         }
     }
@@ -225,5 +307,54 @@ private fun formatDurationShort(totalSeconds: Long): String {
         "${minutes}m ${seconds}s"
     } else {
         "${seconds}s"
+    }
+}
+
+private fun Session.persistedOrGeneratedRagInsight(): SessionRagInsight {
+    if (ragAnswer.isNotBlank()) {
+        return SessionRagInsight(
+            title = ragTitle.ifBlank { "Interpretacio post sessio" },
+            answer = ragAnswer,
+            sourceTitles = ragSourceTitles
+                .split("|")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+        )
+    }
+
+    return SessionRagRecommender.buildInsight(this)
+}
+
+private data class ActivityTimelinePoint(
+    val timestampMillis: Long,
+    val label: String,
+    val confidence: Float
+)
+
+private fun parseActivityTimeline(timeline: String): List<ActivityTimelinePoint> {
+    if (timeline.isBlank()) {
+        return emptyList()
+    }
+
+    return timeline.split("|").mapNotNull { rawPoint ->
+        val parts = rawPoint.split(",")
+        if (parts.size < 5) {
+            return@mapNotNull null
+        }
+
+        ActivityTimelinePoint(
+            timestampMillis = parts[0].toLongOrNull() ?: return@mapNotNull null,
+            label = parts[2].trim(),
+            confidence = parts[4].toFloatOrNull() ?: 0f
+        )
+    }
+}
+
+private fun colorForActivity(label: String): Color {
+    return when (label) {
+        "Alta intensitat" -> Color(0xFFFFC857)
+        "Desplacament suau" -> Color(0xFF46D9A8)
+        "Repos" -> Color(0xFF8BB7FF)
+        else -> Color(0xFFD8B4FE)
     }
 }

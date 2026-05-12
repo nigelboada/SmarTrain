@@ -74,4 +74,6 @@ dependencies {
     // app/src/main/assets/model_v1.tflite.
     implementation("org.tensorflow:tensorflow-lite:2.17.0")
 
+    testImplementation(libs.junit)
+
 }

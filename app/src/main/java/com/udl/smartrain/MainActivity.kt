@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
             AppDatabase::class.java, "smartrain-db"
         )
             .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addMigrations(AppDatabase.MIGRATION_2_3)
             .build()
 
         val firestore = Firebase.firestore

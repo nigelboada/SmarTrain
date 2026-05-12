@@ -14,6 +14,7 @@ import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.repository.SessionRepository
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.ActivityRecognitionState
+import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
 import java.util.UUID
@@ -156,10 +157,16 @@ class MainViewModel(
                 activityTimeline = mlSummary.activityTimeline,
                 intensityScore = mlSummary.avgMlConfidence
             )
+            val ragInsight = SessionRagRecommender.buildInsight(sessionWithMlResults)
+            val sessionWithRagResults = sessionWithMlResults.copy(
+                ragTitle = ragInsight.title,
+                ragAnswer = ragInsight.answer,
+                ragSourceTitles = ragInsight.sourceTitles.joinToString(separator = "|")
+            )
 
-            Log.d("DEBUG_VM", "Sessio trobada, guardant: ${sessionWithMlResults.id}")
+            Log.d("DEBUG_VM", "Sessio trobada, guardant: ${sessionWithRagResults.id}")
             viewModelScope.launch {
-                repository.saveSession(sessionWithMlResults)
+                repository.saveSession(sessionWithRagResults)
                 _currentSession.value = null
             }
         }
