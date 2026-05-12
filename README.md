@@ -302,6 +302,17 @@ Mes detalls a `ml/ML_EXPERIMENTS.md`.
 - No hi ha embeddings semantics ni LLM generatiu dins de l'app.
 - Les recomanacions son orientatives i no substitueixen criteri professional d'entrenament.
 
+## Fora d'abast actual
+
+El prototip actual no implementa encara:
+
+- integracio Wear OS;
+- captura real de frequencia cardiaca;
+- notificacions push remotes;
+- emmagatzematge de rutes GPS completes punt a punt.
+
+La localitzacio s'utilitza per calcular distancia aproximada durant la sessio, pero la sessio guardada nomes persisteix el resum de distancia, durada i resultats ML. El camp `avgBpm` existeix al model de dades com a extensio futura, pero actualment no es calcula ni es mostra com a metrica funcional.
+
 ## Fitxers principals
 
 - `app/src/main/java/com/udl/smartrain/service/TrackingService.kt`

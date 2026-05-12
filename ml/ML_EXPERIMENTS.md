@@ -190,7 +190,7 @@ A Android, el model es carrega amb `Interpreter`, rep finestres de 128 mostres i
 
 La integracio s'ha provat en un dispositiu Android real dins del flux complet de l'aplicacio: login Firebase, inici de sessio esportiva, permisos, foreground service, lectura de sensors, inferencia ML, finalitzacio, persistencia local amb Room, historial i sincronitzacio amb Firestore.
 
-Durant aquesta prova inicial es va observar que el model tendia a predir `Baixar escales` o `Pujar escales` encara que el mobil estigues quiet o caminant. Aquest comportament no indicava necessàriament un error del sensor, sino una diferencia entre el domini d'entrenament i el domini real d'inferencia:
+Durant aquesta prova inicial es va observar que el model tendia a predir `Baixar escales` o `Pujar escales` encara que el mobil estigues quiet o caminant. Aquest comportament no indicava necessariament un error del sensor, sino una diferencia entre el domini d'entrenament i el domini real d'inferencia:
 
 - Android entrega l'accelerometre en m/s2.
 - UCI HAR esta representat aproximadament en unitats `g`.
@@ -223,7 +223,7 @@ La decisio final per a 3A es utilitzar `cnn_deep`, perque combina millor rendime
 
 ### 11.1 Problema i Abordatge
 
-El bloc RAG s'ha definit com un sistema documental per interpretar resultats de sessio i donar recomanacions basades en context. L'objectiu no es substituir el model ML, sino complementar-lo: el model classifica activitat i el RAG ajuda a explicar que pot significar una sessio amb molta activitat de repos, alta intensitat aproximada o baixa confiança.
+El bloc RAG s'ha definit com un sistema documental per interpretar resultats de sessio i donar recomanacions basades en context. L'objectiu no es substituir el model ML, sino complementar-lo: el model classifica activitat i el RAG ajuda a explicar que pot significar una sessio amb molta activitat de repos, alta intensitat aproximada o baixa confianca.
 
 Abast triat per a 3A:
 
@@ -252,7 +252,7 @@ Fitxer principal:
 
 `ml/rag/data/knowledge_base.jsonl`
 
-També s'ha creat un conjunt petit d'avaluacio amb 6 preguntes i documents esperats:
+Tambe s'ha creat un conjunt petit d'avaluacio amb 6 preguntes i documents esperats:
 
 `ml/rag/eval/questions.jsonl`
 
@@ -330,7 +330,7 @@ El RAG actual es adequat per al prototip perque:
 
 - Es transparent: es pot inspeccionar quin document dona suport a cada resposta.
 - Es reproduible: no depen de credencials ni serveis externs.
-- Connecta ML i experiencia d'usuari: interpreta prediccions, confiança i limitacions.
+- Connecta ML i experiencia d'usuari: interpreta prediccions, confianca i limitacions.
 - Es facil d'ampliar: afegir documents nous al JSONL no requereix canviar el codi.
 
 ### 11.9 Integracio del RAG a Android
@@ -340,12 +340,12 @@ Per connectar el RAG amb l'aplicacio, s'ha afegit una versio local i lleugera di
 La pantalla d'historial mostra un boto de resum per a cada sessio amb prediccions ML. Quan l'usuari l'obre, l'app genera una recomanacio post-sessio a partir de:
 
 - activitat dominant de la sessio;
-- confiança mitjana del model;
+- confianca mitjana del model;
 - nombre de prediccions ML;
 - nombre de blocs d'alta intensitat;
-- fragments documentals locals sobre recuperacio, desplacament suau, alta intensitat, confiança i limitacions UCI HAR.
+- fragments documentals locals sobre recuperacio, desplacament suau, alta intensitat, confianca i limitacions UCI HAR.
 
-La resposta mostra una interpretacio de la sessio i les fonts documentals recuperades. Aquesta decisio evita dependencies d'API, funciona offline i manté la traçabilitat entre resultats ML i recomanacions visibles a l'usuari.
+La resposta mostra una interpretacio de la sessio i les fonts documentals recuperades. Aquesta decisio evita dependencies d'API, funciona offline i mante la tracabilitat entre resultats ML i recomanacions visibles a l'usuari.
 
 Limitacions:
 
