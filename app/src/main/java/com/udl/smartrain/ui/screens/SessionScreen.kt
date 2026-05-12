@@ -1,7 +1,10 @@
 package com.udl.smartrain.ui.screens
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,14 +56,19 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
     val predictionHistory by ActivityRecognitionState.predictionHistory.collectAsState()
     val trackingMetrics by TrackingSessionState.metrics.collectAsState()
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var permissionMessage by remember { mutableStateOf<String?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val granted = permissions.values.all { it }
-        if (granted) {
-            val intent = Intent(context, TrackingService::class.java)
-            ContextCompat.startForegroundService(context, intent)
+        if (hasLocationPermission(context, permissions)) {
+            permissionMessage = null
+            startTrackingService(
+                context = context,
+                onError = { message -> permissionMessage = message }
+            )
+        } else {
+            permissionMessage = "Cal concedir el permis de localitzacio per iniciar la sessio."
         }
     }
 
@@ -102,13 +111,9 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
             item {
                 ActionPanel(
                     isTracking = trackingMetrics.isTracking,
+                    permissionMessage = permissionMessage,
                     onStart = {
-                        permissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
-                        )
+                        permissionLauncher.launch(trackingPermissions())
                     },
                     onFinish = {
                         viewModel.finishAndSaveSession(context)
@@ -135,6 +140,43 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+private fun trackingPermissions(): Array<String> {
+    return buildList {
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
+        add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }.toTypedArray()
+}
+
+private fun hasLocationPermission(context: Context, permissions: Map<String, Boolean>): Boolean {
+    val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION]
+        ?: (ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED)
+
+    val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION]
+        ?: (ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED)
+
+    return fineGranted || coarseGranted
+}
+
+private fun startTrackingService(context: Context, onError: (String) -> Unit) {
+    try {
+        val intent = Intent(context, TrackingService::class.java)
+        ContextCompat.startForegroundService(context, intent)
+    } catch (exception: SecurityException) {
+        onError("No s'ha pogut iniciar el servei: revisa els permisos de localitzacio.")
+    } catch (exception: IllegalStateException) {
+        onError("No s'ha pogut iniciar el servei en segon pla. Torna-ho a provar amb l'app oberta.")
     }
 }
 
@@ -236,11 +278,23 @@ private fun PredictionCard(prediction: ActivityPrediction?) {
 }
 
 @Composable
-private fun ActionPanel(isTracking: Boolean, onStart: () -> Unit, onFinish: () -> Unit) {
+private fun ActionPanel(
+    isTracking: Boolean,
+    permissionMessage: String?,
+    onStart: () -> Unit,
+    onFinish: () -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        permissionMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
         Button(
             onClick = onStart,
             enabled = !isTracking,
