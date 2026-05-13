@@ -157,15 +157,14 @@ class MainViewModel(
                 activityTimeline = mlSummary.activityTimeline,
                 intensityScore = mlSummary.avgMlConfidence
             )
-            val ragInsight = SessionRagRecommender.buildInsight(sessionWithMlResults)
-            val sessionWithRagResults = sessionWithMlResults.copy(
-                ragTitle = ragInsight.title,
-                ragAnswer = ragInsight.answer,
-                ragSourceTitles = ragInsight.sourceTitles.joinToString(separator = "|")
-            )
-
-            Log.d("DEBUG_VM", "Sessio trobada, guardant: ${sessionWithRagResults.id}")
+            Log.d("DEBUG_VM", "Sessio trobada, guardant: ${sessionWithMlResults.id}")
             viewModelScope.launch {
+                val ragInsight = SessionRagRecommender.buildInsightWithGenerator(sessionWithMlResults)
+                val sessionWithRagResults = sessionWithMlResults.copy(
+                    ragTitle = ragInsight.title,
+                    ragAnswer = ragInsight.answer,
+                    ragSourceTitles = ragInsight.sourceTitles.joinToString(separator = "|")
+                )
                 repository.saveSession(sessionWithRagResults)
                 _currentSession.value = null
             }

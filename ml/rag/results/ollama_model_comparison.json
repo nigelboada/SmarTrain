@@ -1,0 +1,387 @@
+{
+  "base_url": "http://127.0.0.1:11434",
+  "top_k": 3,
+  "documents": 12,
+  "questions": 6,
+  "sessions": 4,
+  "models": [
+    "gemma3:1b"
+  ],
+  "summary": [
+    {
+      "model": "gemma3:1b",
+      "tasks": 10,
+      "successful_tasks": 10,
+      "avg_latency_ms": 9266.15,
+      "avg_grounded_overlap": 0.598,
+      "avg_expected_term_coverage": 0.333,
+      "errors": 0
+    }
+  ],
+  "details": [
+    {
+      "model": "gemma3:1b",
+      "task_id": "q_001",
+      "task_type": "question",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_003] Alta intensitat aproximada (training_recommendation): Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients.\n[kb_009] Recomanacio post sessio (training_recommendation): Despres d'una sessio amb alta intensitat, es recomana incloure recuperacio, hidratacio i analisi de carrega. Si hi ha massa blocs intensos seguits, la propera sessio pot prioritzar tecnica, mobilitat o treball aerobi suau.\n[kb_001] Repos i recuperacio (training_recommendation): Quan una sessio mostra molta activitat de repos o baixa intensitat, SmarTrain recomana revisar si era una sessio de recuperacio, escalfament o tornada a la calma. Si l'objectiu era entrenament intens, cal augmentar progressivament blocs de carrera suau i exercicis tecnics amb pilota.\n\nPregunta: Que vol dir si la sessio te molta alta intensitat?\n\nResposta:",
+      "answer": "Si la sessió té molta alta intensitat, és possible que s'utilitzin aproximacions tècniques per a accions que requereixen un esforç intens. Recomano alternar aquests blocs amb recuperacions suficients per evitar canvis de ritme, acceleracions o moviments exigents.",
+      "answer_chars": 263,
+      "retrieved_ids": "kb_003|kb_009|kb_001",
+      "retrieved_titles": [
+        "Alta intensitat aproximada",
+        "Recomanacio post sessio",
+        "Repos i recuperacio"
+      ],
+      "source_hit_rate": 1.0,
+      "expected_term_coverage": null,
+      "grounded_overlap": 0.5769230769230769,
+      "error": "",
+      "latency_ms": 8893.57,
+      "total_duration_ns": 8837842500,
+      "eval_count": 69,
+      "eval_duration_ns": 3538033600,
+      "prompt_eval_count": 355,
+      "task": {
+        "type": "question",
+        "id": "q_001",
+        "question": "Que vol dir si la sessio te molta alta intensitat?",
+        "query": "Que vol dir si la sessio te molta alta intensitat?",
+        "expected_ids": [
+          "kb_003",
+          "kb_009"
+        ],
+        "expected_terms": []
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "q_002",
+      "task_type": "question",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_006] Confusio seure dret (model_interpretation): La matriu de confusio mostra que les classes seure i dret son les mes similars. Aquesta confusio es esperable perque totes dues son posturals i tenen patrons d'acceleracio amb poca variacio. Per futbol, totes dues es poden agrupar com baixa intensitat o repos.\n[kb_004] Confiança baixa del model (model_interpretation): Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu.\n[kb_005] Confiança alta del model (model_interpretation): Una confiança alta del model indica que la finestra de sensor s'assembla clarament a una classe apresa durant l'entrenament. Tot i aixi, en SmarTrain el model esta entrenat amb UCI HAR i no amb dades especifiques de futbol, per tant la lectura continua sent una aproximacio.\n\nPregunta: Per que el model pot confondre seure i dret?\n\nResposta:",
+      "answer": "El model pot confondre seure i dret perquè la matriu de confusio mostra que les classes \"seure i dret\" són les més similars. Aquesta confusio es pot causar per soroll del sensor, posicionament incorrecte del sensor o que el model no estigui entrenat amb dades específiques de futbol.\n\n**Recomanació d'acció:**\n*   Verificar la posició del sensor i assegurar-se que està adequat per a la captura de dades.\n*   Aixecar la sensibilitat del model per a dades de futbol.",
+      "answer_chars": 465,
+      "retrieved_ids": "kb_006|kb_004|kb_005",
+      "retrieved_titles": [
+        "Confusio seure dret",
+        "Confiança baixa del model",
+        "Confiança alta del model"
+      ],
+      "source_hit_rate": 1.0,
+      "expected_term_coverage": null,
+      "grounded_overlap": 0.4444444444444444,
+      "error": "",
+      "latency_ms": 12293.74,
+      "total_duration_ns": 12288924600,
+      "eval_count": 129,
+      "eval_duration_ns": 6844290100,
+      "prompt_eval_count": 352,
+      "task": {
+        "type": "question",
+        "id": "q_002",
+        "question": "Per que el model pot confondre seure i dret?",
+        "query": "Per que el model pot confondre seure i dret?",
+        "expected_ids": [
+          "kb_006"
+        ],
+        "expected_terms": []
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "q_003",
+      "task_type": "question",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_007] Model final CNN deep (ml_experiment): El model seleccionat per a l'entrega final es cnn_deep. Obte 96,01 per cent d'accuracy, 96,02 per cent de F1 weighted, ocupa 55.208 bytes en format TFLite i te una inferencia mitjana de 0,078 ms en l'entorn d'avaluacio.\n[kb_004] Confiança baixa del model (model_interpretation): Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu.\n[kb_010] Us del RAG a SmarTrain (rag_design): El RAG de SmarTrain recupera fragments documentals sobre interpretacio del model, limitacions del dataset i recomanacions d'entrenament. La resposta final ha de basar-se en els fragments recuperats i evitar conclusions no suportades per les dades de la sessio.\n\nPregunta: Quin model final s'ha seleccionat i quines metriques te?\n\nResposta:",
+      "answer": "El model final s'ha seleccionat com 'cnn_deep' i ha obtitjà 96,01 per cent d'accuracy, 96,02 per cent de F1 weighted, i ocupa 55.208 bytes en format TFLite i una inferència mitjana de 0,078 ms.",
+      "answer_chars": 193,
+      "retrieved_ids": "kb_007|kb_004|kb_010",
+      "retrieved_titles": [
+        "Model final CNN deep",
+        "Confiança baixa del model",
+        "Us del RAG a SmarTrain"
+      ],
+      "source_hit_rate": 1.0,
+      "expected_term_coverage": null,
+      "grounded_overlap": 0.92,
+      "error": "",
+      "latency_ms": 9963.53,
+      "total_duration_ns": 9957969600,
+      "eval_count": 76,
+      "eval_duration_ns": 4143810900,
+      "prompt_eval_count": 368,
+      "task": {
+        "type": "question",
+        "id": "q_003",
+        "question": "Quin model final s'ha seleccionat i quines metriques te?",
+        "query": "Quin model final s'ha seleccionat i quines metriques te?",
+        "expected_ids": [
+          "kb_007"
+        ],
+        "expected_terms": []
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "q_004",
+      "task_type": "question",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_008] Limitacio UCI HAR futbol (ml_experiment): UCI HAR no conte etiquetes especifiques de futbol com sprint, canvi de direccio, pressio o conduccio de pilota. Per aquest motiu, el model de SmarTrain valida la integracio tecnica pero no s'ha de presentar com un classificador final de rendiment futbolistic.\n[kb_005] Confiança alta del model (model_interpretation): Una confiança alta del model indica que la finestra de sensor s'assembla clarament a una classe apresa durant l'entrenament. Tot i aixi, en SmarTrain el model esta entrenat amb UCI HAR i no amb dades especifiques de futbol, per tant la lectura continua sent una aproximacio.\n[kb_010] Us del RAG a SmarTrain (rag_design): El RAG de SmarTrain recupera fragments documentals sobre interpretacio del model, limitacions del dataset i recomanacions d'entrenament. La resposta final ha de basar-se en els fragments recuperats i evitar conclusions no suportades per les dades de la sessio.\n\nPregunta: Quines limitacions te UCI HAR per al futbol?\n\nResposta:",
+      "answer": "UCI HAR no té etiquetes específiques de futbol com a sprint, canvi de direcció, pressió o conducció de pilota.\n\n**Recomanació d'acció:** Considera que la interpretació del model és una aproximació i no un classificador final de rendiment futbolistic.",
+      "answer_chars": 250,
+      "retrieved_ids": "kb_008|kb_005|kb_010",
+      "retrieved_titles": [
+        "Limitacio UCI HAR futbol",
+        "Confiança alta del model",
+        "Us del RAG a SmarTrain"
+      ],
+      "source_hit_rate": 1.0,
+      "expected_term_coverage": null,
+      "grounded_overlap": 0.56,
+      "error": "",
+      "latency_ms": 9100.93,
+      "total_duration_ns": 9095305000,
+      "eval_count": 65,
+      "eval_duration_ns": 3236339500,
+      "prompt_eval_count": 343,
+      "task": {
+        "type": "question",
+        "id": "q_004",
+        "question": "Quines limitacions te UCI HAR per al futbol?",
+        "query": "Quines limitacions te UCI HAR per al futbol?",
+        "expected_ids": [
+          "kb_008",
+          "kb_005"
+        ],
+        "expected_terms": []
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "q_005",
+      "task_type": "question",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_004] Confiança baixa del model (model_interpretation): Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu.\n[kb_005] Confiança alta del model (model_interpretation): Una confiança alta del model indica que la finestra de sensor s'assembla clarament a una classe apresa durant l'entrenament. Tot i aixi, en SmarTrain el model esta entrenat amb UCI HAR i no amb dades especifiques de futbol, per tant la lectura continua sent una aproximacio.\n[kb_012] Interpretacio de prediccions (model_interpretation): Les prediccions de SmarTrain s'han d'interpretar com finestres curtes de moviment. El resum de sessio utilitza activitat dominant, confiança mitjana, nombre de prediccions i recompte d'alta intensitat per donar context a l'usuari.\n\nPregunta: Com s'ha d'interpretar una confiança baixa del model?\n\nResposta:",
+      "answer": "Si la confiança del model és baixa, és important interpretar-la amb prudència. Pot indicar problemes amb el sensor o la situació d'entrenament. Recomanem que utilitzis aquest resultat com una orientació i no com una predicció definitiva.",
+      "answer_chars": 237,
+      "retrieved_ids": "kb_004|kb_005|kb_012",
+      "retrieved_titles": [
+        "Confiança baixa del model",
+        "Confiança alta del model",
+        "Interpretacio de prediccions"
+      ],
+      "source_hit_rate": 1.0,
+      "expected_term_coverage": null,
+      "grounded_overlap": 0.5454545454545454,
+      "error": "",
+      "latency_ms": 9785.17,
+      "total_duration_ns": 9780455700,
+      "eval_count": 58,
+      "eval_duration_ns": 2914046000,
+      "prompt_eval_count": 348,
+      "task": {
+        "type": "question",
+        "id": "q_005",
+        "question": "Com s'ha d'interpretar una confiança baixa del model?",
+        "query": "Com s'ha d'interpretar una confiança baixa del model?",
+        "expected_ids": [
+          "kb_004"
+        ],
+        "expected_terms": []
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "q_006",
+      "task_type": "question",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_011] Estructura de dades del RAG (rag_design): La base documental del RAG es guarda a ml/rag/data/knowledge_base.jsonl. Cada document conte id, titol, categoria i text. Aquesta estructura permet afegir noves recomanacions sense modificar el codi del recuperador.\n[kb_010] Us del RAG a SmarTrain (rag_design): El RAG de SmarTrain recupera fragments documentals sobre interpretacio del model, limitacions del dataset i recomanacions d'entrenament. La resposta final ha de basar-se en els fragments recuperats i evitar conclusions no suportades per les dades de la sessio.\n[kb_001] Repos i recuperacio (training_recommendation): Quan una sessio mostra molta activitat de repos o baixa intensitat, SmarTrain recomana revisar si era una sessio de recuperacio, escalfament o tornada a la calma. Si l'objectiu era entrenament intens, cal augmentar progressivament blocs de carrera suau i exercicis tecnics amb pilota.\n\nPregunta: On es guarda la base documental del RAG?\n\nResposta:",
+      "answer": "A ml/rag/data/knowledge_base.jsonl es guarda.",
+      "answer_chars": 45,
+      "retrieved_ids": "kb_011|kb_010|kb_001",
+      "retrieved_titles": [
+        "Estructura de dades del RAG",
+        "Us del RAG a SmarTrain",
+        "Repos i recuperacio"
+      ],
+      "source_hit_rate": 1.0,
+      "expected_term_coverage": null,
+      "grounded_overlap": 1.0,
+      "error": "",
+      "latency_ms": 6250.27,
+      "total_duration_ns": 6245043900,
+      "eval_count": 18,
+      "eval_duration_ns": 874055600,
+      "prompt_eval_count": 344,
+      "task": {
+        "type": "question",
+        "id": "q_006",
+        "question": "On es guarda la base documental del RAG?",
+        "query": "On es guarda la base documental del RAG?",
+        "expected_ids": [
+          "kb_011"
+        ],
+        "expected_terms": []
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "s_001",
+      "task_type": "session",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_012] Interpretacio de prediccions (model_interpretation): Les prediccions de SmarTrain s'han d'interpretar com finestres curtes de moviment. El resum de sessio utilitza activitat dominant, confiança mitjana, nombre de prediccions i recompte d'alta intensitat per donar context a l'usuari.\n[kb_003] Alta intensitat aproximada (training_recommendation): Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients.\n[kb_009] Recomanacio post sessio (training_recommendation): Despres d'una sessio amb alta intensitat, es recomana incloure recuperacio, hidratacio i analisi de carrega. Si hi ha massa blocs intensos seguits, la propera sessio pot prioritzar tecnica, mobilitat o treball aerobi suau.\n\nResum de sessio: Activitat dominant: Alta intensitat. Confianca mitjana: 82%. Blocs alta intensitat: 12/24.\n\nResposta:",
+      "answer": "La sessió ha estat d'alta intensitat amb 12 blocs de dificultat alta. Recomanem recuperació, hidratació i anàlisi de carrega després per evitar canvis de ritme.",
+      "answer_chars": 160,
+      "retrieved_ids": "kb_012|kb_003|kb_009",
+      "retrieved_titles": [
+        "Interpretacio de prediccions",
+        "Alta intensitat aproximada",
+        "Recomanacio post sessio"
+      ],
+      "source_hit_rate": null,
+      "expected_term_coverage": 0.6666666666666666,
+      "grounded_overlap": 0.4117647058823529,
+      "error": "",
+      "latency_ms": 9560.9,
+      "total_duration_ns": 9555128300,
+      "eval_count": 47,
+      "eval_duration_ns": 2307471800,
+      "prompt_eval_count": 366,
+      "task": {
+        "type": "session",
+        "id": "s_001",
+        "session": {
+          "dominantActivity": "Alta intensitat",
+          "avgMlConfidence": 0.82,
+          "mlPredictionCount": 24,
+          "highIntensityCount": 12
+        },
+        "query": "Activitat dominant: Alta intensitat. Confianca mitjana: 82%. Blocs alta intensitat: 12/24.",
+        "expected_ids": [],
+        "expected_terms": [
+          "alta intensitat",
+          "recuperacio",
+          "carrega"
+        ],
+        "notes": "Sessio amb ratio alt d'intensitat. La resposta hauria de recomanar recuperacio i control de carrega."
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "s_002",
+      "task_type": "session",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_012] Interpretacio de prediccions (model_interpretation): Les prediccions de SmarTrain s'han d'interpretar com finestres curtes de moviment. El resum de sessio utilitza activitat dominant, confiança mitjana, nombre de prediccions i recompte d'alta intensitat per donar context a l'usuari.\n[kb_001] Repos i recuperacio (training_recommendation): Quan una sessio mostra molta activitat de repos o baixa intensitat, SmarTrain recomana revisar si era una sessio de recuperacio, escalfament o tornada a la calma. Si l'objectiu era entrenament intens, cal augmentar progressivament blocs de carrera suau i exercicis tecnics amb pilota.\n[kb_003] Alta intensitat aproximada (training_recommendation): Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients.\n\nResum de sessio: Activitat dominant: Repos. Confianca mitjana: 74%. Blocs alta intensitat: 0/18.\n\nResposta:",
+      "answer": "La sessió es va centrar en repos, amb una confiança mitjana del 74%. És possible que hi hagi canvis en el ritme o la intensitat de l'activitat. Recomanem alternar blocs d'alta intensitat amb recuperacions per evitar la sobreexplotació.",
+      "answer_chars": 235,
+      "retrieved_ids": "kb_012|kb_001|kb_003",
+      "retrieved_titles": [
+        "Interpretacio de prediccions",
+        "Repos i recuperacio",
+        "Alta intensitat aproximada"
+      ],
+      "source_hit_rate": null,
+      "expected_term_coverage": 0.6666666666666666,
+      "grounded_overlap": 0.5,
+      "error": "",
+      "latency_ms": 9418.37,
+      "total_duration_ns": 9413158300,
+      "eval_count": 67,
+      "eval_duration_ns": 3660785700,
+      "prompt_eval_count": 374,
+      "task": {
+        "type": "session",
+        "id": "s_002",
+        "session": {
+          "dominantActivity": "Repos",
+          "avgMlConfidence": 0.74,
+          "mlPredictionCount": 18,
+          "highIntensityCount": 0
+        },
+        "query": "Activitat dominant: Repos. Confianca mitjana: 74%. Blocs alta intensitat: 0/18.",
+        "expected_ids": [],
+        "expected_terms": [
+          "repos",
+          "recuperacio",
+          "baixa intensitat"
+        ],
+        "notes": "Sessio dominada per repos o baixa intensitat."
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "s_003",
+      "task_type": "session",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_002] Desplacament suau (training_recommendation): Una sessio dominada per caminar o desplacament suau indica carrega aerobia baixa. Es pot interpretar com treball regeneratiu, activacio o fase tecnica. Per progressar, es recomana afegir intervals curts de carrera moderada i controlar que la fatiga no augmenti massa.\n[kb_012] Interpretacio de prediccions (model_interpretation): Les prediccions de SmarTrain s'han d'interpretar com finestres curtes de moviment. El resum de sessio utilitza activitat dominant, confiança mitjana, nombre de prediccions i recompte d'alta intensitat per donar context a l'usuari.\n[kb_003] Alta intensitat aproximada (training_recommendation): Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients.\n\nResum de sessio: Activitat dominant: Desplacament suau. Confianca mitjana: 88%. Blocs alta intensitat: 2/30.\n\nResposta:",
+      "answer": "És recomanable alternar els blocs de desplaçament suau amb recuperacions per evitar canvis de ritme i augment de fatiga.",
+      "answer_chars": 120,
+      "retrieved_ids": "kb_002|kb_012|kb_003",
+      "retrieved_titles": [
+        "Desplacament suau",
+        "Interpretacio de prediccions",
+        "Alta intensitat aproximada"
+      ],
+      "source_hit_rate": null,
+      "expected_term_coverage": 0.0,
+      "grounded_overlap": 0.5833333333333334,
+      "error": "",
+      "latency_ms": 8496.46,
+      "total_duration_ns": 8490738900,
+      "eval_count": 34,
+      "eval_duration_ns": 1700229400,
+      "prompt_eval_count": 368,
+      "task": {
+        "type": "session",
+        "id": "s_003",
+        "session": {
+          "dominantActivity": "Desplacament suau",
+          "avgMlConfidence": 0.88,
+          "mlPredictionCount": 30,
+          "highIntensityCount": 2
+        },
+        "query": "Activitat dominant: Desplacament suau. Confianca mitjana: 88%. Blocs alta intensitat: 2/30.",
+        "expected_ids": [],
+        "expected_terms": [
+          "desplacament suau",
+          "carrega aerobia",
+          "progressar"
+        ],
+        "notes": "Sessio suau amb poca alta intensitat."
+      }
+    },
+    {
+      "model": "gemma3:1b",
+      "task_id": "s_004",
+      "task_type": "session",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\nContext RAG:\n[kb_012] Interpretacio de prediccions (model_interpretation): Les prediccions de SmarTrain s'han d'interpretar com finestres curtes de moviment. El resum de sessio utilitza activitat dominant, confiança mitjana, nombre de prediccions i recompte d'alta intensitat per donar context a l'usuari.\n[kb_003] Alta intensitat aproximada (training_recommendation): Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients.\n[kb_009] Recomanacio post sessio (training_recommendation): Despres d'una sessio amb alta intensitat, es recomana incloure recuperacio, hidratacio i analisi de carrega. Si hi ha massa blocs intensos seguits, la propera sessio pot prioritzar tecnica, mobilitat o treball aerobi suau.\n\nResum de sessio: Activitat dominant: Alta intensitat. Confianca mitjana: 48%. Blocs alta intensitat: 7/16.\n\nResposta:",
+      "answer": "La sessió ha estat d'alta intensitat amb 7 blocs de blocs de alta intensitat. Recomanem recuperació, hidratació i anàlisi de carrega després per evitar canvis de ritme o sobreestès.",
+      "answer_chars": 181,
+      "retrieved_ids": "kb_012|kb_003|kb_009",
+      "retrieved_titles": [
+        "Interpretacio de prediccions",
+        "Alta intensitat aproximada",
+        "Recomanacio post sessio"
+      ],
+      "source_hit_rate": null,
+      "expected_term_coverage": 0.0,
+      "grounded_overlap": 0.4375,
+      "error": "",
+      "latency_ms": 8898.59,
+      "total_duration_ns": 8893328800,
+      "eval_count": 53,
+      "eval_duration_ns": 2696680400,
+      "prompt_eval_count": 365,
+      "task": {
+        "type": "session",
+        "id": "s_004",
+        "session": {
+          "dominantActivity": "Alta intensitat",
+          "avgMlConfidence": 0.48,
+          "mlPredictionCount": 16,
+          "highIntensityCount": 7
+        },
+        "query": "Activitat dominant: Alta intensitat. Confianca mitjana: 48%. Blocs alta intensitat: 7/16.",
+        "expected_ids": [],
+        "expected_terms": [
+          "prudencia",
+          "confianca baixa",
+          "soroll"
+        ],
+        "notes": "Sessio intensa pero amb confianca baixa del model."
+      }
+    }
+  ]
+}

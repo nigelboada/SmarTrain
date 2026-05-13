@@ -72,12 +72,36 @@ object SessionRagRecommender {
             )
         }
 
-        val queryTokens = buildQueryTokens(session)
-        val retrieved = documents
-            .map { document -> document to score(document, queryTokens) }
-            .sortedByDescending { (_, score) -> score }
-            .take(TOP_K)
-            .map { (document, _) -> document }
+        return buildRuleBasedInsight(session, retrieveDocuments(session))
+    }
+
+    suspend fun buildInsightWithGenerator(
+        session: Session,
+        generator: RagAnswerGenerator = defaultGenerator()
+    ): SessionRagInsight {
+        if (session.mlPredictionCount == 0) {
+            return buildInsight(session)
+        }
+
+        val retrieved = retrieveDocuments(session)
+        return runCatching {
+            generator.generate(session, retrieved)
+        }.getOrElse {
+            buildRuleBasedInsight(session, retrieved)
+        }
+    }
+
+    fun buildRuleBasedInsight(
+        session: Session,
+        retrieved: List<RagDocument>
+    ): SessionRagInsight {
+        if (session.mlPredictionCount == 0) {
+            return SessionRagInsight(
+                title = "Resum ML no disponible",
+                answer = "Aquesta sessio no conte prediccions ML suficients per generar una recomanacio.",
+                sourceTitles = emptyList()
+            )
+        }
 
         val intensityRatio = session.highIntensityCount.toDouble() / session.mlPredictionCount
         val confidencePercent = (session.avgMlConfidence * 100).toInt()
@@ -97,6 +121,15 @@ object SessionRagRecommender {
             answer = answer,
             sourceTitles = retrieved.map { it.title }
         )
+    }
+
+    fun retrieveDocuments(session: Session): List<RagDocument> {
+        val queryTokens = buildQueryTokens(session)
+        return documents
+            .map { document -> document to score(document, queryTokens) }
+            .sortedByDescending { (_, score) -> score }
+            .take(TOP_K)
+            .map { (document, _) -> document }
     }
 
     private fun buildQueryTokens(session: Session): Set<String> {
@@ -132,4 +165,15 @@ object SessionRagRecommender {
     private const val TOP_K = 3
     private const val LOW_CONFIDENCE_THRESHOLD = 0.60
     private const val HIGH_INTENSITY_RATIO = 0.30
+
+    private fun defaultGenerator(): RagAnswerGenerator {
+        return if (RagGenerationConfig.USE_OLLAMA) {
+            OllamaRagGenerator(
+                baseUrl = RagGenerationConfig.OLLAMA_BASE_URL,
+                model = RagGenerationConfig.OLLAMA_MODEL
+            )
+        } else {
+            RuleBasedRagAnswerGenerator
+        }
+    }
 }
