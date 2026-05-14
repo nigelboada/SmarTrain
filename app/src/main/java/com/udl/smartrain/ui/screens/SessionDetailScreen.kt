@@ -180,6 +180,18 @@ private fun SessionDetailContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.88f)
                     )
+                    Text(
+                        text = buildRagMetadataText(session),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.68f)
+                    )
+                    if (session.ragUsedFallback) {
+                        Text(
+                            text = "Fallback local utilitzat: ${session.ragFallbackReason.ifBlank { "el generador IA no estava disponible." }}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFFFC857)
+                        )
+                    }
                     if (insight.sourceTitles.isNotEmpty()) {
                         Text(
                             text = "Fonts recuperades",
@@ -312,6 +324,16 @@ private fun formatDurationShort(totalSeconds: Long): String {
     } else {
         "${seconds}s"
     }
+}
+
+private fun buildRagMetadataText(session: Session): String {
+    val source = "${session.ragProvider}:${session.ragModel}"
+    val latency = if (session.ragLatencyMillis > 0) {
+        " - ${session.ragLatencyMillis} ms"
+    } else {
+        ""
+    }
+    return "Generador: $source$latency"
 }
 
 private fun Session.persistedOrGeneratedRagInsight(): SessionRagInsight {

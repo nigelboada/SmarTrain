@@ -4,6 +4,7 @@ import argparse
 import csv
 import json
 import math
+import os
 import re
 import time
 from collections import Counter
@@ -20,6 +21,7 @@ SESSIONS_PATH = ROOT / "eval" / "sessions.jsonl"
 RESULTS_DIR = ROOT / "results"
 JSON_RESULTS_PATH = RESULTS_DIR / "ollama_model_comparison.json"
 CSV_RESULTS_PATH = RESULTS_DIR / "ollama_model_comparison.csv"
+REVIEW_CSV_PATH = RESULTS_DIR / "ollama_manual_review.csv"
 
 STOPWORDS = {
     "a",
@@ -55,7 +57,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def tokenize(text: str) -> list[str]:
-    tokens = re.findall(r"[a-zA-ZÀ-ÿ0-9]+", text.lower())
+    tokens = re.findall(r"[A-Za-z\u00C0-\u00FF0-9]+", text.lower())
     return [token for token in tokens if token not in STOPWORDS and len(token) > 1]
 
 
@@ -127,14 +129,21 @@ def build_prompt(task: dict[str, Any], retrieved: list[dict[str, Any]]) -> str:
     return (
         "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\n"
         "Basa la resposta nomes en el context recuperat i en les dades de la sessio.\n"
-        "No inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n\n"
+        "No inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\n"
+        "No escriguis raonament intern, nomes la resposta final.\n\n"
         f"Context RAG:\n{context}\n\n"
         f"{user_input}\n\n"
         "Resposta:"
     )
 
 
-def call_ollama(base_url: str, model: str, prompt: str, timeout_seconds: int) -> tuple[str, dict[str, Any]]:
+def call_ollama(
+    base_url: str,
+    model: str,
+    prompt: str,
+    timeout_seconds: int,
+    api_key: str = "",
+) -> tuple[str, dict[str, Any]]:
     payload = {
         "model": model,
         "prompt": prompt,
@@ -144,10 +153,14 @@ def call_ollama(base_url: str, model: str, prompt: str, timeout_seconds: int) ->
             "num_predict": 220,
         },
     }
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
     request = Request(
-        f"{base_url.rstrip('/')}/api/generate",
+        generate_endpoint(base_url),
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     started = time.perf_counter()
@@ -163,6 +176,13 @@ def call_ollama(base_url: str, model: str, prompt: str, timeout_seconds: int) ->
         "prompt_eval_count": data.get("prompt_eval_count"),
     }
     return data.get("response", "").strip(), metadata
+
+
+def generate_endpoint(base_url: str) -> str:
+    normalized_base_url = base_url.rstrip("/")
+    if normalized_base_url.endswith("/api"):
+        return f"{normalized_base_url}/generate"
+    return f"{normalized_base_url}/api/generate"
 
 
 def source_hit_rate(expected_ids: list[str], retrieved_ids: list[str]) -> float | None:
@@ -185,6 +205,38 @@ def grounded_overlap(answer: str, retrieved: list[dict[str, Any]]) -> float:
         return 0.0
     context_tokens = set(tokenize(" ".join(document["text"] for document in retrieved)))
     return len(answer_tokens & context_tokens) / len(answer_tokens)
+
+
+def language_hint_score(answer: str) -> float:
+    if not answer:
+        return 0.0
+    markers = [
+        "sessio",
+        "confianca",
+        "recomana",
+        "recuperacio",
+        "carrega",
+        "activitat",
+        "prediccio",
+        "prudencia",
+    ]
+    normalized = answer.lower()
+    hits = sum(1 for marker in markers if marker in normalized)
+    return min(1.0, hits / 3)
+
+
+def recommendation_hint_score(answer: str) -> float:
+    if not answer:
+        return 0.0
+    normalized = answer.lower()
+    markers = ["recoman", "conve", "prioritza", "cal ", "pots ", "propera sessio"]
+    return 1.0 if any(marker in normalized for marker in markers) else 0.0
+
+
+def hallucination_risk_score(answer: str, retrieved: list[dict[str, Any]]) -> float:
+    if not answer:
+        return 1.0
+    return round(1.0 - grounded_overlap(answer, retrieved), 3)
 
 
 def build_tasks(questions: list[dict[str, Any]], sessions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -225,6 +277,9 @@ def write_csv(rows: list[dict[str, Any]], path: Path) -> None:
         "source_hit_rate",
         "expected_term_coverage",
         "grounded_overlap",
+        "language_hint_score",
+        "recommendation_hint_score",
+        "hallucination_risk_score",
         "answer_chars",
         "error",
         "retrieved_ids",
@@ -236,6 +291,28 @@ def write_csv(rows: list[dict[str, Any]], path: Path) -> None:
             writer.writerow({field: row.get(field) for field in fieldnames})
 
 
+def write_manual_review_csv(rows: list[dict[str, Any]], path: Path) -> None:
+    fieldnames = [
+        "model",
+        "task_id",
+        "task_type",
+        "latency_ms",
+        "error",
+        "retrieved_ids",
+        "answer",
+        "catalan_quality_1_5",
+        "respects_rag_context_1_5",
+        "invented_data_1_5",
+        "recommendation_usefulness_1_5",
+        "manual_notes",
+    ]
+    with path.open("w", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: row.get(field, "") for field in fieldnames})
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Compare Ollama models on the SmarTrain RAG task.")
     parser.add_argument("--models", nargs="+", default=["gemma3:1b"], help="Ollama model names to evaluate.")
@@ -243,7 +320,13 @@ def main() -> None:
     parser.add_argument("--top-k", type=int, default=3, help="Number of RAG documents to retrieve.")
     parser.add_argument("--timeout", type=int, default=120, help="Request timeout per generation.")
     parser.add_argument("--limit", type=int, default=0, help="Optional maximum number of tasks.")
+    parser.add_argument(
+        "--api-key-env",
+        default="OLLAMA_API_KEY",
+        help="Environment variable containing an Ollama Cloud API key.",
+    )
     args = parser.parse_args()
+    api_key = os.environ.get(args.api_key_env, "")
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     documents = read_jsonl(DATA_PATH)
@@ -266,9 +349,17 @@ def main() -> None:
             answer = ""
             metadata: dict[str, Any] = {"latency_ms": None}
             try:
-                answer, metadata = call_ollama(args.base_url, model, prompt, args.timeout)
+                answer, metadata = call_ollama(
+                    base_url=args.base_url,
+                    model=model,
+                    prompt=prompt,
+                    timeout_seconds=args.timeout,
+                    api_key=api_key,
+                )
             except (HTTPError, URLError, TimeoutError, OSError) as exc:
                 error = str(exc)
+            if not error and not answer.strip():
+                error = "empty response"
 
             row = {
                 "model": model,
@@ -282,6 +373,9 @@ def main() -> None:
                 "source_hit_rate": source_hit_rate(task.get("expected_ids", []), retrieved_ids),
                 "expected_term_coverage": expected_term_coverage(task.get("expected_terms", []), answer),
                 "grounded_overlap": grounded_overlap(answer, retrieved) if answer else 0.0,
+                "language_hint_score": language_hint_score(answer),
+                "recommendation_hint_score": recommendation_hint_score(answer),
+                "hallucination_risk_score": hallucination_risk_score(answer, retrieved),
                 "error": error,
                 **metadata,
             }
@@ -302,26 +396,38 @@ def main() -> None:
     summary = []
     for model in args.models:
         model_rows = [row for row in rows if row["model"] == model]
-        successful = [row for row in model_rows if not row["error"]]
+        successful = [row for row in model_rows if not row["error"] and row["answer_chars"] > 0]
         latencies = [row["latency_ms"] for row in successful if row["latency_ms"] is not None]
+        term_rows = [row for row in successful if row["expected_term_coverage"] is not None]
         summary.append(
             {
                 "model": model,
                 "tasks": len(model_rows),
                 "successful_tasks": len(successful),
                 "avg_latency_ms": round(sum(latencies) / len(latencies), 2) if latencies else None,
-                "avg_grounded_overlap": round(
-                    sum(row["grounded_overlap"] for row in successful) / len(successful), 3
-                )
+                "avg_grounded_overlap": round(sum(row["grounded_overlap"] for row in successful) / len(successful), 3)
                 if successful
                 else None,
                 "avg_expected_term_coverage": round(
-                    sum(
-                        row["expected_term_coverage"]
-                        for row in successful
-                        if row["expected_term_coverage"] is not None
-                    )
-                    / max(1, len([row for row in successful if row["expected_term_coverage"] is not None])),
+                    sum(row["expected_term_coverage"] for row in term_rows) / len(term_rows),
+                    3,
+                )
+                if term_rows
+                else None,
+                "avg_language_hint_score": round(
+                    sum(row["language_hint_score"] for row in successful) / len(successful),
+                    3,
+                )
+                if successful
+                else None,
+                "avg_recommendation_hint_score": round(
+                    sum(row["recommendation_hint_score"] for row in successful) / len(successful),
+                    3,
+                )
+                if successful
+                else None,
+                "avg_hallucination_risk_score": round(
+                    sum(row["hallucination_risk_score"] for row in successful) / len(successful),
                     3,
                 )
                 if successful
@@ -342,7 +448,18 @@ def main() -> None:
     }
     JSON_RESULTS_PATH.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
     write_csv(rows, CSV_RESULTS_PATH)
-    print(json.dumps({"summary": summary, "json": str(JSON_RESULTS_PATH), "csv": str(CSV_RESULTS_PATH)}, indent=2))
+    write_manual_review_csv(rows, REVIEW_CSV_PATH)
+    print(
+        json.dumps(
+            {
+                "summary": summary,
+                "json": str(JSON_RESULTS_PATH),
+                "csv": str(CSV_RESULTS_PATH),
+                "manual_review_csv": str(REVIEW_CSV_PATH),
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

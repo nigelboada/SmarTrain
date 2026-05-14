@@ -14,12 +14,15 @@ import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.repository.SessionRepository
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.ActivityRecognitionState
+import com.udl.smartrain.ml.DebugRagGenerationSettings
 import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -35,6 +38,7 @@ class MainViewModel(
 ) : ViewModel() {
 
     private val _currentSession = MutableStateFlow<Session?>(null)
+    private val _ragGenerationUiState = MutableStateFlow(RagGenerationUiState())
     private val currentUserId = MutableStateFlow(auth.currentUser?.uid.orEmpty())
 
     var currentUserName by mutableStateOf(auth.currentUser?.email ?: "Usuari")
@@ -45,6 +49,9 @@ class MainViewModel(
 
     val isAuthenticated: Boolean
         get() = currentUserId.value.isNotBlank()
+
+    val ragGenerationUiState: StateFlow<RagGenerationUiState> = _ragGenerationUiState.asStateFlow()
+    val ragGenerationSettings = DebugRagGenerationSettings.settings
 
     val sessionsHistory = currentUserId
         .flatMapLatest { userId ->
@@ -123,13 +130,14 @@ class MainViewModel(
             return
         }
 
+        _ragGenerationUiState.value = RagGenerationUiState()
         _currentSession.value = Session(
             id = UUID.randomUUID().toString(),
             userId = userId
         )
     }
 
-    fun finishAndSaveSession(context: Context) {
+    fun finishAndSaveSession(context: Context, onSaved: () -> Unit = {}) {
         Log.d("DEBUG_VM", "Entrant a finishAndSaveSession()")
 
         locationProvider.stopTracking()
@@ -159,16 +167,57 @@ class MainViewModel(
             )
             Log.d("DEBUG_VM", "Sessio trobada, guardant: ${sessionWithMlResults.id}")
             viewModelScope.launch {
-                val ragInsight = SessionRagRecommender.buildInsightWithGenerator(sessionWithMlResults)
+                val settings = DebugRagGenerationSettings.settings.value
+                _ragGenerationUiState.value = RagGenerationUiState(
+                    isGenerating = true,
+                    message = if (settings.useOllama) {
+                        "Generant resum amb IA (${settings.ollamaModel})..."
+                    } else {
+                        "Generant resum local..."
+                    }
+                )
+                val ragResult = SessionRagRecommender.buildInsightWithGenerator(
+                    session = sessionWithMlResults,
+                    settings = settings
+                )
+                val ragInsight = ragResult.insight
                 val sessionWithRagResults = sessionWithMlResults.copy(
                     ragTitle = ragInsight.title,
                     ragAnswer = ragInsight.answer,
-                    ragSourceTitles = ragInsight.sourceTitles.joinToString(separator = "|")
+                    ragSourceTitles = ragInsight.sourceTitles.joinToString(separator = "|"),
+                    ragProvider = ragResult.provider,
+                    ragModel = ragResult.model,
+                    ragLatencyMillis = ragResult.latencyMillis,
+                    ragUsedFallback = ragResult.usedFallback,
+                    ragFallbackReason = ragResult.fallbackReason
                 )
                 repository.saveSession(sessionWithRagResults)
                 _currentSession.value = null
+                _ragGenerationUiState.value = RagGenerationUiState(
+                    isGenerating = false,
+                    message = if (ragResult.usedFallback) {
+                        "Ollama no ha respost. S'ha guardat el resum local de fallback."
+                    } else {
+                        "Resum guardat amb ${ragResult.provider}:${ragResult.model}."
+                    }
+                )
+                onSaved()
             }
         }
+    }
+
+    fun updateRagGenerationSettings(
+        useOllama: Boolean,
+        ollamaBaseUrl: String,
+        ollamaModel: String,
+        ollamaApiKey: String
+    ) {
+        DebugRagGenerationSettings.update(
+            useOllama = useOllama,
+            ollamaBaseUrl = ollamaBaseUrl,
+            ollamaModel = ollamaModel,
+            ollamaApiKey = ollamaApiKey
+        )
     }
 
     fun deleteSession(session: Session) {
@@ -193,6 +242,11 @@ class MainViewModel(
         repository.syncPendingSessions(userId)
     }
 }
+
+data class RagGenerationUiState(
+    val isGenerating: Boolean = false,
+    val message: String? = null
+)
 
 class MainViewModelFactory(
     private val repository: SessionRepository,

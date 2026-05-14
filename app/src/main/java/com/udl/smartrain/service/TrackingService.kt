@@ -77,16 +77,7 @@ class TrackingService : Service() {
                     val normalizedWindow = normalizeWindowForUciModel(buffer)
                     val inputArray = arrayOf(normalizedWindow.toTypedArray())
                     val modelPrediction = classifier.classify(inputArray)
-                    val prediction = if (isStationary(buffer)) {
-                        ActivityPrediction(
-                            classIndex = REST_CLASS_INDEX,
-                            label = "Repos",
-                            confidence = stationaryConfidence(buffer),
-                            modelLabel = "Repos estable"
-                        )
-                    } else {
-                        modelPrediction
-                    }
+                    val prediction = movementHeuristicPrediction(buffer) ?: modelPrediction
 
                     ActivityRecognitionState.publish(prediction)
 
@@ -184,13 +175,46 @@ class TrackingService : Service() {
         }
     }
 
-    private fun isStationary(window: List<FloatArray>): Boolean {
-        return magnitudeStd(window) < STATIONARY_MAGNITUDE_STD_THRESHOLD
+    private fun movementHeuristicPrediction(window: List<FloatArray>): ActivityPrediction? {
+        val std = magnitudeStd(window)
+        val range = magnitudeRange(window)
+        return when {
+            std < STATIONARY_MAGNITUDE_STD_THRESHOLD && range < STATIONARY_MAGNITUDE_RANGE_THRESHOLD -> {
+                ActivityPrediction(
+                    classIndex = REST_CLASS_INDEX,
+                    label = "Repos",
+                    confidence = stationaryConfidence(std),
+                    modelLabel = "Repos estable"
+                )
+            }
+            std >= VIGOROUS_MAGNITUDE_STD_THRESHOLD || range >= VIGOROUS_MAGNITUDE_RANGE_THRESHOLD -> {
+                ActivityPrediction(
+                    classIndex = HIGH_INTENSITY_CLASS_INDEX,
+                    label = "Alta intensitat",
+                    confidence = movementConfidence(std, VIGOROUS_MAGNITUDE_STD_THRESHOLD),
+                    modelLabel = "Moviment brusc"
+                )
+            }
+            std >= LIGHT_MOVEMENT_MAGNITUDE_STD_THRESHOLD || range >= LIGHT_MOVEMENT_MAGNITUDE_RANGE_THRESHOLD -> {
+                ActivityPrediction(
+                    classIndex = LIGHT_MOVEMENT_CLASS_INDEX,
+                    label = "Desplacament suau",
+                    confidence = movementConfidence(std, LIGHT_MOVEMENT_MAGNITUDE_STD_THRESHOLD),
+                    modelLabel = "Moviment suau"
+                )
+            }
+            else -> null
+        }
     }
 
-    private fun stationaryConfidence(window: List<FloatArray>): Float {
-        val confidence = 1f - (magnitudeStd(window) / STATIONARY_MAGNITUDE_STD_THRESHOLD)
+    private fun stationaryConfidence(std: Float): Float {
+        val confidence = 1f - (std / STATIONARY_MAGNITUDE_STD_THRESHOLD)
         return confidence.coerceIn(0.65f, 0.99f)
+    }
+
+    private fun movementConfidence(std: Float, threshold: Float): Float {
+        val confidence = 0.60f + ((std - threshold).coerceAtLeast(0f) / (threshold * 2.5f))
+        return confidence.coerceIn(0.60f, 0.98f)
     }
 
     private fun magnitudeStd(window: List<FloatArray>): Float {
@@ -210,11 +234,29 @@ class TrackingService : Service() {
         return sqrt(variance)
     }
 
+    private fun magnitudeRange(window: List<FloatArray>): Float {
+        val magnitudes = window.map { sample ->
+            sqrt(
+                sample[0] * sample[0] +
+                    sample[1] * sample[1] +
+                    sample[2] * sample[2]
+            )
+        }
+        return (magnitudes.maxOrNull() ?: 0f) - (magnitudes.minOrNull() ?: 0f)
+    }
+
     private companion object {
         const val WINDOW_SIZE = 128
         const val AXIS_COUNT = 3
+        const val LIGHT_MOVEMENT_CLASS_INDEX = 0
+        const val HIGH_INTENSITY_CLASS_INDEX = 1
         const val REST_CLASS_INDEX = 3
         const val TARGET_SAMPLING_PERIOD_NANOS = 20_000_000L
         const val STATIONARY_MAGNITUDE_STD_THRESHOLD = 0.035f
+        const val STATIONARY_MAGNITUDE_RANGE_THRESHOLD = 0.12f
+        const val LIGHT_MOVEMENT_MAGNITUDE_STD_THRESHOLD = 0.055f
+        const val LIGHT_MOVEMENT_MAGNITUDE_RANGE_THRESHOLD = 0.18f
+        const val VIGOROUS_MAGNITUDE_STD_THRESHOLD = 0.16f
+        const val VIGOROUS_MAGNITUDE_RANGE_THRESHOLD = 0.55f
     }
 }

@@ -1,0 +1,3 @@
+model,task_id,task_type,latency_ms,error,retrieved_ids,answer,catalan_quality_1_5,respects_rag_context_1_5,invented_data_1_5,recommendation_usefulness_1_5,manual_notes
+qwen3.6:latest,q_001,question,93027.92,empty response,kb_003|kb_009|kb_001,,,,,,
+qwen3.6:latest,q_002,question,97653.51,empty response,kb_006|kb_004|kb_005,,,,,,

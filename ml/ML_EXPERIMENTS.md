@@ -347,11 +347,35 @@ La pantalla d'historial mostra un boto de resum per a cada sessio amb prediccion
 
 La resposta mostra una interpretacio de la sessio i les fonts documentals recuperades. Aquesta decisio evita dependencies d'API, funciona offline i mante la tracabilitat entre resultats ML i recomanacions visibles a l'usuari.
 
+### 11.10 Experimentacio amb Ollama i ngrok
+
+Per a la demo final s'ha afegit una via opcional de generacio amb Ollama. L'app permet configurar des de la pantalla de perfil:
+
+- si es vol usar Ollama o el resum local;
+- la Base URL d'Ollama, que pot ser local o una URL HTTPS de ngrok;
+- el nom del model, per exemple `gemma3:1b`.
+
+Quan Ollama esta activat, l'app envia el resum de sessio i els documents recuperats a l'endpoint `/api/generate`. Si Ollama o ngrok no responen, es guarda automaticament el resum local de fallback. El resum generat queda persistit dins la sessio amb el proveidor, model, latencia i estat de fallback.
+
+L'experimentacio comparativa es documenta a `ml/rag/RAG_EXPERIMENTS.md` i es reprodueix amb:
+
+```bash
+python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b
+```
+
+Resultat actual amb `gemma3:1b`:
+
+| Model | Tasques | Correctes sense error | Latencia mitjana | Grounded overlap | Cobertura termes esperats |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| `gemma3:1b` | 10 | 10 | 9266,15 ms | 0,598 | 0,333 |
+
+La lectura experimental es que `gemma3:1b` es viable per demo com a baseline petit, pero la latencia es alta i la cobertura automatica de termes esperats encara es moderada. Per aquest motiu, el sistema de regles continua sent el fallback recomanat.
+
 Limitacions:
 
 - Corpus petit.
 - No hi ha embeddings semantics reals.
-- No hi ha generacio natural amb LLM.
+- La generacio natural amb Ollama es opcional i depen de tenir l'endpoint actiu.
 - L'avaluacio usa nomes 6 preguntes.
 
 Per a una versio posterior, el pas natural seria comparar aquest TF-IDF amb embeddings multilingues, ampliar el corpus i substituir la resposta extractiva local per una generacio controlada amb un model de llenguatge.

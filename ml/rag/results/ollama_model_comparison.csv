@@ -1,11 +1,3 @@
-model,task_id,task_type,latency_ms,source_hit_rate,expected_term_coverage,grounded_overlap,answer_chars,error,retrieved_ids
-gemma3:1b,q_001,question,8893.57,1.0,,0.5769230769230769,263,,kb_003|kb_009|kb_001
-gemma3:1b,q_002,question,12293.74,1.0,,0.4444444444444444,465,,kb_006|kb_004|kb_005
-gemma3:1b,q_003,question,9963.53,1.0,,0.92,193,,kb_007|kb_004|kb_010
-gemma3:1b,q_004,question,9100.93,1.0,,0.56,250,,kb_008|kb_005|kb_010
-gemma3:1b,q_005,question,9785.17,1.0,,0.5454545454545454,237,,kb_004|kb_005|kb_012
-gemma3:1b,q_006,question,6250.27,1.0,,1.0,45,,kb_011|kb_010|kb_001
-gemma3:1b,s_001,session,9560.9,,0.6666666666666666,0.4117647058823529,160,,kb_012|kb_003|kb_009
-gemma3:1b,s_002,session,9418.37,,0.6666666666666666,0.5,235,,kb_012|kb_001|kb_003
-gemma3:1b,s_003,session,8496.46,,0.0,0.5833333333333334,120,,kb_002|kb_012|kb_003
-gemma3:1b,s_004,session,8898.59,,0.0,0.4375,181,,kb_012|kb_003|kb_009
+model,task_id,task_type,latency_ms,source_hit_rate,expected_term_coverage,grounded_overlap,language_hint_score,recommendation_hint_score,hallucination_risk_score,answer_chars,error,retrieved_ids
+qwen3.6:latest,q_001,question,93027.92,1.0,,0.0,0.0,0.0,1.0,0,empty response,kb_003|kb_009|kb_001
+qwen3.6:latest,q_002,question,97653.51,1.0,,0.0,0.0,0.0,1.0,0,empty response,kb_006|kb_004|kb_005

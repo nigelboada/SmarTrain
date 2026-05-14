@@ -251,6 +251,18 @@ El script compara recuperadors simples i genera:
 ml/rag/results/rag_evaluation.json
 ```
 
+Per comparar models generatius Ollama:
+
+```powershell
+python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b
+```
+
+Mes detalls a:
+
+```text
+ml/rag/RAG_EXPERIMENTS.md
+```
+
 ## RAG integrat a l'app
 
 A Android hi ha una versio local i lleugera del RAG a:
@@ -268,6 +280,37 @@ Quan l'usuari obre l'historial, cada sessio amb prediccions ML mostra una icona 
 - fragments documentals locals.
 
 La resposta mostra interpretacio i fonts recuperades.
+
+## Ollama i ngrok per a demo
+
+Per a una demo amb mobil fisic es pot fer servir Ollama al PC i exposar-lo temporalment amb ngrok. Aixo evita canviar la IP local del PC o del mobil.
+
+Al PC:
+
+```powershell
+ollama serve
+ollama pull gemma3:1b
+ngrok http 11434
+```
+
+Ngrok mostrara una URL HTTPS semblant a:
+
+```text
+https://exemple.ngrok-free.app
+```
+
+A l'app:
+
+1. Obrir `Perfil`.
+2. Activar `Usar Ollama per als resums`.
+3. Posar la URL HTTPS de ngrok a `Base URL Ollama / ngrok`.
+4. Posar el model, per exemple `gemma3:1b`.
+5. Guardar canvis.
+6. Crear i finalitzar una sessio nova.
+
+Quan es guarda la sessio, l'app intenta generar el resum RAG amb Ollama. Si Ollama o ngrok no responen, es guarda automaticament el resum local de fallback. La pantalla de detall mostra quin generador s'ha utilitzat (`ollama` o `rules`), el model i la latencia.
+
+Per seguretat, l'endpoint ngrok s'ha d'utilitzar nomes durant la demo i no s'ha de deixar obert permanentment.
 
 ## Resultats validats
 
@@ -298,8 +341,8 @@ Mes detalls a `ml/ML_EXPERIMENTS.md`.
 - Les categories d'alta intensitat son una aproximacio basada en pujar/baixar escales.
 - La posicio del mobil al cos pot afectar la prediccio.
 - El preprocessament Android redueix diferencies d'escala i orientacio, pero no elimina completament el canvi de domini.
-- El RAG integrat es local, extractiu i amb corpus petit.
-- No hi ha embeddings semantics ni LLM generatiu dins de l'app.
+- El RAG local es extractiu i amb corpus petit.
+- La generacio amb Ollama/ngrok es opcional i pensada per demo, amb fallback local.
 - Les recomanacions son orientatives i no substitueixen criteri professional d'entrenament.
 
 ## Fora d'abast actual
@@ -322,4 +365,6 @@ La localitzacio s'utilitza per calcular distancia aproximada durant la sessio, p
 - `app/src/main/java/com/udl/smartrain/data/repository/SessionRepository.kt`
 - `ml/scripts/train_model_comparison.py`
 - `ml/rag/scripts/evaluate_rag.py`
+- `ml/rag/scripts/evaluate_ollama_models.py`
+- `ml/rag/RAG_EXPERIMENTS.md`
 - `ml/ML_EXPERIMENTS.md`

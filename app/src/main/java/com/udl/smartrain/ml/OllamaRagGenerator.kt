@@ -10,8 +10,10 @@ import java.net.URL
 
 class OllamaRagGenerator(
     private val baseUrl: String,
-    private val model: String
+    override val model: String,
+    private val apiKey: String = ""
 ) : RagAnswerGenerator {
+    override val provider: String = "ollama"
 
     override suspend fun generate(
         session: Session,
@@ -29,11 +31,15 @@ class OllamaRagGenerator(
                     .put("num_predict", 220)
             )
 
-        val connection = (URL("${baseUrl.trimEnd('/')}/api/generate").openConnection() as HttpURLConnection)
+        val connection = (URL(generateUrl()).openConnection() as HttpURLConnection)
         connection.requestMethod = "POST"
         connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
         connection.readTimeout = READ_TIMEOUT_MILLIS
         connection.setRequestProperty("Content-Type", "application/json")
+        connection.setRequestProperty("ngrok-skip-browser-warning", "true")
+        if (apiKey.isNotBlank()) {
+            connection.setRequestProperty("Authorization", "Bearer $apiKey")
+        }
         connection.doOutput = true
 
         OutputStreamWriter(connection.outputStream, Charsets.UTF_8).use { writer ->
@@ -51,6 +57,15 @@ class OllamaRagGenerator(
             answer = answer,
             sourceTitles = retrievedDocuments.map { it.title }
         )
+    }
+
+    private fun generateUrl(): String {
+        val normalizedBaseUrl = baseUrl.trimEnd('/')
+        return if (normalizedBaseUrl.endsWith("/api")) {
+            "$normalizedBaseUrl/generate"
+        } else {
+            "$normalizedBaseUrl/api/generate"
+        }
     }
 
     private fun buildPrompt(session: Session, retrievedDocuments: List<RagDocument>): String {
@@ -83,10 +98,4 @@ class OllamaRagGenerator(
         const val CONNECT_TIMEOUT_MILLIS = 5_000
         const val READ_TIMEOUT_MILLIS = 30_000
     }
-}
-
-object RagGenerationConfig {
-    const val USE_OLLAMA = false
-    const val OLLAMA_BASE_URL = "http://10.0.2.2:11434"
-    const val OLLAMA_MODEL = "gemma3:1b"
 }
