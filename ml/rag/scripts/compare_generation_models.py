@@ -36,7 +36,6 @@ DEFAULT_CLOUD_MODELS = ["qwen3-coder-next", "gemma3:4b", "gpt-oss:20b"]
 
 COMPARISON_JSON_PATH = RESULTS_DIR / "generation_model_comparison.json"
 COMPARISON_CSV_PATH = RESULTS_DIR / "generation_model_comparison.csv"
-REPORT_PATH = RESULTS_DIR / "generation_model_comparison_report.md"
 
 CATALAN_MARKERS = {
     "sessio",
@@ -299,18 +298,6 @@ def choose_winner(summary: list[dict[str, Any]]) -> dict[str, Any] | None:
     )[0]
 
 
-def sample_answer(rows: list[dict[str, Any]], provider: str, model: str) -> dict[str, Any] | None:
-    preferred = [
-        row
-        for row in rows
-        if row["provider"] == provider and row["model"] == model and row["task_id"] in {"q_001", "s_004"} and row["answer"].strip()
-    ]
-    if preferred:
-        return preferred[0]
-    fallback = [row for row in rows if row["provider"] == provider and row["model"] == model and row["answer"].strip()]
-    return fallback[0] if fallback else None
-
-
 def write_csv(rows: list[dict[str, Any]], path: Path) -> None:
     fields = [
         "provider",
@@ -335,76 +322,6 @@ def write_csv(rows: list[dict[str, Any]], path: Path) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow({field: row.get(field, "") for field in fields})
-
-
-def write_report(summary: list[dict[str, Any]], rows: list[dict[str, Any]], path: Path, started_at: str, winner: dict[str, Any] | None) -> None:
-    lines = [
-        "# Comparativa de models generatius per SmarTrain",
-        "",
-        f"Data: {started_at}",
-        "",
-        "## Metodologia",
-        "",
-        "Tots els models s'han avaluat amb les mateixes 10 tasques del RAG: 6 preguntes documentals i 4 sessions sintetiques. El retrieval es mante constant amb TF-IDF i `top_k=3`; per tant, la comparacio mesura principalment la generacio.",
-        "",
-        "Les metriques qualitatives son automatices i orientatives: combinen solapament amb el context recuperat, cobertura de termes esperats, marcadors de catala, deteccio de xifres no suportades i presencia de recomanacions accionables. No substitueixen una auditoria humana, pero eviten haver d'omplir un CSV manual per al prototip.",
-        "",
-        "## Resultats resum",
-        "",
-        "| Proveidor | Model | Tasques OK | Errors/timeouts | Latencia mitjana | P95 latencia | Catala | Respecte RAG | No invencio | Utilitat | Grounded overlap |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-    ]
-    for item in summary:
-        lines.append(
-            "| {provider} | `{model}` | {successful_tasks}/{tasks} | {errors_or_timeouts} | {avg_latency_ms} ms | {p95_latency_ms} ms | {avg_linguistic_quality_1_5} | {avg_context_respect_1_5} | {avg_invented_data_1_5} | {avg_recommendation_usefulness_1_5} | {avg_grounded_overlap} |".format(
-                **{key: value if value is not None else "n/a" for key, value in item.items()}
-            )
-        )
-    lines.extend(["", "## Exemples de resposta", ""])
-    for item in summary:
-        example = sample_answer(rows, item["provider"], item["model"])
-        lines.append(f"### {item['provider']} - `{item['model']}`")
-        if not example:
-            lines.append("")
-            lines.append("No hi ha resposta valida; el model ha fallat o ha retornat buit.")
-            lines.append("")
-            continue
-        answer = example["answer"].replace("\n", " ").strip()
-        if len(answer) > 650:
-            answer = answer[:647].rstrip() + "..."
-        lines.append("")
-        lines.append(f"Tasca: `{example['task_id']}`")
-        lines.append("")
-        lines.append(f"> {answer}")
-        lines.append("")
-    lines.extend(["## Decisio final", ""])
-    if winner:
-        lines.append(f"Model recomanat: **`{winner['model']}` ({winner['provider']})**.")
-        lines.append("")
-        lines.append(
-        "La decisio es basa en l'equilibri entre 10/10 tasques correctes, latencia, respecte del context RAG, baixa invencio de dades i utilitat de la recomanacio."
-        )
-        if winner["provider"] == "cloud":
-            lines.append(
-                "Com que es cloud, s'ha de mantenir el fallback local per garantir que l'app continua funcionant sense connexio o si la API falla."
-            )
-        lines.append(
-            "Els models amb latencia mitjana superior a 10 segons no es consideren recomanables com a opcio principal de l'app, encara que puguin tenir bones puntuacions qualitatives."
-        )
-    else:
-        lines.append("No s'ha pogut seleccionar cap model per falta de resultats valids.")
-    lines.extend(
-        [
-            "",
-            "## Fitxers generats",
-            "",
-            f"- `{COMPARISON_JSON_PATH.as_posix()}`",
-            f"- `{COMPARISON_CSV_PATH.as_posix()}`",
-            f"- `{REPORT_PATH.as_posix()}`",
-            "",
-        ]
-    )
-    path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def main() -> None:
@@ -432,8 +349,7 @@ def main() -> None:
         existing["winner"] = winner
         COMPARISON_JSON_PATH.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
         write_csv(rows, COMPARISON_CSV_PATH)
-        write_report(summary, rows, REPORT_PATH, existing.get("started_at", "unknown"), winner)
-        print(json.dumps({"summary": summary, "winner": winner, "report": str(REPORT_PATH)}, indent=2, ensure_ascii=False))
+        print(json.dumps({"summary": summary, "winner": winner, "json": str(COMPARISON_JSON_PATH), "csv": str(COMPARISON_CSV_PATH)}, indent=2, ensure_ascii=False))
         return
 
     documents = read_jsonl(DATA_PATH)
@@ -467,8 +383,7 @@ def main() -> None:
     }
     COMPARISON_JSON_PATH.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
     write_csv(rows, COMPARISON_CSV_PATH)
-    write_report(summary, rows, REPORT_PATH, started_at, winner)
-    print(json.dumps({"summary": summary, "winner": winner, "report": str(REPORT_PATH)}, indent=2, ensure_ascii=False))
+    print(json.dumps({"summary": summary, "winner": winner, "json": str(COMPARISON_JSON_PATH), "csv": str(COMPARISON_CSV_PATH)}, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
