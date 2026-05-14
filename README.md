@@ -257,10 +257,19 @@ Per comparar models generatius Ollama:
 python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b
 ```
 
+Per a Ollama Cloud, carregar la clau en una variable d'entorn local i usar el model exacte retornat pel servei:
+
+```powershell
+$env:OLLAMA_API_KEY="..."
+python ml/rag/scripts/evaluate_ollama_models.py --base-url https://ollama.com --models qwen3-coder-next --timeout 180
+```
+
 Mes detalls a:
 
 ```text
 ml/rag/RAG_EXPERIMENTS.md
+ml/rag/MODEL_COMPARISON_GUIDE.md
+ml/rag/results/generation_model_comparison_report.md
 ```
 
 ## RAG integrat a l'app
@@ -289,7 +298,6 @@ Al PC:
 
 ```powershell
 ollama serve
-ollama pull gemma3:1b
 ngrok http 11434
 ```
 
@@ -304,7 +312,7 @@ A l'app:
 1. Obrir `Perfil`.
 2. Activar `Usar Ollama per als resums`.
 3. Posar la URL HTTPS de ngrok a `Base URL Ollama / ngrok`.
-4. Posar el model, per exemple `gemma3:1b`.
+4. Posar el model seleccionat, `qwen3-coder-next` amb Ollama Cloud. En local es pot provar `gemma3:1b`, pero la qualitat es inferior.
 5. Guardar canvis.
 6. Crear i finalitzar una sessio nova.
 
@@ -334,6 +342,14 @@ Resultat ML final:
 | `cnn_deep` | 96,01% | 96,02% | 55.208 bytes |
 
 Mes detalls a `ml/ML_EXPERIMENTS.md`.
+
+Resultat RAG generatiu final:
+
+| Model seleccionat | Proveidor | Tasques OK | Latencia mitjana | Decisio |
+| :--- | :--- | ---: | ---: | :--- |
+| `qwen3-coder-next` | Ollama Cloud | 10/10 | 3.378,32 ms | Seleccionat per demo generativa |
+
+El fallback local basat en regles continua actiu per garantir que l'app funciona sense endpoint IA.
 
 ## Limitacions conegudes
 

@@ -15,6 +15,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -67,7 +68,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(horizontal = 20.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             ProfileField("Usuari", userName) { userName = it }
@@ -113,6 +114,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     onValueChange = { ollamaBaseUrl = it },
                     label = { Text("Base URL Ollama / ngrok") },
                     singleLine = true,
+                    colors = darkOutlinedTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -120,6 +122,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     onValueChange = { ollamaModel = it },
                     label = { Text("Model") },
                     singleLine = true,
+                    colors = darkOutlinedTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -127,6 +130,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     onValueChange = { ollamaApiKey = it },
                     label = { Text("API key Ollama Cloud (opcional)") },
                     singleLine = true,
+                    colors = darkOutlinedTextFieldColors(),
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -195,3 +199,16 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
         )
     }
 }
+
+@Composable
+private fun darkOutlinedTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    focusedLabelColor = Color.White,
+    unfocusedLabelColor = Color.White.copy(alpha = 0.72f),
+    cursorColor = Color.White,
+    focusedBorderColor = Color.White,
+    unfocusedBorderColor = Color.White.copy(alpha = 0.54f),
+    focusedContainerColor = Color.White.copy(alpha = 0.08f),
+    unfocusedContainerColor = Color.White.copy(alpha = 0.06f)
+)

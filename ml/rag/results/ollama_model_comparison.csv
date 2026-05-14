@@ -1,2 +1,11 @@
 model,task_id,task_type,latency_ms,source_hit_rate,expected_term_coverage,grounded_overlap,language_hint_score,recommendation_hint_score,hallucination_risk_score,answer_chars,error,retrieved_ids
-qwen3-coder-next,q_001,question,1639.9,1.0,,0.7,0.6666666666666666,1.0,0.3,306,,kb_003|kb_009|kb_001
+qwen3-coder-next,q_001,question,3579.51,1.0,,0.7419354838709677,0.6666666666666666,1.0,0.258,289,,kb_003|kb_009|kb_001
+qwen3-coder-next,q_002,question,2151.68,1.0,,0.5925925925925926,0.3333333333333333,1.0,0.407,238,,kb_006|kb_004|kb_005
+qwen3-coder-next,q_003,question,1183.77,1.0,,1.0,0.0,0.0,0.0,107,,kb_007|kb_004|kb_010
+qwen3-coder-next,q_004,question,10481.44,1.0,,0.43902439024390244,0.6666666666666666,1.0,0.561,409,,kb_008|kb_005|kb_010
+qwen3-coder-next,q_005,question,1803.63,1.0,,0.5,0.6666666666666666,1.0,0.5,410,,kb_004|kb_005|kb_012
+qwen3-coder-next,q_006,question,783.4,1.0,,1.0,0.0,0.0,0.0,74,,kb_011|kb_010|kb_001
+qwen3-coder-next,s_001,session,1379.83,,0.6666666666666666,0.5185185185185185,0.6666666666666666,1.0,0.481,254,,kb_012|kb_003|kb_009
+qwen3-coder-next,s_002,session,9240.08,,0.3333333333333333,0.64,0.6666666666666666,0.0,0.36,252,,kb_012|kb_001|kb_003
+qwen3-coder-next,s_003,session,1369.99,,0.6666666666666666,0.72,0.3333333333333333,1.0,0.28,238,,kb_002|kb_012|kb_003
+qwen3-coder-next,s_004,session,1516.62,,0.0,0.5,0.6666666666666666,1.0,0.5,262,,kb_012|kb_003|kb_009

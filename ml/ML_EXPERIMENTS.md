@@ -355,7 +355,7 @@ Per a la demo final s'ha afegit una via opcional de generacio amb Ollama. L'app 
 - la Base URL d'Ollama, que pot ser local o una URL HTTPS de ngrok;
 - el nom del model, per exemple `gemma3:1b`.
 
-Quan Ollama esta activat, l'app envia el resum de sessio i els documents recuperats a l'endpoint `/api/generate`. Si Ollama o ngrok no responen, es guarda automaticament el resum local de fallback. El resum generat queda persistit dins la sessio amb el proveidor, model, latencia i estat de fallback.
+Quan Ollama esta activat, l'app envia el resum de sessio i els documents recuperats a l'endpoint `/api/chat`. Si Ollama o ngrok no responen, es guarda automaticament el resum local de fallback. El resum generat queda persistit dins la sessio amb el proveidor, model, latencia i estat de fallback.
 
 L'experimentacio comparativa es documenta a `ml/rag/RAG_EXPERIMENTS.md` i es reprodueix amb:
 
@@ -363,13 +363,30 @@ L'experimentacio comparativa es documenta a `ml/rag/RAG_EXPERIMENTS.md` i es rep
 python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b
 ```
 
-Resultat actual amb `gemma3:1b`:
+Resultat complet actual amb `gemma3:1b`:
 
 | Model | Tasques | Correctes sense error | Latencia mitjana | Grounded overlap | Cobertura termes esperats |
 | :--- | ---: | ---: | ---: | ---: | ---: |
 | `gemma3:1b` | 10 | 10 | 9266,15 ms | 0,598 | 0,333 |
 
 La lectura experimental es que `gemma3:1b` es viable per demo com a baseline petit, pero la latencia es alta i la cobertura automatica de termes esperats encara es moderada. Per aquest motiu, el sistema de regles continua sent el fallback recomanat.
+
+La comparativa completa entre models locals i cloud s'ha executat amb 6 models i 10 tasques per model. El model seleccionat per a la via generativa es `qwen3-coder-next`, perque completa 10/10 tasques, mante una latencia mitjana de 3.378,32 ms i ofereix millor equilibri entre qualitat del catala, respecte del context RAG, baixa invencio i utilitat de recomanacio.
+
+Resum de la comparativa generativa:
+
+| Proveidor | Model | Tasques OK | Errors/timeouts | Latencia mitjana | Decisio |
+| :--- | :--- | ---: | ---: | ---: | :--- |
+| cloud | `qwen3-coder-next` | 10/10 | 0 | 3.378,32 ms | Seleccionat |
+| cloud | `gemma3:4b` | 10/10 | 0 | 702,98 ms | Molt rapid, massa breu |
+| cloud | `gpt-oss:20b` | 8/10 | 2 | 1.554,34 ms | Descartat per respostes buides |
+| local | `gemma3:1b` | 10/10 | 0 | 8.022,97 ms | Fallback generatiu local possible, qualitat inferior |
+| local | `gemma4:latest` | 10/10 | 0 | 43.190,86 ms | Descartat per latencia |
+| local | `qwen3.6:latest` | 9/10 | 1 | 63.571,25 ms | Descartat per latencia i timeout |
+
+Informe complet:
+
+`ml/rag/results/generation_model_comparison_report.md`
 
 Limitacions:
 
