@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,6 +19,7 @@ import com.google.firebase.firestore.firestore
 import com.udl.smartrain.data.local.AppDatabase
 import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.repository.SessionRepositoryImpl
+import com.udl.smartrain.ui.components.AppBackground
 import com.udl.smartrain.ui.navigation.Screen
 import com.udl.smartrain.ui.screens.DashboardScreen
 import com.udl.smartrain.ui.screens.LoginScreen
@@ -53,8 +54,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SmarTrainTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
-                    SmarTrainApp(viewModel)
+                AppBackground {
+                    Surface(color = Color.Transparent) {
+                        SmarTrainApp(viewModel)
+                    }
                 }
             }
         }

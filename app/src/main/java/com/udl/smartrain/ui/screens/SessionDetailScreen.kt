@@ -1,23 +1,27 @@
 package com.udl.smartrain.ui.screens
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,17 +30,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.ml.SessionRagInsight
 import com.udl.smartrain.ui.components.GlassCard
-import com.udl.smartrain.ui.theme.DarkBlueSecondary
-import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -51,10 +53,7 @@ fun SessionDetailScreen(
     val session = sessions.firstOrNull { it.id == sessionId }
 
     Scaffold(
-        containerColor = Color.Transparent,
-        modifier = Modifier.background(
-            Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary))
-        )
+        containerColor = Color.Transparent
     ) { paddingValues ->
         if (session == null) {
             SessionNotFound(
@@ -88,7 +87,7 @@ private fun SessionDetailContent(
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
             Row(
@@ -169,44 +168,7 @@ private fun SessionDetailContent(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = insight.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = insight.answer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.88f)
-                    )
-                    Text(
-                        text = buildRagMetadataText(session),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.68f)
-                    )
-                    if (session.ragUsedFallback) {
-                        Text(
-                            text = "Fallback local utilitzat: ${session.ragFallbackReason.ifBlank { "el generador IA no estava disponible." }}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFFFC857)
-                        )
-                    }
-                    if (insight.sourceTitles.isNotEmpty()) {
-                        Text(
-                            text = "Fonts recuperades",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        insight.sourceTitles.forEach { source ->
-                            Text(
-                                text = source,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.72f)
-                            )
-                        }
-                    }
+                    RagInsightCard(session = session, insight = insight)
                 }
             }
         }
@@ -229,6 +191,7 @@ private fun ActivityTimelineChart(
     }
 
     val categories = remember(points) { points.map { it.label }.distinct() }
+    val segments = remember(points) { buildTimelineSegments(points) }
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -245,10 +208,16 @@ private fun ActivityTimelineChart(
     }
 
     Text(
-        text = "${points.size} punts del timeline - $totalPredictions prediccions totals - confianca mitjana ${(averageConfidence * 100).toInt()}%",
+        text = "${formatDurationCompact(totalTimelineMillis(segments))} registrats - $totalPredictions prediccions - confianca mitjana ${(averageConfidence * 100).toInt()}%",
         style = MaterialTheme.typography.bodySmall,
         color = Color.White.copy(alpha = 0.72f)
     )
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        segments.forEach { segment ->
+            TimelineSegmentRow(segment = segment)
+        }
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         categories.forEach { category ->
@@ -262,11 +231,102 @@ private fun ActivityTimelineChart(
                     drawRect(color = colorForActivity(category), size = size)
                 }
                 Text(
-                    text = "$category: ${points.count { it.label == category }}",
+                    text = "$category: ${formatDurationCompact(segments.filter { it.label == category }.sumOf { it.durationMillis })}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.82f)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TimelineSegmentRow(segment: ActivityTimelineSegment) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
+        Canvas(modifier = Modifier.size(12.dp)) {
+            drawRect(color = colorForActivity(segment.label), size = size)
+        }
+        Text(
+            text = segment.label,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White.copy(alpha = 0.9f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = formatDurationCompact(segment.durationMillis),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun RagInsightCard(session: Session, insight: SessionRagInsight) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Surface(
+                modifier = Modifier.size(34.dp),
+                color = Color.White.copy(alpha = 0.14f),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = Color(0xFFFFC857),
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = insight.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = buildRagMetadataText(session),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.68f)
+                )
+            }
+        }
+
+        Surface(
+            color = Color.White.copy(alpha = 0.08f),
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = insight.answer,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.92f)
+            )
+        }
+
+        if (session.ragUsedFallback) {
+            Text(
+                text = "S'ha utilitzat el resum local per seguretat: ${session.ragFallbackReason.ifBlank { "el generador IA no estava disponible." }}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFFFC857)
+            )
+        }
+
+        if (insight.sourceTitles.isNotEmpty()) {
+            Text(
+                text = "Resposta basada en ${insight.sourceTitles.size} criteris de context recuperats pel RAG.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.62f)
+            )
         }
     }
 }
@@ -327,7 +387,11 @@ private fun formatDurationShort(totalSeconds: Long): String {
 }
 
 private fun buildRagMetadataText(session: Session): String {
-    val source = "${session.ragProvider}:${session.ragModel}"
+    val source = when {
+        session.ragUsedFallback -> "automàtic (fallback local)"
+        session.ragProvider == "ollama" -> "automàtic"
+        else -> "local"
+    }
     val latency = if (session.ragLatencyMillis > 0) {
         " - ${session.ragLatencyMillis} ms"
     } else {
@@ -357,6 +421,11 @@ private data class ActivityTimelinePoint(
     val confidence: Float
 )
 
+private data class ActivityTimelineSegment(
+    val label: String,
+    val durationMillis: Long
+)
+
 private fun parseActivityTimeline(timeline: String): List<ActivityTimelinePoint> {
     if (timeline.isBlank()) {
         return emptyList()
@@ -373,6 +442,45 @@ private fun parseActivityTimeline(timeline: String): List<ActivityTimelinePoint>
             label = parts[2].trim(),
             confidence = parts[4].toFloatOrNull() ?: 0f
         )
+    }
+}
+
+private fun buildTimelineSegments(points: List<ActivityTimelinePoint>): List<ActivityTimelineSegment> {
+    if (points.isEmpty()) {
+        return emptyList()
+    }
+
+    val sorted = points.sortedBy { it.timestampMillis }
+    val intervals = sorted
+        .zipWithNext { current, next -> (next.timestampMillis - current.timestampMillis).coerceAtLeast(0L) }
+        .filter { it > 0L }
+    val fallbackInterval = intervals.takeIf { it.isNotEmpty() }?.average()?.toLong() ?: 1000L
+    val segmentDurations = linkedMapOf<String, Long>()
+
+    sorted.forEachIndexed { index, point ->
+        val duration = sorted.getOrNull(index + 1)
+            ?.let { (it.timestampMillis - point.timestampMillis).coerceAtLeast(0L) }
+            ?: fallbackInterval
+        segmentDurations[point.label] = (segmentDurations[point.label] ?: 0L) + duration
+    }
+
+    return segmentDurations.map { (label, duration) ->
+        ActivityTimelineSegment(label = label, durationMillis = duration)
+    }
+}
+
+private fun totalTimelineMillis(segments: List<ActivityTimelineSegment>): Long {
+    return segments.sumOf { it.durationMillis }
+}
+
+private fun formatDurationCompact(durationMillis: Long): String {
+    val totalSeconds = (durationMillis / 1000).coerceAtLeast(0L)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return if (minutes > 0) {
+        "${minutes}m ${seconds}s"
+    } else {
+        "${seconds}s"
     }
 }
 

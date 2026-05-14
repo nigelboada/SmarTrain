@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.udl.smartrain.ui.viewmodel.MainViewModel
@@ -36,10 +38,11 @@ fun LoginScreen(viewModel: MainViewModel, onLoginSuccess: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "SmarTrain", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "SmarTrain", style = MaterialTheme.typography.headlineLarge, color = Color.White)
         Text(
             text = if (createAccountMode) "Crear compte" else "Iniciar sessio",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White.copy(alpha = 0.78f)
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -49,6 +52,7 @@ fun LoginScreen(viewModel: MainViewModel, onLoginSuccess: () -> Unit) {
             onValueChange = { email = it },
             label = { Text("Email") },
             singleLine = true,
+            colors = loginTextFieldColors(),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -60,6 +64,7 @@ fun LoginScreen(viewModel: MainViewModel, onLoginSuccess: () -> Unit) {
             label = { Text("Contrasenya") },
             visualTransformation = PasswordVisualTransformation(),
             singleLine = true,
+            colors = loginTextFieldColors(),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -88,7 +93,23 @@ fun LoginScreen(viewModel: MainViewModel, onLoginSuccess: () -> Unit) {
         }
 
         TextButton(onClick = { createAccountMode = !createAccountMode }) {
-            Text(if (createAccountMode) "Ja tinc compte" else "Crear un compte nou")
+            Text(
+                text = if (createAccountMode) "Ja tinc compte" else "Crear un compte nou",
+                color = Color.White
+            )
         }
     }
 }
+
+@Composable
+private fun loginTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    focusedLabelColor = Color.White,
+    unfocusedLabelColor = Color.White.copy(alpha = 0.74f),
+    cursorColor = Color.White,
+    focusedBorderColor = Color.White,
+    unfocusedBorderColor = Color.White.copy(alpha = 0.56f),
+    focusedContainerColor = Color.White.copy(alpha = 0.08f),
+    unfocusedContainerColor = Color.White.copy(alpha = 0.06f)
+)

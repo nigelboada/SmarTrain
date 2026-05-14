@@ -1,22 +1,37 @@
 package com.udl.smartrain.ui.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AppHeader(title: String,
-              onLanguageSelected: (String) -> Unit,
-              onProfileClick: () -> Unit,
-              onLogoutClick: () -> Unit )
-
-{
+fun AppHeader(
+    title: String,
+    onLanguageSelected: (String) -> Unit,
+    onProfileClick: () -> Unit,
+    onLogoutClick: () -> Unit
+) {
     var showLanguageMenu by remember { mutableStateOf(false) }
     var showSettingsMenu by remember { mutableStateOf(false) }
 
@@ -28,33 +43,45 @@ fun AppHeader(title: String,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Títol a l'esquerra
-        Text(text = title, style = MaterialTheme.typography.titleLarge)
+        Text(text = title, style = MaterialTheme.typography.titleLarge, color = Color.White)
 
-        // Icons i Menús a la dreta
         Row {
-            // Menú Idioma
             Box {
                 IconButton(onClick = { showLanguageMenu = true }) {
-                    Icon(Icons.Default.Translate, "Canviar idioma")
+                    Icon(Icons.Default.Translate, contentDescription = "Canviar idioma", tint = Color.White)
                 }
                 DropdownMenu(expanded = showLanguageMenu, onDismissRequest = { showLanguageMenu = false }) {
-                    listOf("Anglès", "Català", "Castellà", "Xinès").forEach { lang ->
+                    listOf("Angles", "Catala", "Castella", "Xines").forEach { lang ->
                         DropdownMenuItem(
                             text = { Text(lang) },
-                            onClick = { onLanguageSelected(lang); showLanguageMenu = false }
+                            onClick = {
+                                onLanguageSelected(lang)
+                                showLanguageMenu = false
+                            }
                         )
                     }
                 }
             }
-            // Menú Settings
+
             Box {
                 IconButton(onClick = { showSettingsMenu = true }) {
-                    Icon(Icons.Default.Settings, "Configuració")
+                    Icon(Icons.Default.Settings, contentDescription = "Configuracio", tint = Color.White)
                 }
                 DropdownMenu(expanded = showSettingsMenu, onDismissRequest = { showSettingsMenu = false }) {
-                    DropdownMenuItem(text = { Text("Perfil") }, onClick = { onProfileClick(); showSettingsMenu = false })
-                    DropdownMenuItem(text = { Text("Tancar sessió") }, onClick = { onLogoutClick(); showSettingsMenu = false })
+                    DropdownMenuItem(
+                        text = { Text("Perfil") },
+                        onClick = {
+                            onProfileClick()
+                            showSettingsMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Tancar sessio") },
+                        onClick = {
+                            onLogoutClick()
+                            showSettingsMenu = false
+                        }
+                    )
                 }
             }
         }

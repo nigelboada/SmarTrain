@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,7 @@ import com.udl.smartrain.ml.ActivityRecognitionState
 import com.udl.smartrain.service.TrackingMetrics
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
+import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -86,7 +88,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = Color.Transparent
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -128,7 +130,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
                 Text(
                     text = "Historic ML recent",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = Color.White
                 )
             }
 
@@ -190,12 +192,12 @@ private fun SessionHeader(metrics: TrackingMetrics, nowMillis: Long) {
         Text(
             text = if (metrics.isTracking) "Sessio activa" else "Sessio preparada",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
+            color = Color.White
         )
         Text(
             text = formatDuration(elapsedSeconds),
             style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.primary,
+            color = Color.White,
             fontWeight = FontWeight.Bold
         )
     }
@@ -235,16 +237,13 @@ private fun MetricsGrid(metrics: TrackingMetrics, predictionCount: Int, nowMilli
 
 @Composable
 private fun MetricCard(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
+    GlassCard(modifier = modifier) {
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(text = label, style = MaterialTheme.typography.labelMedium)
-            Text(text = value, style = MaterialTheme.typography.titleLarge)
+            Text(text = label, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.68f))
+            Text(text = value, style = MaterialTheme.typography.titleLarge, color = Color.White)
         }
     }
 }
@@ -255,17 +254,18 @@ private fun PredictionCard(prediction: ActivityPrediction?) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f))
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(text = "Activitat detectada", style = MaterialTheme.typography.titleMedium)
+            Text(text = "Activitat detectada", style = MaterialTheme.typography.titleMedium, color = Color.White)
             Text(
                 text = prediction?.label ?: "Esperant dades del sensor",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White
             )
             LinearProgressIndicator(
                 progress = { confidence.coerceIn(0f, 1f) },
@@ -273,7 +273,8 @@ private fun PredictionCard(prediction: ActivityPrediction?) {
             )
             Text(
                 text = "Confianca: ${(confidence * 100).toInt()}%",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.76f)
             )
         }
     }
@@ -302,7 +303,7 @@ private fun ActionPanel(
         generationMessage?.let { message ->
             Text(
                 text = message,
-                color = MaterialTheme.colorScheme.primary,
+                color = Color.White,
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -329,13 +330,11 @@ private fun ActionPanel(
 
 @Composable
 private fun EmptyHistoryCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Encara no hi ha prediccions. Comenca la sensoritzacio per veure el model en temps real.",
             style = MaterialTheme.typography.bodyMedium,
+            color = Color.White.copy(alpha = 0.78f),
             modifier = Modifier.padding(16.dp)
         )
     }
@@ -347,7 +346,7 @@ private fun PredictionHistoryRow(prediction: ActivityPrediction) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f))
     ) {
         Row(
             modifier = Modifier
@@ -357,15 +356,17 @@ private fun PredictionHistoryRow(prediction: ActivityPrediction) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text(text = prediction.label, style = MaterialTheme.typography.titleSmall)
+                Text(text = prediction.label, style = MaterialTheme.typography.titleSmall, color = Color.White)
                 Text(
                     text = formatter.format(Date(prediction.timestampMillis)),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.66f)
                 )
             }
             Text(
                 text = "${(prediction.confidence * 100).toInt()}%",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
             )
         }
     }

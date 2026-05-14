@@ -1,6 +1,5 @@
 package com.udl.smartrain.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -35,8 +33,6 @@ import androidx.navigation.NavController
 import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.components.ProfileField
 import com.udl.smartrain.ui.navigation.Screen
-import com.udl.smartrain.ui.theme.DarkBlueSecondary
-import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 
 @Composable
@@ -61,9 +57,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
             )
         },
         containerColor = Color.Transparent,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary)))
+        modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
         Column(
             modifier = Modifier
