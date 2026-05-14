@@ -89,6 +89,11 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.72f)
                 )
+                Text(
+                    text = "Local: model gemma3:1b + URL ngrok/local. Cloud: URL https://ollama.com + model retornat per /api/tags + API key.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.72f)
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween

@@ -1,3 +1,2 @@
 model,task_id,task_type,latency_ms,source_hit_rate,expected_term_coverage,grounded_overlap,language_hint_score,recommendation_hint_score,hallucination_risk_score,answer_chars,error,retrieved_ids
-qwen3.6:latest,q_001,question,93027.92,1.0,,0.0,0.0,0.0,1.0,0,empty response,kb_003|kb_009|kb_001
-qwen3.6:latest,q_002,question,97653.51,1.0,,0.0,0.0,0.0,1.0,0,empty response,kb_006|kb_004|kb_005
+gemma3:1b,q_001,question,10928.77,1.0,,0.5,0.3333333333333333,1.0,0.5,179,,kb_003|kb_009|kb_001

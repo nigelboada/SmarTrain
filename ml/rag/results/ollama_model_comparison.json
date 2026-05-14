@@ -5,30 +5,30 @@
   "questions": 6,
   "sessions": 4,
   "models": [
-    "qwen3.6:latest"
+    "gemma3:1b"
   ],
   "summary": [
     {
-      "model": "qwen3.6:latest",
-      "tasks": 2,
-      "successful_tasks": 0,
-      "avg_latency_ms": null,
-      "avg_grounded_overlap": null,
+      "model": "gemma3:1b",
+      "tasks": 1,
+      "successful_tasks": 1,
+      "avg_latency_ms": 10928.77,
+      "avg_grounded_overlap": 0.5,
       "avg_expected_term_coverage": null,
-      "avg_language_hint_score": null,
-      "avg_recommendation_hint_score": null,
-      "avg_hallucination_risk_score": null,
-      "errors": 2
+      "avg_language_hint_score": 0.333,
+      "avg_recommendation_hint_score": 1.0,
+      "avg_hallucination_risk_score": 0.5,
+      "errors": 0
     }
   ],
   "details": [
     {
-      "model": "qwen3.6:latest",
+      "model": "gemma3:1b",
       "task_id": "q_001",
       "task_type": "question",
       "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\nNo escriguis raonament intern, nomes la resposta final.\n\nContext RAG:\n[kb_003] Alta intensitat aproximada (training_recommendation): Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients.\n[kb_009] Recomanacio post sessio (training_recommendation): Despres d'una sessio amb alta intensitat, es recomana incloure recuperacio, hidratacio i analisi de carrega. Si hi ha massa blocs intensos seguits, la propera sessio pot prioritzar tecnica, mobilitat o treball aerobi suau.\n[kb_001] Repos i recuperacio (training_recommendation): Quan una sessio mostra molta activitat de repos o baixa intensitat, SmarTrain recomana revisar si era una sessio de recuperacio, escalfament o tornada a la calma. Si l'objectiu era entrenament intens, cal augmentar progressivament blocs de carrera suau i exercicis tecnics amb pilota.\n\nPregunta: Que vol dir si la sessio te molta alta intensitat?\n\nResposta:",
-      "answer": "",
-      "answer_chars": 0,
+      "answer": "Si la sessió té molta intensitat, és possible que hi hagi canvis en el ritme, acceleracions o moviment. Recomanem alternar els blocs amb recuperacions per evitar canvis excessius.",
+      "answer_chars": 179,
       "retrieved_ids": "kb_003|kb_009|kb_001",
       "retrieved_titles": [
         "Alta intensitat aproximada",
@@ -37,16 +37,16 @@
       ],
       "source_hit_rate": 1.0,
       "expected_term_coverage": null,
-      "grounded_overlap": 0.0,
-      "language_hint_score": 0.0,
-      "recommendation_hint_score": 0.0,
-      "hallucination_risk_score": 1.0,
-      "error": "empty response",
-      "latency_ms": 93027.92,
-      "total_duration_ns": 92972153200,
-      "eval_count": 220,
-      "eval_duration_ns": 65880617500,
-      "prompt_eval_count": 372,
+      "grounded_overlap": 0.5,
+      "language_hint_score": 0.3333333333333333,
+      "recommendation_hint_score": 1.0,
+      "hallucination_risk_score": 0.5,
+      "error": "",
+      "latency_ms": 10928.77,
+      "total_duration_ns": 10881409200,
+      "eval_count": 48,
+      "eval_duration_ns": 2254427000,
+      "prompt_eval_count": 371,
       "task": {
         "type": "question",
         "id": "q_001",
@@ -55,42 +55,6 @@
         "expected_ids": [
           "kb_003",
           "kb_009"
-        ],
-        "expected_terms": []
-      }
-    },
-    {
-      "model": "qwen3.6:latest",
-      "task_id": "q_002",
-      "task_type": "question",
-      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\nNo escriguis raonament intern, nomes la resposta final.\n\nContext RAG:\n[kb_006] Confusio seure dret (model_interpretation): La matriu de confusio mostra que les classes seure i dret son les mes similars. Aquesta confusio es esperable perque totes dues son posturals i tenen patrons d'acceleracio amb poca variacio. Per futbol, totes dues es poden agrupar com baixa intensitat o repos.\n[kb_004] Confiança baixa del model (model_interpretation): Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu.\n[kb_005] Confiança alta del model (model_interpretation): Una confiança alta del model indica que la finestra de sensor s'assembla clarament a una classe apresa durant l'entrenament. Tot i aixi, en SmarTrain el model esta entrenat amb UCI HAR i no amb dades especifiques de futbol, per tant la lectura continua sent una aproximacio.\n\nPregunta: Per que el model pot confondre seure i dret?\n\nResposta:",
-      "answer": "",
-      "answer_chars": 0,
-      "retrieved_ids": "kb_006|kb_004|kb_005",
-      "retrieved_titles": [
-        "Confusio seure dret",
-        "Confiança baixa del model",
-        "Confiança alta del model"
-      ],
-      "source_hit_rate": 1.0,
-      "expected_term_coverage": null,
-      "grounded_overlap": 0.0,
-      "language_hint_score": 0.0,
-      "recommendation_hint_score": 0.0,
-      "hallucination_risk_score": 1.0,
-      "error": "empty response",
-      "latency_ms": 97653.51,
-      "total_duration_ns": 97647683600,
-      "eval_count": 220,
-      "eval_duration_ns": 66646444400,
-      "prompt_eval_count": 387,
-      "task": {
-        "type": "question",
-        "id": "q_002",
-        "question": "Per que el model pot confondre seure i dret?",
-        "query": "Per que el model pot confondre seure i dret?",
-        "expected_ids": [
-          "kb_006"
         ],
         "expected_terms": []
       }

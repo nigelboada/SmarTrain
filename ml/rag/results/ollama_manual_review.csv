@@ -1,3 +1,2 @@
 model,task_id,task_type,latency_ms,error,retrieved_ids,answer,catalan_quality_1_5,respects_rag_context_1_5,invented_data_1_5,recommendation_usefulness_1_5,manual_notes
-qwen3.6:latest,q_001,question,93027.92,empty response,kb_003|kb_009|kb_001,,,,,,
-qwen3.6:latest,q_002,question,97653.51,empty response,kb_006|kb_004|kb_005,,,,,,
+gemma3:1b,q_001,question,10928.77,,kb_003|kb_009|kb_001,"Si la sessió té molta intensitat, és possible que hi hagi canvis en el ritme, acceleracions o moviment. Recomanem alternar els blocs amb recuperacions per evitar canvis excessius.",,,,,

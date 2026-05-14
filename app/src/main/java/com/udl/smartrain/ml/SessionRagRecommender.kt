@@ -203,7 +203,19 @@ object SessionRagRecommender {
                 "Ollama ha trigat massa a respondre amb el model ${settings.ollamaModel}."
             }
             message.contains("404", ignoreCase = true) -> {
-                "Ollama no ha trobat el model ${settings.ollamaModel}. Comprova el nom exacte amb 'ollama list'."
+                if (settings.ollamaBaseUrl.contains("ollama.com", ignoreCase = true)) {
+                    "Ollama Cloud no ha trobat el model ${settings.ollamaModel}. Usa un nom retornat per https://ollama.com/api/tags i no un model local com gemma3:1b."
+                } else {
+                    "Ollama local no ha trobat el model ${settings.ollamaModel}. Comprova el nom exacte amb 'ollama list' al PC."
+                }
+            }
+            message.contains("401", ignoreCase = true) ||
+                message.contains("403", ignoreCase = true) -> {
+                "Ollama ha rebutjat la peticio. Si uses cloud, revisa que la API key sigui valida i que el model ${settings.ollamaModel} estigui disponible per al teu compte."
+            }
+            message.contains("resposta buida", ignoreCase = true) ||
+                message.contains("End of input", ignoreCase = true) -> {
+                "Ollama ha retornat una resposta buida. Revisa la Base URL, el model i la API key."
             }
             message.isNotBlank() -> message
             else -> "Error generant el resum amb IA."

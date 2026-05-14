@@ -146,8 +146,14 @@ def call_ollama(
 ) -> tuple[str, dict[str, Any]]:
     payload = {
         "model": model,
-        "prompt": prompt,
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
         "stream": False,
+        "think": False,
         "options": {
             "temperature": 0.2,
             "num_predict": 220,
@@ -164,9 +170,15 @@ def call_ollama(
         method="POST",
     )
     started = time.perf_counter()
-    with urlopen(request, timeout=timeout_seconds) as response:
-        raw = response.read().decode("utf-8")
+    try:
+        with urlopen(request, timeout=timeout_seconds) as response:
+            raw = response.read().decode("utf-8")
+    except HTTPError as exc:
+        error_body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {exc.code}: {error_body or exc.reason}") from exc
     latency_ms = round((time.perf_counter() - started) * 1000, 2)
+    if not raw.strip():
+        raise RuntimeError(f"empty HTTP response from {generate_endpoint(base_url)}")
     data = json.loads(raw)
     metadata = {
         "latency_ms": latency_ms,
@@ -175,14 +187,17 @@ def call_ollama(
         "eval_duration_ns": data.get("eval_duration"),
         "prompt_eval_count": data.get("prompt_eval_count"),
     }
-    return data.get("response", "").strip(), metadata
+    answer = (data.get("message") or {}).get("content", "").strip()
+    if not answer:
+        answer = data.get("response", "").strip()
+    return answer, metadata
 
 
 def generate_endpoint(base_url: str) -> str:
     normalized_base_url = base_url.rstrip("/")
     if normalized_base_url.endswith("/api"):
-        return f"{normalized_base_url}/generate"
-    return f"{normalized_base_url}/api/generate"
+        return f"{normalized_base_url}/chat"
+    return f"{normalized_base_url}/api/chat"
 
 
 def source_hit_rate(expected_ids: list[str], retrieved_ids: list[str]) -> float | None:
@@ -356,7 +371,7 @@ def main() -> None:
                     timeout_seconds=args.timeout,
                     api_key=api_key,
                 )
-            except (HTTPError, URLError, TimeoutError, OSError) as exc:
+            except (HTTPError, URLError, TimeoutError, OSError, RuntimeError) as exc:
                 error = str(exc)
             if not error and not answer.strip():
                 error = "empty response"

@@ -30,7 +30,7 @@ Amb diversos models:
 python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b qwen3.6 gemma4
 ```
 
-Amb models cloud d'Ollama, guarda primer la clau en una variable d'entorn i no l'escriguis al repositori:
+Amb models cloud d'Ollama, guarda primer la clau en una variable d'entorn i no l'escriguis al repositori. L'avaluador usa `/api/chat`, que funciona tant per local com per cloud:
 
 ```powershell
 $env:OLLAMA_API_KEY="..."
