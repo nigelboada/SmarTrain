@@ -11,6 +11,7 @@ Detected with `ollama list`:
 | `gemma3:1b` | 815 MB | Small local baseline. Completed the full evaluation. |
 | `gemma4:latest` | 9.6 GB | Larger local model. Very slow and returned empty responses in the current run. |
 | `qwen3.6:latest` | 23 GB | Installed locally. The previous command used `qwen3.6`, which produced 404 because the API model name is `qwen3.6:latest`. A retry with the correct name returned empty responses after very high latency. |
+| `qwen3-coder-next` | Cloud | Connection validated through Ollama Cloud with `/api/chat`; only 1 task has been evaluated so far. |
 
 ## Run summary provided from Android Studio terminal
 
@@ -116,22 +117,48 @@ Manual metrics to fill in `ollama_manual_review.csv`:
 - Invented data from 1 to 5, where 1 means no invented data and 5 means severe invention.
 - Recommendation usefulness from 1 to 5.
 
+## Final automated comparison
+
+The complete local/cloud comparison is available at:
+
+```text
+ml/rag/results/generation_model_comparison_report.md
+```
+
+Models evaluated:
+
+| Provider | Model | Successful tasks | Errors/timeouts | Average latency | Catalan | RAG respect | No invented data | Usefulness |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| cloud | `gemma3:4b` | 10/10 | 0 | 702.98 ms | 2.516 | 4.200 | 5.000 | 3.301 |
+| local | `gemma4:latest` | 10/10 | 0 | 43190.86 ms | 3.003 | 3.982 | 5.000 | 3.873 |
+| cloud | `qwen3-coder-next` | 10/10 | 0 | 3378.32 ms | 3.330 | 3.882 | 4.940 | 3.735 |
+| local | `gemma3:1b` | 10/10 | 0 | 8022.97 ms | 2.586 | 3.597 | 4.840 | 3.430 |
+| local | `qwen3.6:latest` | 9/10 | 1 | 63571.25 ms | 3.070 | 3.710 | 5.000 | 3.810 |
+| cloud | `gpt-oss:20b` | 8/10 | 2 | 1554.34 ms | 2.781 | 3.596 | 4.825 | 3.599 |
+
 ## Current recommendation
 
-Use `gemma3:1b` as the first IA model integrated in the app, with the existing rule-based fallback enabled.
+Use `qwen3-coder-next` as the generative IA model for the app demo, with the existing rule-based fallback enabled.
 
 Reason:
 
-- It is the only model from the current complete run with 10/10 usable responses.
-- It has acceptable grounding compared with the other measured candidates.
-- Its latency is high but manageable for a first post-session summary experiment.
-- It is small enough to run consistently on the current local Ollama setup.
+- It completes all 10 evaluation tasks without errors.
+- Its average latency is acceptable for the session detail screen.
+- It gives more useful recommendations than `gemma3:4b`, which is faster but too terse.
+- It avoids the impractical local latency of `gemma4:latest` and `qwen3.6:latest`.
+- It keeps a strong no-invented-data score and acceptable RAG grounding.
 
-Current practical decision for the local prototype: choose `gemma3:1b`.
+Current practical decision for the prototype: choose `qwen3-coder-next` for Ollama Cloud and keep `rules` as the offline fallback.
 
 The broader academic comparison should still include:
 
 1. `gemma3:1b`
 2. `qwen3.6:latest`
 3. `gemma4:latest`, if a prompt/configuration fix stops empty responses
-4. optionally one Ollama cloud model, if accessible through the API
+4. `qwen3-coder-next`, if accessible through the API
+
+Operational guide:
+
+```text
+ml/rag/MODEL_COMPARISON_GUIDE.md
+```

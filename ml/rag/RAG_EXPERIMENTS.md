@@ -24,17 +24,17 @@ Amb Ollama local:
 python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b
 ```
 
-Amb diversos models:
+Amb diversos models locals:
 
 ```powershell
-python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b qwen3.6 gemma4
+python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b qwen3.6:latest gemma4:latest
 ```
 
 Amb models cloud d'Ollama, guarda primer la clau en una variable d'entorn i no l'escriguis al repositori. L'avaluador usa `/api/chat`, que funciona tant per local com per cloud:
 
 ```powershell
 $env:OLLAMA_API_KEY="..."
-python ml/rag/scripts/evaluate_ollama_models.py --base-url https://ollama.com --models qwen3.5:cloud nemotron-3-super:cloud gemma4:31b-cloud --timeout 180
+python ml/rag/scripts/evaluate_ollama_models.py --base-url https://ollama.com --models qwen3-coder-next --timeout 180
 ```
 
 També es pot usar `https://ollama.com/api` com a base URL; l'script evita duplicar `/api`.
@@ -70,15 +70,13 @@ Despres es configura l'app o l'script amb la URL HTTPS generada per ngrok. Per a
 Models locals o instal.lables:
 
 - `gemma3:1b`: baseline petit i rapid.
-- `qwen3.6`: candidat petit/mitja si esta instal.lat.
-- `gemma4`: candidat mes gran si esta instal.lat.
+- `qwen3.6:latest`: candidat gran local si esta instal.lat.
+- `gemma4:latest`: candidat mes gran local si esta instal.lat.
 
 Models cloud disponibles des de la UI d'Ollama:
 
-- `qwen3.5:cloud`
-- `nemotron-3-super:cloud`
-- `gemma4:31b-cloud`
-- `qwen3-coder:480b-cloud`
+- `qwen3-coder-next`
+- altres models retornats per `https://ollama.com/api/tags`, segons disponibilitat del compte.
 
 Cal comprovar que la sessio d'Ollama te acces cloud abans d'executar-los des de l'API.
 
@@ -99,6 +97,7 @@ Model local detectat amb `ollama list`:
 | Model | Tipus | Estat |
 | --- | --- | --- |
 | `gemma3:1b` | local petit | instal.lat i avaluat |
+| `qwen3-coder-next` | cloud | connexio validada amb 1 tasca |
 
 Primera execucio completa:
 
@@ -127,8 +126,44 @@ La comparativa detallada de models locals es documenta a:
 ml/rag/results/model_selection_report.md
 ```
 
+La comparativa automatica completa entre models locals i cloud es documenta a:
+
+```text
+ml/rag/results/generation_model_comparison_report.md
+```
+
+Execucio utilitzada:
+
+```powershell
+python ml/rag/scripts/compare_generation_models.py --timeout 180
+```
+
+Models comparats:
+
+| Proveidor | Model | Tasques OK | Errors/timeouts | Latencia mitjana | Respecte RAG | No invencio | Utilitat |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| cloud | `gemma3:4b` | 10/10 | 0 | 702,98 ms | 4,20 | 5,00 | 3,30 |
+| local | `gemma4:latest` | 10/10 | 0 | 43.190,86 ms | 3,98 | 5,00 | 3,87 |
+| cloud | `qwen3-coder-next` | 10/10 | 0 | 3.378,32 ms | 3,88 | 4,94 | 3,74 |
+| local | `gemma3:1b` | 10/10 | 0 | 8.022,97 ms | 3,60 | 4,84 | 3,43 |
+| local | `qwen3.6:latest` | 9/10 | 1 | 63.571,25 ms | 3,71 | 5,00 | 3,81 |
+| cloud | `gpt-oss:20b` | 8/10 | 2 | 1.554,34 ms | 3,60 | 4,83 | 3,60 |
+
+Decisio final de l'experiment:
+
+- Model recomanat per a la via generativa: `qwen3-coder-next`.
+- Motiu: completa 10/10 tasques, te latencia mitjana acceptable per a una pantalla de detall, genera respostes mes utils que `gemma3:4b` i evita els temps massa alts de `gemma4:latest` i `qwen3.6:latest`.
+- Model fallback local recomanat: el sistema de regles actual. Si es vol un fallback local generatiu, `gemma3:1b` es el mes viable dels locals per latencia, pero la qualitat es inferior.
+
 Estat actual de decisio:
 
-- `gemma3:1b` es el millor candidat provisional per integrar a la pantalla de detall de sessio.
-- `qwen3.6:latest` s'ha de repetir amb el nom exacte del model, ja que `qwen3.6` retorna 404.
-- `gemma4:latest` queda descartat temporalment per latencia molt alta i respostes buides en la prova actual.
+- `qwen3-coder-next` es el candidat final per a la generacio amb Ollama Cloud.
+- `qwen3.6:latest` s'ha de tractar com a comparador local pesat; en CPU ha mostrat latencies molt altes.
+- `gemma4:latest` queda descartat com a opcio principal per latencia molt alta, tot i tenir respostes correctes.
+- `gemma3:4b` cloud es molt rapid i ben fonamentat, pero dona respostes massa breus i menys utils.
+
+Guia operativa detallada:
+
+```text
+ml/rag/MODEL_COMPARISON_GUIDE.md
+```
