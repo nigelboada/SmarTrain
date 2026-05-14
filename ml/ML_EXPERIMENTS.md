@@ -8,7 +8,7 @@ SmarTrain necessita classificar activitat humana a partir de l'accelerometre del
 - Desplacament suau: caminar o moviment continu moderat.
 - Alta intensitat: canvis de ritme o accions explosives.
 
-El model entrenat per a l'entrega 3A utilitza el dataset public UCI HAR. Aquest dataset no conte accions especifiques de futbol i te 6 classes, no 3. Per tant, el model integrat valida el flux ML end-to-end de l'app, pero encara no substitueix un classificador final entrenat amb dades reals de futbol.
+El model entrenat per a l'entrega final utilitza el dataset public UCI HAR. Aquest dataset no conte accions especifiques de futbol i te 6 classes, no 3. Per tant, el model integrat valida el flux ML end-to-end de l'app, pero encara no substitueix un classificador final entrenat amb dades reals de futbol.
 
 Mapeig conceptual utilitzat:
 
@@ -217,7 +217,7 @@ Despres d'aquest ajust, la deteccio en repos i el comportament general del model
 | CNN deep | F1 96,02% | 55.208 bytes | Seleccionat |
 | CNN separable | F1 91,35% | Exportable | No seleccionat |
 
-La decisio final per a 3A es utilitzar `cnn_deep`, perque combina millor rendiment, mida molt baixa i inferencia rapida. El Random Forest es mante com a baseline historic, pero no es el candidat final per a l'app Android.
+La decisio final per a l'entrega final es utilitzar `cnn_deep`, perque combina millor rendiment, mida molt baixa i inferencia rapida. El Random Forest es mante com a baseline historic, pero no es el candidat final per a l'app Android.
 
 ## 11. RAG per a l'Aplicacio
 
@@ -225,7 +225,7 @@ La decisio final per a 3A es utilitzar `cnn_deep`, perque combina millor rendime
 
 El bloc RAG s'ha definit com un sistema documental per interpretar resultats de sessio i donar recomanacions basades en context. L'objectiu no es substituir el model ML, sino complementar-lo: el model classifica activitat i el RAG ajuda a explicar que pot significar una sessio amb molta activitat de repos, alta intensitat aproximada o baixa confianca.
 
-Abast triat per a 3A:
+Abast triat per a l'entrega final:
 
 - Recuperar fragments documentals sobre interpretacio del model.
 - Explicar limitacions del dataset UCI HAR.
@@ -280,7 +280,7 @@ Per mantenir el RAG reproduible i lleuger, s'ha implementat sense serveis extern
 - Recuperador `tfidf_cosine`.
 - Generacio extractiva: la resposta es construeix amb els fragments recuperats.
 
-En una versio de producte es podria substituir el recuperador per embeddings semantics i afegir un LLM generatiu, pero per a l'entrega 3A aquesta versio permet demostrar el flux RAG sense dependencies d'API.
+En una versio de producte es podria substituir el recuperador per embeddings semantics i afegir un LLM generatiu, pero per a l'entrega final aquesta versio permet demostrar el flux RAG sense dependencies d'API.
 
 ### 11.5 Experimentacio
 
@@ -347,11 +347,35 @@ La pantalla d'historial mostra un boto de resum per a cada sessio amb prediccion
 
 La resposta mostra una interpretacio de la sessio i les fonts documentals recuperades. Aquesta decisio evita dependencies d'API, funciona offline i mante la tracabilitat entre resultats ML i recomanacions visibles a l'usuari.
 
+### 11.10 Experimentacio amb Ollama i ngrok
+
+Per a la demo final s'ha afegit una via opcional de generacio amb Ollama. L'app permet configurar des de la pantalla de perfil:
+
+- si es vol usar Ollama o el resum local;
+- la Base URL d'Ollama, que pot ser local o una URL HTTPS de ngrok;
+- el nom del model, per exemple `gemma3:1b`.
+
+Quan Ollama esta activat, l'app envia el resum de sessio i els documents recuperats a l'endpoint `/api/generate`. Si Ollama o ngrok no responen, es guarda automaticament el resum local de fallback. El resum generat queda persistit dins la sessio amb el proveidor, model, latencia i estat de fallback.
+
+L'experimentacio comparativa es documenta a `ml/rag/RAG_EXPERIMENTS.md` i es reprodueix amb:
+
+```bash
+python ml/rag/scripts/evaluate_ollama_models.py --models gemma3:1b
+```
+
+Resultat actual amb `gemma3:1b`:
+
+| Model | Tasques | Correctes sense error | Latencia mitjana | Grounded overlap | Cobertura termes esperats |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| `gemma3:1b` | 10 | 10 | 9266,15 ms | 0,598 | 0,333 |
+
+La lectura experimental es que `gemma3:1b` es viable per demo com a baseline petit, pero la latencia es alta i la cobertura automatica de termes esperats encara es moderada. Per aquest motiu, el sistema de regles continua sent el fallback recomanat.
+
 Limitacions:
 
 - Corpus petit.
 - No hi ha embeddings semantics reals.
-- No hi ha generacio natural amb LLM.
+- La generacio natural amb Ollama es opcional i depen de tenir l'endpoint actiu.
 - L'avaluacio usa nomes 6 preguntes.
 
 Per a una versio posterior, el pas natural seria comparar aquest TF-IDF amb embeddings multilingues, ampliar el corpus i substituir la resposta extractiva local per una generacio controlada amb un model de llenguatge.
@@ -383,6 +407,6 @@ python ml/rag/scripts/evaluate_rag.py
 
 ## 13. Conclusions
 
-El pas ML queda complet per a l'entrega 3A: hi ha baseline, CNN inicial, variants CNN, comparacio amb metriques reals, matriu de confusio, exportacio TFLite i integracio amb l'app. A mes, s'ha incorporat un RAG documental reproduible per interpretar resultats i recomanacions.
+El pas ML queda complet per a l'entrega final: hi ha baseline, CNN inicial, variants CNN, comparacio amb metriques reals, matriu de confusio, exportacio TFLite i integracio amb l'app. A mes, s'ha incorporat un RAG documental reproduible per interpretar resultats i recomanacions.
 
 La limitacio principal continua sent el dataset: UCI HAR valida la classificacio d'activitat i el flux tecnic, pero una versio final de producte hauria d'entrenar-se amb dades reals de futbolistes i etiquetes especifiques del domini. En el mateix sentit, el RAG actual valida l'arquitectura documental, pero en una versio de produccio caldria ampliar el corpus i avaluar embeddings semantics.

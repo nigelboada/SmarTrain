@@ -1,0 +1,2 @@
+model,task_id,task_type,latency_ms,source_hit_rate,expected_term_coverage,grounded_overlap,language_hint_score,recommendation_hint_score,hallucination_risk_score,answer_chars,error,retrieved_ids
+qwen3-coder-next,q_001,question,1639.9,1.0,,0.7,0.6666666666666666,1.0,0.3,306,,kb_003|kb_009|kb_001

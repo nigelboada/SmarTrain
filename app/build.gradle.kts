@@ -59,19 +59,17 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // --- SOLUCIÓ FIREBASE ---
-    // Importa el BoM (Bill of Materials)
-    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation(platform(libs.firebase.bom))
 
-    // Afegeix les llibreries sense especificar versió (el BoM ja ho fa per tu)
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-auth")
-
-    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.ui.text.google.fonts)
 
     // TensorFlow Lite. Keep this aligned with the TensorFlow version used to export
     // app/src/main/assets/model_v1.tflite.
     implementation("org.tensorflow:tensorflow-lite:2.17.0")
+
+    testImplementation(libs.junit)
 
 }

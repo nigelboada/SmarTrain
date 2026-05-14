@@ -206,7 +206,7 @@
         "kb_004",
         "kb_010"
       ],
-      "answer": "Pregunta: Quin model final s'ha seleccionat i quines metriques te?\nResposta basada en context: El model seleccionat per a l'entrega 3A es cnn_deep. Obte 96,01 per cent d'accuracy, 96,02 per cent de F1 weighted, ocupa 55.208 bytes en format TFLite i te una inferencia mitjana de 0,078 ms en l'entorn d'avaluacio. Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu."
+      "answer": "Pregunta: Quin model final s'ha seleccionat i quines metriques te?\nResposta basada en context: El model seleccionat per a l'entrega final es cnn_deep. Obte 96,01 per cent d'accuracy, 96,02 per cent de F1 weighted, ocupa 55.208 bytes en format TFLite i te una inferencia mitjana de 0,078 ms en l'entorn d'avaluacio. Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu."
     }
   ]
 }

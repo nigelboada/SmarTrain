@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -43,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
-import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.navigation.Screen
@@ -62,7 +59,6 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var sessionToEdit by remember { mutableStateOf<Session?>(null) }
-    var sessionToExplain by remember { mutableStateOf<Session?>(null) }
     var editUserName by remember { mutableStateOf("") }
     var editSessionName by remember { mutableStateOf("") }
 
@@ -129,13 +125,6 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
         )
     }
 
-    sessionToExplain?.let { session ->
-        SessionInsightDialog(
-            session = session,
-            onDismiss = { sessionToExplain = null }
-        )
-    }
-
     Scaffold(
         topBar = {
             AppHeader(
@@ -185,7 +174,7 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                             showEditDialog = true
                         },
                         onInsight = {
-                            sessionToExplain = session
+                            navController.navigate(Screen.SessionDetail.createRoute(session.id))
                         }
                     )
                 }
@@ -219,47 +208,6 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
 }
 
 @Composable
-private fun SessionInsightDialog(session: Session, onDismiss: () -> Unit) {
-    val insight = remember(session) {
-        SessionRagRecommender.buildInsight(session)
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(insight.title) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = insight.answer,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                if (insight.sourceTitles.isNotEmpty()) {
-                    Text(
-                        text = "Fonts recuperades",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    insight.sourceTitles.forEach { source ->
-                        Text(
-                            text = source,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Tancar")
-            }
-        }
-    )
-}
-
-@Composable
 private fun EmptyDashboard(paddingValues: PaddingValues) {
     Box(
         modifier = Modifier
@@ -283,6 +231,8 @@ private fun DashboardSummary(sessions: List<Session>) {
         .map { it.avgMlConfidence }
         .takeIf { it.isNotEmpty() }
         ?.average() ?: 0.0
+    val totalDistance = sessions.sumOf { it.distanceMetres }
+    val totalHighIntensity = sessions.sumOf { it.highIntensityCount }
 
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -302,13 +252,25 @@ private fun DashboardSummary(sessions: List<Session>) {
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetric(
-                    label = "Amb ML",
+                    label = "Distancia",
+                    value = formatDashboardDistance(totalDistance),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SummaryMetric(
+                    label = "Sessions ML",
                     value = sessionsWithMl.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetric(
-                    label = "Conf.",
+                    label = "Confianca",
                     value = "${(averageConfidence * 100).toInt()}%",
+                    modifier = Modifier.weight(1f)
+                )
+                SummaryMetric(
+                    label = "Alta intens.",
+                    value = totalHighIntensity.toString(),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -345,6 +307,7 @@ fun SessionItem(
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
+    val syncLabel = if (session.isSynced) "Sincronitzada" else "Pendent"
 
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -368,9 +331,14 @@ fun SessionItem(
                 )
                 if (session.mlPredictionCount > 0) {
                     Text(
-                        text = "ML: ${session.dominantActivity} - ${(session.avgMlConfidence * 100).toInt()}% - ${session.mlPredictionCount} prediccions",
+                        text = "ML: ${session.dominantActivity} - ${(session.avgMlConfidence * 100).toInt()}%",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.88f)
+                    )
+                    Text(
+                        text = "${formatDashboardDuration(session.durationSeconds)} - ${formatDashboardDistance(session.distanceMetres)} - ${session.mlPredictionCount} prediccions - $syncLabel",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.66f)
                     )
                 } else {
                     Text(
@@ -396,5 +364,23 @@ fun SessionItem(
                 }
             }
         }
+    }
+}
+
+private fun formatDashboardDistance(distanceMetres: Double): String {
+    return if (distanceMetres >= 1000.0) {
+        "${"%.2f".format(distanceMetres / 1000.0)} km"
+    } else {
+        "${distanceMetres.toInt()} m"
+    }
+}
+
+private fun formatDashboardDuration(totalSeconds: Long): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return if (minutes > 0) {
+        "${minutes}m ${seconds}s"
+    } else {
+        "${seconds}s"
     }
 }

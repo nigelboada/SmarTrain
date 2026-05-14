@@ -55,6 +55,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
     val currentPrediction by ActivityRecognitionState.currentPrediction.collectAsState()
     val predictionHistory by ActivityRecognitionState.predictionHistory.collectAsState()
     val trackingMetrics by TrackingSessionState.metrics.collectAsState()
+    val ragGenerationState by viewModel.ragGenerationUiState.collectAsState()
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var permissionMessage by remember { mutableStateOf<String?>(null) }
 
@@ -111,13 +112,14 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
             item {
                 ActionPanel(
                     isTracking = trackingMetrics.isTracking,
+                    isGeneratingRag = ragGenerationState.isGenerating,
                     permissionMessage = permissionMessage,
+                    generationMessage = ragGenerationState.message,
                     onStart = {
                         permissionLauncher.launch(trackingPermissions())
                     },
                     onFinish = {
-                        viewModel.finishAndSaveSession(context)
-                        onStopSession()
+                        viewModel.finishAndSaveSession(context, onSaved = onStopSession)
                     }
                 )
             }
@@ -280,7 +282,9 @@ private fun PredictionCard(prediction: ActivityPrediction?) {
 @Composable
 private fun ActionPanel(
     isTracking: Boolean,
+    isGeneratingRag: Boolean,
     permissionMessage: String?,
+    generationMessage: String?,
     onStart: () -> Unit,
     onFinish: () -> Unit
 ) {
@@ -295,19 +299,30 @@ private fun ActionPanel(
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+        generationMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        if (isGeneratingRag) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
         Button(
             onClick = onStart,
-            enabled = !isTracking,
+            enabled = !isTracking && !isGeneratingRag,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = if (isTracking) "Sensoritzacio en curs" else "Comencar sensoritzacio")
         }
         Button(
             onClick = onFinish,
+            enabled = !isGeneratingRag,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) {
-            Text("Finalitzar i guardar")
+            Text(if (isGeneratingRag) "Generant resum..." else "Finalitzar i guardar")
         }
     }
 }

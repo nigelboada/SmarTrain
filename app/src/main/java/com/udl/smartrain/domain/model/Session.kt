@@ -19,7 +19,38 @@ data class Session(
     val mlPredictionCount: Int = 0,
     val highIntensityCount: Int = 0,
     val activityTimeline: String = "",
+    val ragTitle: String = "",
+    val ragAnswer: String = "",
+    val ragSourceTitles: String = "",
+    val ragProvider: String = "rules",
+    val ragModel: String = "rule_based",
+    val ragLatencyMillis: Long = 0,
+    val ragUsedFallback: Boolean = false,
+    val ragFallbackReason: String = "",
     val isSynced: Boolean = false
 ) {
-    constructor() : this("", "", "Sessio nova", Date(), 0, 0.0, null, 0.0, "", 0.0, 0, 0, "", false)
+    constructor() : this(
+        "",
+        "",
+        "Sessio nova",
+        Date(),
+        0,
+        0.0,
+        null,
+        0.0,
+        "",
+        0.0,
+        0,
+        0,
+        "",
+        "",
+        "",
+        "",
+        "rules",
+        "rule_based",
+        0,
+        false,
+        "",
+        false
+    )
 }

@@ -14,11 +14,8 @@ data class ActivityPrediction(
     val timestampMillis: Long = System.currentTimeMillis()
 )
 
-class ActivityClassifier(context: Context) {
-
-    private val interpreter: Interpreter
-
-    private val labels = listOf(
+object ActivityLabelMapper {
+    val modelLabels = listOf(
         "Caminar",
         "Pujar escales",
         "Baixar escales",
@@ -35,6 +32,19 @@ class ActivityClassifier(context: Context) {
         "Repos",
         "Repos"
     )
+
+    fun modelLabelFor(classIndex: Int): String {
+        return modelLabels.getOrElse(classIndex) { "Desconeguda" }
+    }
+
+    fun smarTrainLabelFor(classIndex: Int): String {
+        return smarTrainLabels.getOrElse(classIndex) { "Desconeguda" }
+    }
+}
+
+class ActivityClassifier(context: Context) {
+
+    private val interpreter: Interpreter
 
     init {
         val modelBuffer = loadModelFile(context, "model_v1.tflite")
@@ -53,17 +63,17 @@ class ActivityClassifier(context: Context) {
     }
 
     fun classify(inputData: Array<Array<FloatArray>>): ActivityPrediction {
-        val output = Array(1) { FloatArray(labels.size) }
+        val output = Array(1) { FloatArray(ActivityLabelMapper.modelLabels.size) }
 
         interpreter.run(inputData, output)
 
         val classIndex = output[0].indices.maxByOrNull { output[0][it] } ?: -1
         val confidence = output[0].getOrNull(classIndex) ?: 0f
-        val modelLabel = labels.getOrElse(classIndex) { "Desconeguda" }
+        val modelLabel = ActivityLabelMapper.modelLabelFor(classIndex)
 
         return ActivityPrediction(
             classIndex = classIndex,
-            label = smarTrainLabels.getOrElse(classIndex) { "Desconeguda" },
+            label = ActivityLabelMapper.smarTrainLabelFor(classIndex),
             confidence = confidence,
             modelLabel = modelLabel
         )

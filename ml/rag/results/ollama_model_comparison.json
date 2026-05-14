@@ -1,0 +1,63 @@
+{
+  "base_url": "https://ollama.com",
+  "top_k": 3,
+  "documents": 12,
+  "questions": 6,
+  "sessions": 4,
+  "models": [
+    "qwen3-coder-next"
+  ],
+  "summary": [
+    {
+      "model": "qwen3-coder-next",
+      "tasks": 1,
+      "successful_tasks": 1,
+      "avg_latency_ms": 1639.9,
+      "avg_grounded_overlap": 0.7,
+      "avg_expected_term_coverage": null,
+      "avg_language_hint_score": 0.667,
+      "avg_recommendation_hint_score": 1.0,
+      "avg_hallucination_risk_score": 0.3,
+      "errors": 0
+    }
+  ],
+  "details": [
+    {
+      "model": "qwen3-coder-next",
+      "task_id": "q_001",
+      "task_type": "question",
+      "prompt": "Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.\nBasa la resposta nomes en el context recuperat i en les dades de la sessio.\nNo inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.\nNo escriguis raonament intern, nomes la resposta final.\n\nContext RAG:\n[kb_003] Alta intensitat aproximada (training_recommendation): Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients.\n[kb_009] Recomanacio post sessio (training_recommendation): Despres d'una sessio amb alta intensitat, es recomana incloure recuperacio, hidratacio i analisi de carrega. Si hi ha massa blocs intensos seguits, la propera sessio pot prioritzar tecnica, mobilitat o treball aerobi suau.\n[kb_001] Repos i recuperacio (training_recommendation): Quan una sessio mostra molta activitat de repos o baixa intensitat, SmarTrain recomana revisar si era una sessio de recuperacio, escalfament o tornada a la calma. Si l'objectiu era entrenament intens, cal augmentar progressivament blocs de carrera suau i exercicis tecnics amb pilota.\n\nPregunta: Que vol dir si la sessio te molta alta intensitat?\n\nResposta:",
+      "answer": "Indica que la sessió inclou molts blocs amb canvis de ritme, acceleracions o moviments exigents (com pujar i baixar escales). Es recomana alternar aquests blocs amb recuperacions suficients i, si és la segona sessió intensa seguida, prioritzar la propera sessió en tècnica, mobilitat o treball aerobi suau.",
+      "answer_chars": 306,
+      "retrieved_ids": "kb_003|kb_009|kb_001",
+      "retrieved_titles": [
+        "Alta intensitat aproximada",
+        "Recomanacio post sessio",
+        "Repos i recuperacio"
+      ],
+      "source_hit_rate": 1.0,
+      "expected_term_coverage": null,
+      "grounded_overlap": 0.7,
+      "language_hint_score": 0.6666666666666666,
+      "recommendation_hint_score": 1.0,
+      "hallucination_risk_score": 0.3,
+      "error": "",
+      "latency_ms": 1639.9,
+      "total_duration_ns": 1282218650,
+      "eval_count": 94,
+      "eval_duration_ns": null,
+      "prompt_eval_count": 385,
+      "task": {
+        "type": "question",
+        "id": "q_001",
+        "question": "Que vol dir si la sessio te molta alta intensitat?",
+        "query": "Que vol dir si la sessio te molta alta intensitat?",
+        "expected_ids": [
+          "kb_003",
+          "kb_009"
+        ],
+        "expected_terms": []
+      }
+    }
+  ]
+}

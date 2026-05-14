@@ -1,18 +1,26 @@
 package com.udl.smartrain.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.ui.components.AppHeader
@@ -35,6 +44,11 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
     var userPassword by remember { mutableStateOf("********") }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showSaveConfirmation by remember { mutableStateOf(false) }
+    val ragSettings by viewModel.ragGenerationSettings.collectAsState()
+    var useOllama by remember(ragSettings.useOllama) { mutableStateOf(ragSettings.useOllama) }
+    var ollamaBaseUrl by remember(ragSettings.ollamaBaseUrl) { mutableStateOf(ragSettings.ollamaBaseUrl) }
+    var ollamaModel by remember(ragSettings.ollamaModel) { mutableStateOf(ragSettings.ollamaModel) }
+    var ollamaApiKey by remember(ragSettings.ollamaApiKey) { mutableStateOf(ragSettings.ollamaApiKey) }
 
     Scaffold(
         topBar = {
@@ -54,9 +68,69 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             ProfileField("Usuari", userName) { userName = it }
             ProfileField("Contrasenya", userPassword) { userPassword = it }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Configuracio IA debug",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
+                )
+                Text(
+                    text = "Mobil fisic: usa una URL ngrok/local accessible o https://ollama.com per cloud. La clau API nomes queda en memoria mentre l'app esta oberta.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.72f)
+                )
+                Text(
+                    text = "Local: model gemma3:1b + URL ngrok/local. Cloud: URL https://ollama.com + model retornat per /api/tags + API key.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.72f)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Usar Ollama per als resums",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
+                    Switch(
+                        checked = useOllama,
+                        onCheckedChange = { useOllama = it }
+                    )
+                }
+                OutlinedTextField(
+                    value = ollamaBaseUrl,
+                    onValueChange = { ollamaBaseUrl = it },
+                    label = { Text("Base URL Ollama / ngrok") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = ollamaModel,
+                    onValueChange = { ollamaModel = it },
+                    label = { Text("Model") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = ollamaApiKey,
+                    onValueChange = { ollamaApiKey = it },
+                    label = { Text("API key Ollama Cloud (opcional)") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -77,6 +151,12 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.updateUserName(userName)
+                    viewModel.updateRagGenerationSettings(
+                        useOllama = useOllama,
+                        ollamaBaseUrl = ollamaBaseUrl,
+                        ollamaModel = ollamaModel,
+                        ollamaApiKey = ollamaApiKey
+                    )
                     showSaveConfirmation = false
                     navController.popBackStack()
                 }) {
