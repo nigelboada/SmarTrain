@@ -34,9 +34,15 @@ def export_chroma(args: argparse.Namespace):
         embedding_function=embeddings,
     )
     data = store._collection.get(include=["embeddings", "documents", "metadatas"])
-    vectors = data.get("embeddings") or []
-    documents = data.get("documents") or []
-    metadatas = data.get("metadatas") or []
+    vectors = data.get("embeddings")
+    documents = data.get("documents")
+    metadatas = data.get("metadatas")
+    if vectors is None:
+        vectors = []
+    if documents is None:
+        documents = []
+    if metadatas is None:
+        metadatas = []
     return vectors[: args.limit], documents[: args.limit], metadatas[: args.limit]
 
 
