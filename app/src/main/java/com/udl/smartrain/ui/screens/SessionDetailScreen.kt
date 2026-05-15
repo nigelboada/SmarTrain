@@ -1,22 +1,20 @@
 package com.udl.smartrain.ui.screens
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,14 +29,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.udl.smartrain.data.local.AppLanguage
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.ml.SessionRagInsight
 import com.udl.smartrain.ui.components.GlassCard
+import com.udl.smartrain.ui.i18n.TextKey
+import com.udl.smartrain.ui.i18n.activityLabel
+import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -50,6 +53,7 @@ fun SessionDetailScreen(
     navController: NavController
 ) {
     val sessions by viewModel.sessionsHistory.collectAsState(initial = emptyList())
+    val language by viewModel.appLanguage.collectAsState()
     val session = sessions.firstOrNull { it.id == sessionId }
 
     Scaffold(
@@ -60,11 +64,13 @@ fun SessionDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
+                language = language,
                 onBack = { navController.popBackStack() }
             )
         } else {
             SessionDetailContent(
                 session = session,
+                language = language,
                 onBack = { navController.popBackStack() },
                 modifier = Modifier
                     .fillMaxSize()
@@ -77,11 +83,12 @@ fun SessionDetailScreen(
 @Composable
 private fun SessionDetailContent(
     session: Session,
+    language: AppLanguage,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
-    val insight = remember(session) { session.persistedOrGeneratedRagInsight() }
+    val insight = remember(session, language) { session.persistedOrGeneratedRagInsight(language) }
     val timeline = remember(session.activityTimeline) { parseActivityTimeline(session.activityTimeline) }
 
     LazyColumn(
@@ -95,7 +102,7 @@ private fun SessionDetailContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Tornar", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = language.text(TextKey.BACK), tint = Color.White)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
@@ -120,22 +127,28 @@ private fun SessionDetailContent(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Mètriques de sessió",
+                        text = language.text(TextKey.SESSIONS),
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        DetailMetric("Temps", formatDurationShort(session.durationSeconds), Modifier.weight(1f))
-                        DetailMetric("Distancia", formatDistance(session.distanceMetres), Modifier.weight(1f))
+                        DetailMetric(language.text(TextKey.TIME), formatDurationShort(session.durationSeconds), Modifier.weight(1f))
+                        DetailMetric(language.text(TextKey.DISTANCE), formatDistance(session.distanceMetres), Modifier.weight(1f))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        DetailMetric("Activitat", session.dominantActivity.ifBlank { "Sense ML" }, Modifier.weight(1f))
-                        DetailMetric("Confianca", "${(session.avgMlConfidence * 100).toInt()}%", Modifier.weight(1f))
+                        DetailMetric(
+                            language.text(TextKey.ACTIVITY),
+                            session.dominantActivity
+                                .ifBlank { language.text(TextKey.NO_ML_SUMMARY) }
+                                .let { language.activityLabel(it) },
+                            Modifier.weight(1f)
+                        )
+                        DetailMetric(language.text(TextKey.CONFIDENCE), "${(session.avgMlConfidence * 100).toInt()}%", Modifier.weight(1f))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        DetailMetric("Prediccions", session.mlPredictionCount.toString(), Modifier.weight(1f))
-                        DetailMetric("Alta intensitat", session.highIntensityCount.toString(), Modifier.weight(1f))
+                        DetailMetric(language.text(TextKey.PREDICTIONS), session.mlPredictionCount.toString(), Modifier.weight(1f))
+                        DetailMetric(language.text(TextKey.HIGH_INTENSITY), session.highIntensityCount.toString(), Modifier.weight(1f))
                     }
                 }
             }
@@ -148,13 +161,15 @@ private fun SessionDetailContent(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Categories ML en el temps",
+                        text = language.text(TextKey.CATEGORIES_OVER_TIME),
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )
                     ActivityTimelineChart(
                         points = timeline,
+                        language = language,
+                        sessionDurationSeconds = session.durationSeconds,
                         totalPredictions = session.mlPredictionCount,
                         averageConfidence = session.avgMlConfidence
                     )
@@ -168,7 +183,7 @@ private fun SessionDetailContent(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    RagInsightCard(session = session, insight = insight)
+                    RagInsightCard(session = session, insight = insight, language = language)
                 }
             }
         }
@@ -178,70 +193,84 @@ private fun SessionDetailContent(
 @Composable
 private fun ActivityTimelineChart(
     points: List<ActivityTimelinePoint>,
+    language: AppLanguage,
+    sessionDurationSeconds: Long,
     totalPredictions: Int,
     averageConfidence: Double
 ) {
     if (points.isEmpty()) {
         Text(
-            text = "Sense dades temporals ML per aquesta sessio.",
+            text = language.text(TextKey.NO_ML_DATA),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.White.copy(alpha = 0.72f)
         )
         return
     }
 
-    val categories = remember(points) { points.map { it.label }.distinct() }
     val segments = remember(points) { buildTimelineSegments(points) }
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
             .height(72.dp)
+            .clip(RoundedCornerShape(8.dp))
     ) {
-        val barWidth = (size.width / points.size).coerceAtLeast(3f)
-        points.forEachIndexed { index, point ->
-            drawRect(
-                color = colorForActivity(point.label),
-                topLeft = Offset(index * barWidth, 0f),
-                size = Size(width = barWidth + 1f, height = size.height)
-            )
+        val totalMillis = totalTimelineMillis(segments).coerceAtLeast(1L)
+        var left = 0f
+        clipRect {
+            segments.forEachIndexed { index, segment ->
+                val width = if (index == segments.lastIndex) {
+                    size.width - left
+                } else {
+                    (size.width * segment.durationMillis / totalMillis).coerceAtLeast(2f)
+                }
+                drawRect(
+                    color = colorForActivity(segment.label),
+                    topLeft = Offset(left, 0f),
+                    size = Size(width = width, height = size.height)
+                )
+                if (index < segments.lastIndex) {
+                    drawLine(
+                        color = Color.White.copy(alpha = 0.82f),
+                        start = Offset(left + width, 0f),
+                        end = Offset(left + width, size.height),
+                        strokeWidth = 1f
+                    )
+                }
+                left += width
+            }
         }
     }
 
     Text(
-        text = "${formatDurationCompact(totalTimelineMillis(segments))} registrats - $totalPredictions prediccions - confianca mitjana ${(averageConfidence * 100).toInt()}%",
+        text = timelineSummaryText(
+            language = language,
+            duration = formatDurationCompact(totalTimelineMillis(segments)),
+            totalPredictions = totalPredictions,
+            averageConfidence = averageConfidence
+        ),
         style = MaterialTheme.typography.bodySmall,
         color = Color.White.copy(alpha = 0.72f)
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         segments.forEach { segment ->
-            TimelineSegmentRow(segment = segment)
+            TimelineSegmentRow(segment = segment, language = language)
         }
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        categories.forEach { category ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Canvas(
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .width(10.dp)
-                        .height(10.dp)
-                ) {
-                    drawRect(color = colorForActivity(category), size = size)
-                }
-                Text(
-                    text = "$category: ${formatDurationCompact(segments.filter { it.label == category }.sumOf { it.durationMillis })}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.82f)
-                )
-            }
-        }
-    }
+    Text(
+        text = buildTimelineFootnote(
+            sessionDurationMillis = sessionDurationSeconds * 1000,
+            mlTimelineMillis = totalTimelineMillis(segments),
+            language = language
+        ),
+        style = MaterialTheme.typography.bodySmall,
+        color = Color.White.copy(alpha = 0.56f)
+    )
 }
 
 @Composable
-private fun TimelineSegmentRow(segment: ActivityTimelineSegment) {
+private fun TimelineSegmentRow(segment: ActivityTimelineSegment, language: AppLanguage) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -251,16 +280,16 @@ private fun TimelineSegmentRow(segment: ActivityTimelineSegment) {
             drawRect(color = colorForActivity(segment.label), size = size)
         }
         Text(
-            text = segment.label,
+            text = language.activityLabel(segment.label),
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = Color.White.copy(alpha = 0.9f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             text = formatDurationCompact(segment.durationMillis),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = Color.White,
             fontWeight = FontWeight.SemiBold
         )
@@ -268,36 +297,22 @@ private fun TimelineSegmentRow(segment: ActivityTimelineSegment) {
 }
 
 @Composable
-private fun RagInsightCard(session: Session, insight: SessionRagInsight) {
+private fun RagInsightCard(session: Session, insight: SessionRagInsight, language: AppLanguage) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Surface(
-                modifier = Modifier.size(34.dp),
-                color = Color.White.copy(alpha = 0.14f),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = Color(0xFFFFC857),
-                        modifier = Modifier.size(19.dp)
-                    )
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = insight.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = buildRagMetadataText(session),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.68f)
-                )
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = insight.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = buildRagMetadataText(session, language),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.68f)
+            )
         }
 
         Surface(
@@ -315,7 +330,7 @@ private fun RagInsightCard(session: Session, insight: SessionRagInsight) {
 
         if (session.ragUsedFallback) {
             Text(
-                text = "S'ha utilitzat el resum local per seguretat: ${session.ragFallbackReason.ifBlank { "el generador IA no estava disponible." }}",
+                text = fallbackText(session, language),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFFFFC857)
             )
@@ -323,7 +338,7 @@ private fun RagInsightCard(session: Session, insight: SessionRagInsight) {
 
         if (insight.sourceTitles.isNotEmpty()) {
             Text(
-                text = "Resposta basada en ${insight.sourceTitles.size} criteris de context recuperats pel RAG.",
+                text = "${language.text(TextKey.RAG_CONTEXT_ITEMS)}: ${insight.sourceTitles.size}",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.62f)
             )
@@ -352,16 +367,16 @@ private fun DetailMetric(label: String, value: String, modifier: Modifier = Modi
 }
 
 @Composable
-private fun SessionNotFound(modifier: Modifier = Modifier, onBack: () -> Unit) {
+private fun SessionNotFound(modifier: Modifier = Modifier, language: AppLanguage, onBack: () -> Unit) {
     Column(
         modifier = modifier.padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Tornar", tint = Color.White)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = language.text(TextKey.BACK), tint = Color.White)
         }
         Text(
-            text = "Sessio no trobada",
+            text = language.text(TextKey.SESSION_NOT_FOUND),
             style = MaterialTheme.typography.headlineSmall,
             color = Color.White
         )
@@ -386,10 +401,10 @@ private fun formatDurationShort(totalSeconds: Long): String {
     }
 }
 
-private fun buildRagMetadataText(session: Session): String {
+private fun buildRagMetadataText(session: Session, language: AppLanguage): String {
     val source = when {
-        session.ragUsedFallback -> "automàtic (fallback local)"
-        session.ragProvider == "ollama" -> "automàtic"
+        session.ragUsedFallback -> "automàtic"
+        session.ragProvider == "ollama" -> session.ragModel.ifBlank { "automàtic" }
         else -> "local"
     }
     val latency = if (session.ragLatencyMillis > 0) {
@@ -397,13 +412,23 @@ private fun buildRagMetadataText(session: Session): String {
     } else {
         ""
     }
-    return "Generador: $source$latency"
+    return "${language.text(TextKey.GENERATOR)}: $source$latency"
 }
 
-private fun Session.persistedOrGeneratedRagInsight(): SessionRagInsight {
-    if (ragAnswer.isNotBlank()) {
+private fun fallbackText(session: Session, language: AppLanguage): String {
+    val reason = session.ragFallbackReason.ifBlank { "IA" }
+    return when (language) {
+        AppLanguage.CATALAN -> "S'ha utilitzat el resum local per seguretat: $reason"
+        AppLanguage.ENGLISH -> "The local summary was used for safety: $reason"
+        AppLanguage.SPANISH -> "Se ha utilizado el resumen local por seguridad: $reason"
+        AppLanguage.CHINESE -> "\u5df2\u4f7f\u7528\u672c\u5730\u603b\u7ed3\u4ee5\u786e\u4fdd\u7a33\u5b9a\uff1a$reason"
+    }
+}
+
+private fun Session.persistedOrGeneratedRagInsight(language: AppLanguage): SessionRagInsight {
+    if (ragAnswer.isNotBlank() && ragProvider == "ollama" && !ragUsedFallback) {
         return SessionRagInsight(
-            title = ragTitle.ifBlank { "Interpretacio post sessio" },
+            title = ragTitle.ifBlank { SessionRagRecommender.localizedInsightTitle(language) },
             answer = ragAnswer,
             sourceTitles = ragSourceTitles
                 .split("|")
@@ -412,7 +437,7 @@ private fun Session.persistedOrGeneratedRagInsight(): SessionRagInsight {
         )
     }
 
-    return SessionRagRecommender.buildInsight(this)
+    return SessionRagRecommender.buildInsight(this, language)
 }
 
 private data class ActivityTimelinePoint(
@@ -423,6 +448,7 @@ private data class ActivityTimelinePoint(
 
 private data class ActivityTimelineSegment(
     val label: String,
+    val startMillis: Long,
     val durationMillis: Long
 )
 
@@ -455,18 +481,27 @@ private fun buildTimelineSegments(points: List<ActivityTimelinePoint>): List<Act
         .zipWithNext { current, next -> (next.timestampMillis - current.timestampMillis).coerceAtLeast(0L) }
         .filter { it > 0L }
     val fallbackInterval = intervals.takeIf { it.isNotEmpty() }?.average()?.toLong() ?: 1000L
-    val segmentDurations = linkedMapOf<String, Long>()
+    val segments = mutableListOf<ActivityTimelineSegment>()
 
     sorted.forEachIndexed { index, point ->
         val duration = sorted.getOrNull(index + 1)
             ?.let { (it.timestampMillis - point.timestampMillis).coerceAtLeast(0L) }
             ?: fallbackInterval
-        segmentDurations[point.label] = (segmentDurations[point.label] ?: 0L) + duration
+        val previous = segments.lastOrNull()
+        if (previous != null && previous.label == point.label) {
+            segments[segments.lastIndex] = previous.copy(
+                durationMillis = previous.durationMillis + duration
+            )
+        } else {
+            segments += ActivityTimelineSegment(
+                label = point.label,
+                startMillis = point.timestampMillis,
+                durationMillis = duration
+            )
+        }
     }
 
-    return segmentDurations.map { (label, duration) ->
-        ActivityTimelineSegment(label = label, durationMillis = duration)
-    }
+    return segments
 }
 
 private fun totalTimelineMillis(segments: List<ActivityTimelineSegment>): Long {
@@ -474,13 +509,40 @@ private fun totalTimelineMillis(segments: List<ActivityTimelineSegment>): Long {
 }
 
 private fun formatDurationCompact(durationMillis: Long): String {
-    val totalSeconds = (durationMillis / 1000).coerceAtLeast(0L)
+    val totalSeconds = if (durationMillis in 1..999) {
+        1L
+    } else {
+        (durationMillis / 1000).coerceAtLeast(0L)
+    }
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return if (minutes > 0) {
         "${minutes}m ${seconds}s"
     } else {
         "${seconds}s"
+    }
+}
+
+private fun buildTimelineFootnote(sessionDurationMillis: Long, mlTimelineMillis: Long, language: AppLanguage): String {
+    return if (sessionDurationMillis > mlTimelineMillis + 1500) {
+        language.text(TextKey.ML_TIMELINE_NOTE)
+    } else {
+        language.text(TextKey.ML_TIMELINE_NOTE_SHORT)
+    }
+}
+
+private fun timelineSummaryText(
+    language: AppLanguage,
+    duration: String,
+    totalPredictions: Int,
+    averageConfidence: Double
+): String {
+    val confidence = (averageConfidence * 100).toInt()
+    return when (language) {
+        AppLanguage.CATALAN -> "$duration registrats - $totalPredictions prediccions - confianca mitjana $confidence%"
+        AppLanguage.ENGLISH -> "$duration registered - $totalPredictions predictions - average confidence $confidence%"
+        AppLanguage.SPANISH -> "$duration registrados - $totalPredictions predicciones - confianza media $confidence%"
+        AppLanguage.CHINESE -> "$duration \u5df2\u8bb0\u5f55 - $totalPredictions \u6b21\u9884\u6d4b - \u5e73\u5747\u7f6e\u4fe1\u5ea6 $confidence%"
     }
 }
 

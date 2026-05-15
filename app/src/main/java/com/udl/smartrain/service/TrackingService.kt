@@ -11,6 +11,8 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.udl.smartrain.R
+import com.udl.smartrain.data.local.AppLanguage
+import com.udl.smartrain.data.local.AppPreferences
 import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.local.SensorProvider
 import com.udl.smartrain.ml.ActivityClassifier
@@ -121,22 +123,45 @@ class TrackingService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotification(): Notification {
+        val language = AppPreferences(applicationContext).loadLanguage()
         return NotificationCompat.Builder(this, channelId)
-            .setContentTitle("SmarTrain en curs")
-            .setContentText("Recollint dades de l'entrenament...")
+            .setContentTitle(notificationTitle(language))
+            .setContentText(notificationText(language))
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .build()
     }
 
     private fun createNotificationChannel() {
+        val language = AppPreferences(applicationContext).loadLanguage()
         val channel = NotificationChannel(
             channelId,
-            "Canal de Tracking SmarTrain",
+            notificationChannelName(language),
             NotificationManager.IMPORTANCE_LOW
         )
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
+    }
+
+    private fun notificationTitle(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "SmarTrain en curs"
+        AppLanguage.ENGLISH -> "SmarTrain running"
+        AppLanguage.SPANISH -> "SmarTrain en curso"
+        AppLanguage.CHINESE -> "SmarTrain \u8fd0\u884c\u4e2d"
+    }
+
+    private fun notificationText(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "Recollint dades de l'entrenament..."
+        AppLanguage.ENGLISH -> "Collecting training data..."
+        AppLanguage.SPANISH -> "Recogiendo datos del entrenamiento..."
+        AppLanguage.CHINESE -> "\u6b63\u5728\u6536\u96c6\u8bad\u7ec3\u6570\u636e..."
+    }
+
+    private fun notificationChannelName(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "Canal de tracking SmarTrain"
+        AppLanguage.ENGLISH -> "SmarTrain tracking channel"
+        AppLanguage.SPANISH -> "Canal de tracking SmarTrain"
+        AppLanguage.CHINESE -> "SmarTrain \u8ddf\u8e2a\u9891\u9053"
     }
 
     private fun shouldAcceptSensorSample(timestampNanos: Long): Boolean {

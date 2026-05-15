@@ -10,7 +10,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.udl.smartrain.data.local.AppLanguage
+import com.udl.smartrain.data.local.AppPreferences
 import com.udl.smartrain.data.local.LocationProvider
+import com.udl.smartrain.data.local.RememberedUser
 import com.udl.smartrain.data.repository.SessionRepository
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.ActivityRecognitionState
@@ -34,11 +37,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 class MainViewModel(
     private val repository: SessionRepository,
     private val locationProvider: LocationProvider,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     private val _currentSession = MutableStateFlow<Session?>(null)
     private val _ragGenerationUiState = MutableStateFlow(RagGenerationUiState())
+    private val _rememberedUsers = MutableStateFlow(appPreferences.getRememberedUsers())
+    private val _appLanguage = MutableStateFlow(appPreferences.loadLanguage())
     private val currentUserId = MutableStateFlow(auth.currentUser?.uid.orEmpty())
 
     var currentUserName by mutableStateOf(auth.currentUser?.email ?: "Usuari")
@@ -52,6 +58,8 @@ class MainViewModel(
 
     val ragGenerationUiState: StateFlow<RagGenerationUiState> = _ragGenerationUiState.asStateFlow()
     val ragGenerationSettings = DebugRagGenerationSettings.settings
+    val rememberedUsers: StateFlow<List<RememberedUser>> = _rememberedUsers.asStateFlow()
+    val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
 
     val sessionsHistory = currentUserId
         .flatMapLatest { userId ->
@@ -68,6 +76,7 @@ class MainViewModel(
         )
 
     init {
+        DebugRagGenerationSettings.replace(appPreferences.loadRagSettings())
         auth.currentUser?.uid?.let { userId ->
             viewModelScope.launch {
                 syncUserSessions(userId)
@@ -75,18 +84,19 @@ class MainViewModel(
         }
     }
 
-    fun signIn(email: String, password: String, onSuccess: () -> Unit) {
-        authenticate(email, password, createAccount = false, onSuccess = onSuccess)
+    fun signIn(email: String, password: String, rememberUser: Boolean, onSuccess: () -> Unit) {
+        authenticate(email, password, createAccount = false, rememberUser = rememberUser, onSuccess = onSuccess)
     }
 
-    fun createAccount(email: String, password: String, onSuccess: () -> Unit) {
-        authenticate(email, password, createAccount = true, onSuccess = onSuccess)
+    fun createAccount(email: String, password: String, rememberUser: Boolean, onSuccess: () -> Unit) {
+        authenticate(email, password, createAccount = true, rememberUser = rememberUser, onSuccess = onSuccess)
     }
 
     private fun authenticate(
         email: String,
         password: String,
         createAccount: Boolean,
+        rememberUser: Boolean,
         onSuccess: () -> Unit
     ) {
         if (email.isBlank() || password.length < 6) {
@@ -106,6 +116,10 @@ class MainViewModel(
                 currentUserId.value = user.uid
                 currentUserName = user.email ?: "Usuari"
                 authError = null
+                if (rememberUser) {
+                    appPreferences.saveRememberedUser(email.trim(), password)
+                    _rememberedUsers.value = appPreferences.getRememberedUsers()
+                }
                 syncUserSessions(user.uid)
                 onSuccess()
             } catch (e: Exception) {
@@ -121,6 +135,8 @@ class MainViewModel(
         _currentSession.value = null
         TrackingSessionState.reset()
         ActivityRecognitionState.reset()
+        appPreferences.clearRagSettings()
+        DebugRagGenerationSettings.reset()
     }
 
     fun startNewSession() {
@@ -218,6 +234,12 @@ class MainViewModel(
             ollamaModel = ollamaModel,
             ollamaApiKey = ollamaApiKey
         )
+        appPreferences.saveRagSettings(DebugRagGenerationSettings.settings.value)
+    }
+
+    fun updateLanguage(language: AppLanguage) {
+        _appLanguage.value = language
+        appPreferences.saveLanguage(language)
     }
 
     fun deleteSession(session: Session) {
@@ -251,12 +273,13 @@ data class RagGenerationUiState(
 class MainViewModelFactory(
     private val repository: SessionRepository,
     private val locationProvider: LocationProvider,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val appPreferences: AppPreferences
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(repository, locationProvider, auth) as T
+            return MainViewModel(repository, locationProvider, auth, appPreferences) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

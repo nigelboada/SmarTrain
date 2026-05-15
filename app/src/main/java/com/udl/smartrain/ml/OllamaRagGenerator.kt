@@ -1,5 +1,6 @@
 package com.udl.smartrain.ml
 
+import com.udl.smartrain.data.local.AppLanguage
 import com.udl.smartrain.domain.model.Session
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,9 +18,10 @@ class OllamaRagGenerator(
 
     override suspend fun generate(
         session: Session,
-        retrievedDocuments: List<RagDocument>
+        retrievedDocuments: List<RagDocument>,
+        language: AppLanguage
     ): SessionRagInsight = withContext(Dispatchers.IO) {
-        val prompt = buildPrompt(session, retrievedDocuments)
+        val prompt = buildPrompt(session, retrievedDocuments, language)
         val payload = JSONObject()
             .put("model", model)
             .put(
@@ -76,7 +78,7 @@ class OllamaRagGenerator(
         }
 
         SessionRagInsight(
-            title = "Interpretacio post sessio",
+            title = SessionRagRecommender.localizedInsightTitle(language),
             answer = answer,
             sourceTitles = retrievedDocuments.map { it.title }
         )
@@ -100,27 +102,29 @@ class OllamaRagGenerator(
         }
     }
 
-    private fun buildPrompt(session: Session, retrievedDocuments: List<RagDocument>): String {
+    private fun buildPrompt(session: Session, retrievedDocuments: List<RagDocument>, language: AppLanguage): String {
         val confidencePercent = (session.avgMlConfidence * 100).toInt()
         val context = retrievedDocuments.joinToString(separator = "\n") { document ->
             "[${document.id}] ${document.title} (${document.category}): ${document.text}"
         }
-        val sessionSummary = buildString {
-            append("Activitat dominant: ${session.dominantActivity}. ")
-            append("Confianca mitjana: $confidencePercent%. ")
-            append("Blocs d'alta intensitat: ${session.highIntensityCount}/${session.mlPredictionCount}.")
+        val sessionSummary = SessionRagRecommender.localizedSessionSummary(session, language)
+        val languageInstruction = when (language) {
+            AppLanguage.CATALAN -> "Respon en catala"
+            AppLanguage.ENGLISH -> "Answer in English"
+            AppLanguage.SPANISH -> "Responde en castellano"
+            AppLanguage.CHINESE -> "\u8bf7\u7528\u4e2d\u6587\u56de\u7b54"
         }
 
         return """
-            Ets l'assistent de SmarTrain. Respon en catala, de forma breu i prudent.
-            Basa la resposta nomes en el context recuperat i en les dades de la sessio.
-            No inventis metriques ni diagnositcs medics. Inclou una recomanacio accionable.
+            You are the SmarTrain assistant. $languageInstruction. Be brief and careful.
+            Base the answer only on the retrieved context and the session data.
+            Do not invent metrics or medical diagnoses. Include one actionable recommendation.
 
             Context RAG:
             $context
 
             Resum de sessio:
-            $sessionSummary
+            $sessionSummary Confidence: $confidencePercent%.
 
             Resposta:
         """.trimIndent()

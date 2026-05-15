@@ -39,12 +39,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.udl.smartrain.data.local.AppLanguage
 import com.udl.smartrain.ml.ActivityPrediction
 import com.udl.smartrain.ml.ActivityRecognitionState
 import com.udl.smartrain.service.TrackingMetrics
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
 import com.udl.smartrain.ui.components.GlassCard
+import com.udl.smartrain.ui.i18n.TextKey
+import com.udl.smartrain.ui.i18n.activityLabel
+import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -58,6 +62,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
     val predictionHistory by ActivityRecognitionState.predictionHistory.collectAsState()
     val trackingMetrics by TrackingSessionState.metrics.collectAsState()
     val ragGenerationState by viewModel.ragGenerationUiState.collectAsState()
+    val language by viewModel.appLanguage.collectAsState()
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var permissionMessage by remember { mutableStateOf<String?>(null) }
 
@@ -68,10 +73,11 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
             permissionMessage = null
             startTrackingService(
                 context = context,
+                language = language,
                 onError = { message -> permissionMessage = message }
             )
         } else {
-            permissionMessage = "Cal concedir el permis de localitzacio per iniciar la sessio."
+            permissionMessage = locationPermissionText(language)
         }
     }
 
@@ -96,19 +102,20 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
-                SessionHeader(metrics = trackingMetrics, nowMillis = nowMillis)
+                SessionHeader(metrics = trackingMetrics, nowMillis = nowMillis, language = language)
             }
 
             item {
                 MetricsGrid(
                     metrics = trackingMetrics,
                     predictionCount = predictionHistory.size,
-                    nowMillis = nowMillis
+                    nowMillis = nowMillis,
+                    language = language
                 )
             }
 
             item {
-                PredictionCard(prediction = currentPrediction)
+                PredictionCard(prediction = currentPrediction, language = language)
             }
 
             item {
@@ -117,6 +124,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
                     isGeneratingRag = ragGenerationState.isGenerating,
                     permissionMessage = permissionMessage,
                     generationMessage = ragGenerationState.message,
+                    language = language,
                     onStart = {
                         permissionLauncher.launch(trackingPermissions())
                     },
@@ -128,7 +136,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
 
             item {
                 Text(
-                    text = "Historic ML recent",
+                    text = language.text(TextKey.ML_HISTORY),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White
                 )
@@ -136,11 +144,11 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
 
             if (predictionHistory.isEmpty()) {
                 item {
-                    EmptyHistoryCard()
+                    EmptyHistoryCard(language = language)
                 }
             } else {
                 items(predictionHistory.asReversed()) { prediction ->
-                    PredictionHistoryRow(prediction)
+                    PredictionHistoryRow(prediction = prediction, language = language)
                 }
             }
         }
@@ -173,24 +181,32 @@ private fun hasLocationPermission(context: Context, permissions: Map<String, Boo
     return fineGranted || coarseGranted
 }
 
-private fun startTrackingService(context: Context, onError: (String) -> Unit) {
+private fun startTrackingService(context: Context, language: AppLanguage, onError: (String) -> Unit) {
     try {
         val intent = Intent(context, TrackingService::class.java)
         ContextCompat.startForegroundService(context, intent)
     } catch (exception: SecurityException) {
-        onError("No s'ha pogut iniciar el servei: revisa els permisos de localitzacio.")
+        onError(servicePermissionText(language))
     } catch (exception: IllegalStateException) {
-        onError("No s'ha pogut iniciar el servei en segon pla. Torna-ho a provar amb l'app oberta.")
+        onError(backgroundServiceText(language))
     }
 }
 
+private fun locationPermissionText(language: AppLanguage): String = when (language) {
+    else -> language.text(TextKey.LOCATION_PERMISSION_REQUIRED)
+}
+
+private fun servicePermissionText(language: AppLanguage): String = language.text(TextKey.SERVICE_PERMISSION_ERROR)
+
+private fun backgroundServiceText(language: AppLanguage): String = language.text(TextKey.SERVICE_BACKGROUND_ERROR)
+
 @Composable
-private fun SessionHeader(metrics: TrackingMetrics, nowMillis: Long) {
+private fun SessionHeader(metrics: TrackingMetrics, nowMillis: Long, language: AppLanguage) {
     val elapsedSeconds = metrics.startedAtMillis?.let { (nowMillis - it) / 1000 } ?: 0L
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
-            text = if (metrics.isTracking) "Sessio activa" else "Sessio preparada",
+            text = if (metrics.isTracking) language.text(TextKey.SESSION_ACTIVE) else language.text(TextKey.SESSION_READY),
             style = MaterialTheme.typography.headlineSmall,
             color = Color.White
         )
@@ -204,31 +220,31 @@ private fun SessionHeader(metrics: TrackingMetrics, nowMillis: Long) {
 }
 
 @Composable
-private fun MetricsGrid(metrics: TrackingMetrics, predictionCount: Int, nowMillis: Long) {
+private fun MetricsGrid(metrics: TrackingMetrics, predictionCount: Int, nowMillis: Long, language: AppLanguage) {
     val elapsedSeconds = metrics.startedAtMillis?.let { (nowMillis - it) / 1000 } ?: 0L
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             MetricCard(
-                label = "Temps",
+                label = language.text(TextKey.TIME),
                 value = formatDuration(elapsedSeconds),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
-                label = "Distancia",
+                label = language.text(TextKey.DISTANCE),
                 value = "${"%.2f".format(metrics.distanceMeters / 1000.0)} km",
                 modifier = Modifier.weight(1f)
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             MetricCard(
-                label = "Prediccions",
+                label = language.text(TextKey.PREDICTIONS),
                 value = predictionCount.toString(),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
-                label = "Estat",
-                value = if (metrics.isTracking) "Actiu" else "Aturat",
+                label = language.text(TextKey.STATUS),
+                value = if (metrics.isTracking) language.text(TextKey.SESSION_ACTIVE) else language.text(TextKey.STOPPED),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -249,7 +265,7 @@ private fun MetricCard(label: String, value: String, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun PredictionCard(prediction: ActivityPrediction?) {
+private fun PredictionCard(prediction: ActivityPrediction?, language: AppLanguage) {
     val confidence = prediction?.confidence ?: 0f
 
     Card(
@@ -260,9 +276,9 @@ private fun PredictionCard(prediction: ActivityPrediction?) {
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(text = "Activitat detectada", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text(text = language.text(TextKey.ACTIVITY_DETECTED), style = MaterialTheme.typography.titleMedium, color = Color.White)
             Text(
-                text = prediction?.label ?: "Esperant dades del sensor",
+                text = prediction?.let { language.activityLabel(it.label) } ?: language.text(TextKey.NO_ML_DATA),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White
@@ -272,7 +288,7 @@ private fun PredictionCard(prediction: ActivityPrediction?) {
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                text = "Confianca: ${(confidence * 100).toInt()}%",
+                text = "${language.text(TextKey.CONFIDENCE)}: ${(confidence * 100).toInt()}%",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.76f)
             )
@@ -286,6 +302,7 @@ private fun ActionPanel(
     isGeneratingRag: Boolean,
     permissionMessage: String?,
     generationMessage: String?,
+    language: AppLanguage,
     onStart: () -> Unit,
     onFinish: () -> Unit
 ) {
@@ -315,7 +332,7 @@ private fun ActionPanel(
             enabled = !isTracking && !isGeneratingRag,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = if (isTracking) "Sensoritzacio en curs" else "Comencar sensoritzacio")
+            Text(text = if (isTracking) language.text(TextKey.SESSION_ACTIVE) else language.text(TextKey.START_SENSORING))
         }
         Button(
             onClick = onFinish,
@@ -323,16 +340,16 @@ private fun ActionPanel(
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) {
-            Text(if (isGeneratingRag) "Generant resum..." else "Finalitzar i guardar")
+            Text(if (isGeneratingRag) language.text(TextKey.GENERATING_SUMMARY) else language.text(TextKey.FINISH_SAVE))
         }
     }
 }
 
 @Composable
-private fun EmptyHistoryCard() {
+private fun EmptyHistoryCard(language: AppLanguage) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Encara no hi ha prediccions. Comenca la sensoritzacio per veure el model en temps real.",
+            text = language.text(TextKey.NO_HISTORY_PREDICTIONS),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.White.copy(alpha = 0.78f),
             modifier = Modifier.padding(16.dp)
@@ -341,7 +358,7 @@ private fun EmptyHistoryCard() {
 }
 
 @Composable
-private fun PredictionHistoryRow(prediction: ActivityPrediction) {
+private fun PredictionHistoryRow(prediction: ActivityPrediction, language: AppLanguage) {
     val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
     Card(
@@ -356,7 +373,7 @@ private fun PredictionHistoryRow(prediction: ActivityPrediction) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text(text = prediction.label, style = MaterialTheme.typography.titleSmall, color = Color.White)
+                Text(text = language.activityLabel(prediction.label), style = MaterialTheme.typography.titleSmall, color = Color.White)
                 Text(
                     text = formatter.format(Date(prediction.timestampMillis)),
                     style = MaterialTheme.typography.bodySmall,

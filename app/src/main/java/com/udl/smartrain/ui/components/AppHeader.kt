@@ -24,11 +24,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.udl.smartrain.data.local.AppLanguage
+import com.udl.smartrain.ui.i18n.TextKey
+import com.udl.smartrain.ui.i18n.text
 
 @Composable
 fun AppHeader(
     title: String,
-    onLanguageSelected: (String) -> Unit,
+    currentLanguage: AppLanguage,
+    onLanguageSelected: (AppLanguage) -> Unit,
     onProfileClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
@@ -48,12 +52,16 @@ fun AppHeader(
         Row {
             Box {
                 IconButton(onClick = { showLanguageMenu = true }) {
-                    Icon(Icons.Default.Translate, contentDescription = "Canviar idioma", tint = Color.White)
+                    Icon(Icons.Default.Translate, contentDescription = currentLanguage.text(TextKey.CHANGE_LANGUAGE), tint = Color.White)
                 }
                 DropdownMenu(expanded = showLanguageMenu, onDismissRequest = { showLanguageMenu = false }) {
-                    listOf("Angles", "Catala", "Castella", "Xines").forEach { lang ->
+                    AppLanguage.entries.forEach { lang ->
                         DropdownMenuItem(
-                            text = { Text(lang) },
+                            text = {
+                                Text(
+                                    text = if (lang == currentLanguage) "${lang.label} ✓" else lang.label
+                                )
+                            },
                             onClick = {
                                 onLanguageSelected(lang)
                                 showLanguageMenu = false
@@ -65,18 +73,18 @@ fun AppHeader(
 
             Box {
                 IconButton(onClick = { showSettingsMenu = true }) {
-                    Icon(Icons.Default.Settings, contentDescription = "Configuracio", tint = Color.White)
+                    Icon(Icons.Default.Settings, contentDescription = currentLanguage.text(TextKey.PROFILE), tint = Color.White)
                 }
                 DropdownMenu(expanded = showSettingsMenu, onDismissRequest = { showSettingsMenu = false }) {
                     DropdownMenuItem(
-                        text = { Text("Perfil") },
+                        text = { Text(currentLanguage.text(TextKey.PROFILE)) },
                         onClick = {
                             onProfileClick()
                             showSettingsMenu = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Tancar sessio") },
+                        text = { Text(currentLanguage.text(TextKey.SIGN_OUT)) },
                         onClick = {
                             onLogoutClick()
                             showSettingsMenu = false

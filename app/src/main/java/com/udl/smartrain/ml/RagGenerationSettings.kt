@@ -16,6 +16,14 @@ object DebugRagGenerationSettings {
     private val _settings = MutableStateFlow(RagGenerationSettings())
     val settings: StateFlow<RagGenerationSettings> = _settings.asStateFlow()
 
+    fun replace(settings: RagGenerationSettings) {
+        _settings.value = settings
+    }
+
+    fun reset() {
+        _settings.value = RagGenerationSettings()
+    }
+
     fun update(useOllama: Boolean, ollamaBaseUrl: String, ollamaModel: String, ollamaApiKey: String) {
         _settings.update {
             RagGenerationSettings(
