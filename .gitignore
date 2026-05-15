@@ -20,8 +20,15 @@ output-metadata.json
 
 # Secrets and local credentials
 google-services.json
+.env
+.env.*
+!.env.example
 *.jks
 *.keystore
+
+# Local RAG indexes and generated projector files
+ml/rag/chroma_db/
+ml/rag/results/projector/
 
 # Logs, profiling and OS files
 *.log

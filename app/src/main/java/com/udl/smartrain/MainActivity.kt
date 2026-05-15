@@ -43,6 +43,7 @@ import com.udl.smartrain.data.local.AppDatabase
 import com.udl.smartrain.data.local.AppPreferences
 import com.udl.smartrain.data.local.LocationProvider
 import com.udl.smartrain.data.repository.SessionRepositoryImpl
+import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.ui.components.AppBackground
 import com.udl.smartrain.ui.i18n.TextKey
 import com.udl.smartrain.ui.i18n.text
@@ -68,6 +69,7 @@ class MainActivity : ComponentActivity() {
             .addMigrations(AppDatabase.MIGRATION_1_2)
             .addMigrations(AppDatabase.MIGRATION_2_3)
             .addMigrations(AppDatabase.MIGRATION_3_4)
+            .addMigrations(AppDatabase.MIGRATION_4_5)
             .build()
 
         val firestore = Firebase.firestore
@@ -75,6 +77,7 @@ class MainActivity : ComponentActivity() {
         val locationProvider = LocationProvider(applicationContext)
         val appPreferences = AppPreferences(applicationContext)
         val auth = FirebaseAuth.getInstance()
+        SessionRagRecommender.initialize(applicationContext)
 
         val viewModel: MainViewModel by viewModels {
             MainViewModelFactory(repository, locationProvider, auth, appPreferences)

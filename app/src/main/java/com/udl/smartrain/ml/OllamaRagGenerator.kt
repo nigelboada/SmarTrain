@@ -80,7 +80,17 @@ class OllamaRagGenerator(
         SessionRagInsight(
             title = SessionRagRecommender.localizedInsightTitle(language),
             answer = answer,
-            sourceTitles = retrievedDocuments.map { it.title }
+            sourceTitles = retrievedDocuments.map { it.title },
+            sourceDetails = retrievedDocuments.mapIndexed { index, document ->
+                RagSourceDetail(
+                    id = document.id,
+                    source = document.title,
+                    category = document.category,
+                    chunkId = index,
+                    score = 1.0,
+                    text = document.text
+                )
+            }
         )
     }
 

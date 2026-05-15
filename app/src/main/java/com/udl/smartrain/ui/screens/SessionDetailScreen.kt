@@ -38,6 +38,7 @@ import com.udl.smartrain.data.local.AppLanguage
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.ml.SessionRagInsight
+import com.udl.smartrain.ml.RagSourceDetail
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.i18n.TextKey
 import com.udl.smartrain.ui.i18n.activityLabel
@@ -343,6 +344,42 @@ private fun RagInsightCard(session: Session, insight: SessionRagInsight, languag
                 color = Color.White.copy(alpha = 0.62f)
             )
         }
+        if (insight.sourceDetails.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                insight.sourceDetails.take(4).forEach { source ->
+                    SourceChunkRow(source = source)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SourceChunkRow(source: RagSourceDetail) {
+    Surface(
+        color = Color.White.copy(alpha = 0.06f),
+        shape = MaterialTheme.shapes.small,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Text(
+                text = "${source.source.ifBlank { source.id }} · score ${"%.2f".format(source.score)}",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White.copy(alpha = 0.86f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = source.text,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.62f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
@@ -439,18 +476,43 @@ private fun fallbackText(session: Session, language: AppLanguage): String {
 }
 
 private fun Session.persistedOrGeneratedRagInsight(language: AppLanguage): SessionRagInsight {
-    if (ragAnswer.isNotBlank() && ragProvider == "ollama" && !ragUsedFallback) {
+    if (ragAnswer.isNotBlank() && !ragUsedFallback) {
         return SessionRagInsight(
             title = ragTitle.ifBlank { SessionRagRecommender.localizedInsightTitle(language) },
             answer = ragAnswer,
             sourceTitles = ragSourceTitles
                 .split("|")
                 .map { it.trim() }
-                .filter { it.isNotBlank() }
+                .filter { it.isNotBlank() },
+            sourceDetails = parseRagSourceDetails(ragSourceDetails)
         )
     }
 
     return SessionRagRecommender.buildInsight(this, language)
+}
+
+private fun parseRagSourceDetails(raw: String): List<RagSourceDetail> {
+    if (raw.isBlank()) return emptyList()
+    return raw.split("|").mapNotNull { item ->
+        val parts = item.split("~")
+        if (parts.size < 6) {
+            return@mapNotNull null
+        }
+        RagSourceDetail(
+            id = parts[0].decodeSourcePart(),
+            source = parts[1].decodeSourcePart(),
+            category = parts[2].decodeSourcePart(),
+            chunkId = parts[3].toIntOrNull() ?: 0,
+            score = parts[4].replace(",", ".").toDoubleOrNull() ?: 0.0,
+            text = parts.drop(5).joinToString("~").decodeSourcePart()
+        )
+    }
+}
+
+private fun String.decodeSourcePart(): String {
+    return replace("%7E", "~")
+        .replace("%7C", "|")
+        .replace("%25", "%")
 }
 
 private data class ActivityTimelinePoint(

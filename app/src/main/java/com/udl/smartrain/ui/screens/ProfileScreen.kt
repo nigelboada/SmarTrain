@@ -45,6 +45,8 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
     var showSaveConfirmation by remember { mutableStateOf(false) }
     val ragSettings by viewModel.ragGenerationSettings.collectAsState()
     val language by viewModel.appLanguage.collectAsState()
+    var useRemoteRag by remember(ragSettings.useRemoteRag) { mutableStateOf(ragSettings.useRemoteRag) }
+    var remoteRagBaseUrl by remember(ragSettings.remoteRagBaseUrl) { mutableStateOf(ragSettings.remoteRagBaseUrl) }
     var useOllama by remember(ragSettings.useOllama) { mutableStateOf(ragSettings.useOllama) }
     var ollamaBaseUrl by remember(ragSettings.ollamaBaseUrl) { mutableStateOf(ragSettings.ollamaBaseUrl) }
     var ollamaModel by remember(ragSettings.ollamaModel) { mutableStateOf(ragSettings.ollamaModel) }
@@ -92,6 +94,28 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     text = language.text(TextKey.IA_SETTINGS_HELP_CLOUD),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.72f)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = language.text(TextKey.REMOTE_RAG),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
+                    Switch(
+                        checked = useRemoteRag,
+                        onCheckedChange = { useRemoteRag = it }
+                    )
+                }
+                OutlinedTextField(
+                    value = remoteRagBaseUrl,
+                    onValueChange = { remoteRagBaseUrl = it },
+                    label = { Text(language.text(TextKey.REMOTE_RAG_URL)) },
+                    singleLine = true,
+                    colors = darkOutlinedTextFieldColors(),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -154,6 +178,8 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 TextButton(onClick = {
                     viewModel.updateUserName(userName)
                     viewModel.updateRagGenerationSettings(
+                        useRemoteRag = useRemoteRag,
+                        remoteRagBaseUrl = remoteRagBaseUrl,
                         useOllama = useOllama,
                         ollamaBaseUrl = ollamaBaseUrl,
                         ollamaModel = ollamaModel,

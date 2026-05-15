@@ -8,7 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.udl.smartrain.domain.model.Session
 
 
-@Database(entities = [Session::class], version = 4, exportSchema = false)
+@Database(entities = [Session::class], version = 5, exportSchema = false)
 @TypeConverters(Converters::class) // Necessari per guardar objectes com 'Date'
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
@@ -39,6 +39,12 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE sessions ADD COLUMN ragLatencyMillis INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE sessions ADD COLUMN ragUsedFallback INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE sessions ADD COLUMN ragFallbackReason TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sessions ADD COLUMN ragSourceDetails TEXT NOT NULL DEFAULT ''")
             }
         }
     }

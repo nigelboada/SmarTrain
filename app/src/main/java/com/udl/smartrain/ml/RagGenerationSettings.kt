@@ -6,9 +6,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 data class RagGenerationSettings(
+    val useRemoteRag: Boolean = false,
+    val remoteRagBaseUrl: String = "http://10.0.2.2:8000",
     val useOllama: Boolean = false,
     val ollamaBaseUrl: String = "http://10.0.2.2:11434",
-    val ollamaModel: String = "gemma3:1b",
+    val ollamaModel: String = "qwen3-coder-next",
     val ollamaApiKey: String = ""
 )
 
@@ -24,9 +26,18 @@ object DebugRagGenerationSettings {
         _settings.value = RagGenerationSettings()
     }
 
-    fun update(useOllama: Boolean, ollamaBaseUrl: String, ollamaModel: String, ollamaApiKey: String) {
+    fun update(
+        useRemoteRag: Boolean,
+        remoteRagBaseUrl: String,
+        useOllama: Boolean,
+        ollamaBaseUrl: String,
+        ollamaModel: String,
+        ollamaApiKey: String
+    ) {
         _settings.update {
             RagGenerationSettings(
+                useRemoteRag = useRemoteRag,
+                remoteRagBaseUrl = remoteRagBaseUrl.trim().ifBlank { RagGenerationSettings().remoteRagBaseUrl },
                 useOllama = useOllama,
                 ollamaBaseUrl = ollamaBaseUrl.trim().ifBlank { RagGenerationSettings().ollamaBaseUrl },
                 ollamaModel = ollamaModel.trim().ifBlank { RagGenerationSettings().ollamaModel },

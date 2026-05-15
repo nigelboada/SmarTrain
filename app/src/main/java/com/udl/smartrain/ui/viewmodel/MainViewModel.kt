@@ -18,11 +18,13 @@ import com.udl.smartrain.data.repository.SessionRepository
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.ActivityRecognitionState
 import com.udl.smartrain.ml.DebugRagGenerationSettings
+import com.udl.smartrain.ml.RagSourceDetail
 import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
 import com.udl.smartrain.ui.i18n.TextKey
 import com.udl.smartrain.ui.i18n.text
+import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -189,10 +191,10 @@ class MainViewModel(
                 val settings = DebugRagGenerationSettings.settings.value
                 _ragGenerationUiState.value = RagGenerationUiState(
                     isGenerating = true,
-                    message = if (settings.useOllama) {
-                        _appLanguage.value.text(TextKey.SESSION_SAVE_OLLAMA_GENERATING, settings.ollamaModel)
-                    } else {
-                        _appLanguage.value.text(TextKey.SESSION_SAVE_LOCAL_GENERATING)
+                    message = when {
+                        settings.useRemoteRag -> _appLanguage.value.text(TextKey.SESSION_SAVE_OLLAMA_GENERATING, "Remote RAG")
+                        settings.useOllama -> _appLanguage.value.text(TextKey.SESSION_SAVE_OLLAMA_GENERATING, settings.ollamaModel)
+                        else -> _appLanguage.value.text(TextKey.SESSION_SAVE_LOCAL_GENERATING)
                     }
                 )
                 val ragResult = SessionRagRecommender.buildInsightWithGenerator(
@@ -205,6 +207,7 @@ class MainViewModel(
                     ragTitle = ragInsight.title,
                     ragAnswer = ragInsight.answer,
                     ragSourceTitles = ragInsight.sourceTitles.joinToString(separator = "|"),
+                    ragSourceDetails = ragInsight.sourceDetails.joinToString(separator = "|") { it.serialize() },
                     ragProvider = ragResult.provider,
                     ragModel = ragResult.model,
                     ragLatencyMillis = ragResult.latencyMillis,
@@ -227,12 +230,16 @@ class MainViewModel(
     }
 
     fun updateRagGenerationSettings(
+        useRemoteRag: Boolean,
+        remoteRagBaseUrl: String,
         useOllama: Boolean,
         ollamaBaseUrl: String,
         ollamaModel: String,
         ollamaApiKey: String
     ) {
         DebugRagGenerationSettings.update(
+            useRemoteRag = useRemoteRag,
+            remoteRagBaseUrl = remoteRagBaseUrl,
             useOllama = useOllama,
             ollamaBaseUrl = ollamaBaseUrl,
             ollamaModel = ollamaModel,
@@ -287,6 +294,16 @@ class MainViewModel(
         AppLanguage.ENGLISH -> "Could not sign in."
         AppLanguage.SPANISH -> "No se ha podido iniciar sesion."
         AppLanguage.CHINESE -> "\u65e0\u6cd5\u767b\u5f55\u3002"
+    }
+
+    private fun RagSourceDetail.serialize(): String {
+        return listOf(id, source, category, chunkId.toString(), String.format(Locale.US, "%.4f", score), text.take(220))
+            .joinToString("~") { value ->
+                value.replace("%", "%25")
+                    .replace("|", "%7C")
+                    .replace("~", "%7E")
+                    .replace("\n", " ")
+            }
     }
 }
 

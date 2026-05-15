@@ -44,6 +44,7 @@ SmarTrain/
     scripts/               preprocessament i entrenament
   docs/
     PROJECT_REPORT.md
+    RAG_IMPLEMENTATION_GUIDE.md
 ```
 
 Flux ML dins l'app:
@@ -60,16 +61,19 @@ SensorProvider
   -> RAG post-sessio
 ```
 
-Flux RAG/IA:
+Flux RAG/IA actualitzat:
 
 ```text
 Session
-  -> retrieveDocuments()
-  -> prompt amb context RAG
-  -> OllamaRagGenerator (/api/chat) si esta activat
+  -> backend RAG remot opcional (/rag/session-summary)
+  -> ChromaDB/Pinecone al backend + chunks + scores
+  -> qwen3-coder-next via Ollama Cloud
+  -> OllamaRagGenerator (/api/chat) si esta activat com a mode directe
   -> fallback RuleBasedRagAnswerGenerator si falla
-  -> persistencia de resposta, proveidor, model, latencia i motiu de fallback
+  -> persistencia de resposta, proveidor, model, latencia, chunks font i motiu de fallback
 ```
+
+La guia operativa del nou pipeline RAG es troba a `docs/RAG_IMPLEMENTATION_GUIDE.md`.
 
 ## 3. Experimentacio ML
 

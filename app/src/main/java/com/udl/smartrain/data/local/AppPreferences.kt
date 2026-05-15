@@ -58,6 +58,9 @@ class AppPreferences(context: Context) {
     fun loadRagSettings(): RagGenerationSettings {
         val defaults = RagGenerationSettings()
         return RagGenerationSettings(
+            useRemoteRag = preferences.getBoolean(KEY_RAG_USE_REMOTE, defaults.useRemoteRag),
+            remoteRagBaseUrl = preferences.getString(KEY_RAG_REMOTE_BASE_URL, defaults.remoteRagBaseUrl).orEmpty()
+                .ifBlank { defaults.remoteRagBaseUrl },
             useOllama = preferences.getBoolean(KEY_RAG_USE_OLLAMA, defaults.useOllama),
             ollamaBaseUrl = preferences.getString(KEY_RAG_BASE_URL, defaults.ollamaBaseUrl).orEmpty()
                 .ifBlank { defaults.ollamaBaseUrl },
@@ -69,6 +72,8 @@ class AppPreferences(context: Context) {
 
     fun saveRagSettings(settings: RagGenerationSettings) {
         preferences.edit()
+            .putBoolean(KEY_RAG_USE_REMOTE, settings.useRemoteRag)
+            .putString(KEY_RAG_REMOTE_BASE_URL, settings.remoteRagBaseUrl)
             .putBoolean(KEY_RAG_USE_OLLAMA, settings.useOllama)
             .putString(KEY_RAG_BASE_URL, settings.ollamaBaseUrl)
             .putString(KEY_RAG_MODEL, settings.ollamaModel)
@@ -78,6 +83,8 @@ class AppPreferences(context: Context) {
 
     fun clearRagSettings() {
         preferences.edit()
+            .remove(KEY_RAG_USE_REMOTE)
+            .remove(KEY_RAG_REMOTE_BASE_URL)
             .remove(KEY_RAG_USE_OLLAMA)
             .remove(KEY_RAG_BASE_URL)
             .remove(KEY_RAG_MODEL)
@@ -110,6 +117,8 @@ class AppPreferences(context: Context) {
     private companion object {
         const val PREFERENCES_NAME = "smartrain_preferences"
         const val KEY_REMEMBERED_USERS = "remembered_users"
+        const val KEY_RAG_USE_REMOTE = "rag_use_remote"
+        const val KEY_RAG_REMOTE_BASE_URL = "rag_remote_base_url"
         const val KEY_RAG_USE_OLLAMA = "rag_use_ollama"
         const val KEY_RAG_BASE_URL = "rag_base_url"
         const val KEY_RAG_MODEL = "rag_model"
