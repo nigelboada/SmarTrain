@@ -1,6 +1,5 @@
 package com.udl.smartrain.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,16 +26,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.ui.components.AppHeader
+import com.udl.smartrain.ui.i18n.TextKey
+import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.components.ProfileField
 import com.udl.smartrain.ui.navigation.Screen
-import com.udl.smartrain.ui.theme.DarkBlueSecondary
-import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 
 @Composable
@@ -46,6 +44,9 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showSaveConfirmation by remember { mutableStateOf(false) }
     val ragSettings by viewModel.ragGenerationSettings.collectAsState()
+    val language by viewModel.appLanguage.collectAsState()
+    var useRemoteRag by remember(ragSettings.useRemoteRag) { mutableStateOf(ragSettings.useRemoteRag) }
+    var remoteRagBaseUrl by remember(ragSettings.remoteRagBaseUrl) { mutableStateOf(ragSettings.remoteRagBaseUrl) }
     var useOllama by remember(ragSettings.useOllama) { mutableStateOf(ragSettings.useOllama) }
     var ollamaBaseUrl by remember(ragSettings.ollamaBaseUrl) { mutableStateOf(ragSettings.ollamaBaseUrl) }
     var ollamaModel by remember(ragSettings.ollamaModel) { mutableStateOf(ragSettings.ollamaModel) }
@@ -54,16 +55,15 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
     Scaffold(
         topBar = {
             AppHeader(
-                title = "Perfil",
-                onLanguageSelected = { },
+                title = language.text(TextKey.PROFILE),
+                currentLanguage = language,
+                onLanguageSelected = viewModel::updateLanguage,
                 onProfileClick = { },
                 onLogoutClick = { showLogoutDialog = true }
             )
         },
         containerColor = Color.Transparent,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary)))
+        modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -71,8 +71,8 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 .padding(horizontal = 20.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            ProfileField("Usuari", userName) { userName = it }
-            ProfileField("Contrasenya", userPassword) { userPassword = it }
+            ProfileField(language.text(TextKey.USER), userName) { userName = it }
+            ProfileField(language.text(TextKey.PASSWORD), userPassword) { userPassword = it }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -81,17 +81,17 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Configuracio IA debug",
+                    text = language.text(TextKey.AI_SETTINGS),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White
                 )
                 Text(
-                    text = "Mobil fisic: usa una URL ngrok/local accessible o https://ollama.com per cloud. La clau API nomes queda en memoria mentre l'app esta oberta.",
+                    text = language.text(TextKey.IA_SETTINGS_HELP),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.72f)
                 )
                 Text(
-                    text = "Local: model gemma3:1b + URL ngrok/local. Cloud: URL https://ollama.com + model retornat per /api/tags + API key.",
+                    text = language.text(TextKey.IA_SETTINGS_HELP_CLOUD),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.72f)
                 )
@@ -100,7 +100,29 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Usar Ollama per als resums",
+                        text = language.text(TextKey.REMOTE_RAG),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
+                    Switch(
+                        checked = useRemoteRag,
+                        onCheckedChange = { useRemoteRag = it }
+                    )
+                }
+                OutlinedTextField(
+                    value = remoteRagBaseUrl,
+                    onValueChange = { remoteRagBaseUrl = it },
+                    label = { Text(language.text(TextKey.REMOTE_RAG_URL)) },
+                    singleLine = true,
+                    colors = darkOutlinedTextFieldColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = language.text(TextKey.USE_OLLAMA),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White
                     )
@@ -112,7 +134,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 OutlinedTextField(
                     value = ollamaBaseUrl,
                     onValueChange = { ollamaBaseUrl = it },
-                    label = { Text("Base URL Ollama / ngrok") },
+                    label = { Text(language.text(TextKey.BASE_URL)) },
                     singleLine = true,
                     colors = darkOutlinedTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
@@ -120,7 +142,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 OutlinedTextField(
                     value = ollamaModel,
                     onValueChange = { ollamaModel = it },
-                    label = { Text("Model") },
+                    label = { Text(language.text(TextKey.MODEL)) },
                     singleLine = true,
                     colors = darkOutlinedTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
@@ -128,7 +150,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 OutlinedTextField(
                     value = ollamaApiKey,
                     onValueChange = { ollamaApiKey = it },
-                    label = { Text("API key Ollama Cloud (opcional)") },
+                    label = { Text(language.text(TextKey.API_KEY)) },
                     singleLine = true,
                     colors = darkOutlinedTextFieldColors(),
                     visualTransformation = PasswordVisualTransformation(),
@@ -142,7 +164,7 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 onClick = { showSaveConfirmation = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar canvis")
+                Text(language.text(TextKey.SAVE_CHANGES))
             }
         }
     }
@@ -150,12 +172,14 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
     if (showSaveConfirmation) {
         AlertDialog(
             onDismissRequest = { showSaveConfirmation = false },
-            title = { Text("Confirmar canvis") },
-            text = { Text("Vols aplicar els canvis al perfil?") },
+            title = { Text(language.text(TextKey.CONFIRM_CHANGES)) },
+            text = { Text(language.text(TextKey.SAVE_PROFILE_QUESTION)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.updateUserName(userName)
                     viewModel.updateRagGenerationSettings(
+                        useRemoteRag = useRemoteRag,
+                        remoteRagBaseUrl = remoteRagBaseUrl,
                         useOllama = useOllama,
                         ollamaBaseUrl = ollamaBaseUrl,
                         ollamaModel = ollamaModel,
@@ -164,12 +188,12 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     showSaveConfirmation = false
                     navController.popBackStack()
                 }) {
-                    Text("Confirmar")
+                    Text(language.text(TextKey.CONFIRM))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSaveConfirmation = false }) {
-                    Text("Cancelar")
+                    Text(language.text(TextKey.CANCEL))
                 }
             }
         )
@@ -178,8 +202,8 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Tancar sessio") },
-            text = { Text("Segur que vols tancar la sessio?") },
+            title = { Text(language.text(TextKey.SIGN_OUT)) },
+            text = { Text(language.text(TextKey.SIGN_OUT_QUESTION)) },
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
@@ -188,12 +212,12 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                         popUpTo(0) { inclusive = true }
                     }
                 }) {
-                    Text("Sortir")
+                    Text(language.text(TextKey.SIGN_OUT))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancelar")
+                    Text(language.text(TextKey.CANCEL))
                 }
             }
         )

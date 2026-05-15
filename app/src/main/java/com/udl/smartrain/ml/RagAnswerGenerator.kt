@@ -1,12 +1,13 @@
 package com.udl.smartrain.ml
 
 import com.udl.smartrain.domain.model.Session
+import com.udl.smartrain.data.local.AppLanguage
 
 interface RagAnswerGenerator {
     val provider: String
     val model: String
 
-    suspend fun generate(session: Session, retrievedDocuments: List<RagDocument>): SessionRagInsight
+    suspend fun generate(session: Session, retrievedDocuments: List<RagDocument>, language: AppLanguage): SessionRagInsight
 }
 
 object RuleBasedRagAnswerGenerator : RagAnswerGenerator {
@@ -15,8 +16,9 @@ object RuleBasedRagAnswerGenerator : RagAnswerGenerator {
 
     override suspend fun generate(
         session: Session,
-        retrievedDocuments: List<RagDocument>
+        retrievedDocuments: List<RagDocument>,
+        language: AppLanguage
     ): SessionRagInsight {
-        return SessionRagRecommender.buildRuleBasedInsight(session, retrievedDocuments)
+        return SessionRagRecommender.buildRuleBasedInsight(session, retrievedDocuments, language)
     }
 }

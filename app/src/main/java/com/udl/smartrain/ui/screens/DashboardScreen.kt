@@ -1,6 +1,5 @@
 package com.udl.smartrain.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,11 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,16 +34,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ui.components.AppHeader
+import com.udl.smartrain.ui.i18n.TextKey
+import com.udl.smartrain.ui.i18n.activityLabel
+import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.navigation.Screen
-import com.udl.smartrain.ui.theme.DarkBlueSecondary
 import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
@@ -53,6 +53,7 @@ import java.util.Locale
 @Composable
 fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     val sessions by viewModel.sessionsHistory.collectAsState(initial = emptyList())
+    val language by viewModel.appLanguage.collectAsState()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var sessionToDelete by remember { mutableStateOf<Session?>(null) }
@@ -65,18 +66,18 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     if (showEditDialog && sessionToEdit != null) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Editar sessio") },
+            title = { Text(language.text(TextKey.EDIT_SESSION)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextField(
                         value = editUserName,
                         onValueChange = { editUserName = it },
-                        label = { Text("Usuari") }
+                        label = { Text(language.text(TextKey.USER)) }
                     )
                     TextField(
                         value = editSessionName,
                         onValueChange = { editSessionName = it },
-                        label = { Text("Nom de la sessio") }
+                        label = { Text(language.text(TextKey.SESSION_NAME)) }
                     )
                 }
             },
@@ -90,12 +91,12 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                     )
                     showEditDialog = false
                 }) {
-                    Text("Guardar")
+                    Text(language.text(TextKey.SAVE_CHANGES))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEditDialog = false }) {
-                    Text("Cancelar")
+                    Text(language.text(TextKey.CANCEL))
                 }
             }
         )
@@ -104,8 +105,8 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     if (showDeleteDialog && sessionToDelete != null) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Esborrar sessio") },
-            text = { Text("Segur que vols esborrar '${sessionToDelete?.sessionName}'?") },
+            title = { Text(language.text(TextKey.DELETE_SESSION)) },
+            text = { Text(language.text(TextKey.DELETE_SESSION_QUESTION)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -114,12 +115,12 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Esborrar", color = Color.White)
+                    Text(language.text(TextKey.DELETE), color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar")
+                    Text(language.text(TextKey.CANCEL))
                 }
             }
         )
@@ -128,27 +129,25 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     Scaffold(
         topBar = {
             AppHeader(
-                title = "Dashboard",
-                onLanguageSelected = { },
+                title = language.text(TextKey.DASHBOARD),
+                currentLanguage = language,
+                onLanguageSelected = viewModel::updateLanguage,
                 onProfileClick = { navController.navigate(Screen.Profile.route) },
                 onLogoutClick = { showLogoutDialog = true }
             )
         },
         containerColor = Color.Transparent,
-        modifier = Modifier.background(
-            Brush.verticalGradient(colors = listOf(PurplePrimary, DarkBlueSecondary))
-        ),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.Session.route) },
                 containerColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nova sessio", tint = PurplePrimary)
+                Icon(Icons.Default.Add, contentDescription = language.text(TextKey.NEW_SESSION), tint = PurplePrimary)
             }
         }
     ) { paddingValues ->
         if (sessions.isEmpty()) {
-            EmptyDashboard(paddingValues)
+            EmptyDashboard(paddingValues, language)
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -158,7 +157,7 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    DashboardSummary(sessions = sessions)
+                    DashboardSummary(sessions = sessions, language = language)
                 }
                 items(sessions) { session ->
                     SessionItem(
@@ -173,9 +172,10 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                             editSessionName = session.sessionName
                             showEditDialog = true
                         },
-                        onInsight = {
+                        onOpen = {
                             navController.navigate(Screen.SessionDetail.createRoute(session.id))
-                        }
+                        },
+                        language = language
                     )
                 }
             }
@@ -185,8 +185,8 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Tancar sessio") },
-            text = { Text("Segur que vols tancar la sessio?") },
+            title = { Text(language.text(TextKey.SIGN_OUT)) },
+            text = { Text(language.text(TextKey.SIGN_OUT_QUESTION)) },
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
@@ -195,12 +195,12 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                         popUpTo(0) { inclusive = true }
                     }
                 }) {
-                    Text("Sortir")
+                    Text(language.text(TextKey.SIGN_OUT))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancelar")
+                    Text(language.text(TextKey.CANCEL))
                 }
             }
         )
@@ -208,7 +208,7 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
 }
 
 @Composable
-private fun EmptyDashboard(paddingValues: PaddingValues) {
+private fun EmptyDashboard(paddingValues: PaddingValues, language: com.udl.smartrain.data.local.AppLanguage) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -216,7 +216,7 @@ private fun EmptyDashboard(paddingValues: PaddingValues) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "No hi ha sessions enregistrades.\nClica el boto + per comencar.",
+            text = language.text(TextKey.NO_SESSIONS),
             color = Color.White.copy(alpha = 0.74f),
             style = MaterialTheme.typography.bodyLarge
         )
@@ -224,7 +224,7 @@ private fun EmptyDashboard(paddingValues: PaddingValues) {
 }
 
 @Composable
-private fun DashboardSummary(sessions: List<Session>) {
+private fun DashboardSummary(sessions: List<Session>, language: com.udl.smartrain.data.local.AppLanguage) {
     val sessionsWithMl = sessions.count { it.mlPredictionCount > 0 }
     val averageConfidence = sessions
         .filter { it.mlPredictionCount > 0 }
@@ -240,36 +240,36 @@ private fun DashboardSummary(sessions: List<Session>) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Resum",
+                text = language.text(TextKey.SUMMARY),
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White,
                 fontWeight = FontWeight.SemiBold
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SummaryMetric(
-                    label = "Sessions",
+                    label = language.text(TextKey.SESSIONS),
                     value = sessions.size.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetric(
-                    label = "Distancia",
+                    label = language.text(TextKey.DISTANCE),
                     value = formatDashboardDistance(totalDistance),
                     modifier = Modifier.weight(1f)
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SummaryMetric(
-                    label = "Sessions ML",
+                    label = language.text(TextKey.ML_SESSIONS),
                     value = sessionsWithMl.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetric(
-                    label = "Confianca",
+                    label = language.text(TextKey.CONFIDENCE),
                     value = "${(averageConfidence * 100).toInt()}%",
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetric(
-                    label = "Alta intens.",
+                    label = language.text(TextKey.HIGH_INTENSITY),
                     value = totalHighIntensity.toString(),
                     modifier = Modifier.weight(1f)
                 )
@@ -303,24 +303,29 @@ fun SessionItem(
     session: Session,
     onDelete: () -> Unit,
     onEdit: () -> Unit,
-    onInsight: () -> Unit
+    onOpen: () -> Unit,
+    language: com.udl.smartrain.data.local.AppLanguage
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
-    val syncLabel = if (session.isSynced) "Sincronitzada" else "Pendent"
+    val syncLabel = if (session.isSynced) language.text(TextKey.SYNCED) else language.text(TextKey.PENDING)
 
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = session.mlPredictionCount > 0, onClick = onOpen)
+    ) {
         Row(
-            modifier = Modifier.padding(18.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = session.sessionName,
-                    style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -331,18 +336,18 @@ fun SessionItem(
                 )
                 if (session.mlPredictionCount > 0) {
                     Text(
-                        text = "ML: ${session.dominantActivity} - ${(session.avgMlConfidence * 100).toInt()}%",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "${language.activityLabel(session.dominantActivity)} · ${formatDashboardDuration(session.durationSeconds)} · ${formatDashboardDistance(session.distanceMetres)}",
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.88f)
                     )
                     Text(
-                        text = "${formatDashboardDuration(session.durationSeconds)} - ${formatDashboardDistance(session.distanceMetres)} - ${session.mlPredictionCount} prediccions - $syncLabel",
+                        text = "${session.mlPredictionCount} ${language.text(TextKey.PREDICTIONS).lowercase()} · ${(session.avgMlConfidence * 100).toInt()}% · $syncLabel",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.66f)
                     )
                 } else {
                     Text(
-                        text = "Sense resum ML",
+                        text = language.text(TextKey.NO_ML_SUMMARY),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.58f)
                     )
@@ -350,17 +355,11 @@ fun SessionItem(
             }
 
             Row {
-                IconButton(
-                    onClick = onInsight,
-                    enabled = session.mlPredictionCount > 0
-                ) {
-                    Icon(Icons.Default.Info, contentDescription = "Resum RAG", tint = Color.White)
-                }
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.White)
+                    Icon(Icons.Default.Edit, contentDescription = language.text(TextKey.EDIT), tint = Color.White)
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Esborrar", tint = Color.White)
+                    Icon(Icons.Default.Delete, contentDescription = language.text(TextKey.DELETE), tint = Color.White)
                 }
             }
         }

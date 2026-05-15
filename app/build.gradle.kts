@@ -40,6 +40,11 @@ android {
     buildFeatures {
         compose = true
     }
+    sourceSets {
+        getByName("main") {
+            assets.srcDir("../ml/rag/data")
+        }
+    }
 }
 
 dependencies {
