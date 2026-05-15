@@ -198,7 +198,7 @@ private fun LanguageChangeBadge(languageLabel: String, modifier: Modifier = Modi
     LaunchedEffect(languageLabel) {
         if (hasSeenInitialLanguage) {
             visible = true
-            delay(2100)
+            delay(3100)
             visible = false
         } else {
             hasSeenInitialLanguage = true

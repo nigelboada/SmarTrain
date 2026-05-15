@@ -403,9 +403,9 @@ private fun formatDurationShort(totalSeconds: Long): String {
 
 private fun buildRagMetadataText(session: Session, language: AppLanguage): String {
     val source = when {
-        session.ragUsedFallback -> "automàtic"
-        session.ragProvider == "ollama" -> session.ragModel.ifBlank { "automàtic" }
-        else -> "local"
+        session.ragUsedFallback -> automaticLabel(language)
+        session.ragProvider == "ollama" -> session.ragModel.ifBlank { automaticLabel(language) }
+        else -> localLabel(language)
     }
     val latency = if (session.ragLatencyMillis > 0) {
         " - ${session.ragLatencyMillis} ms"
@@ -415,6 +415,19 @@ private fun buildRagMetadataText(session: Session, language: AppLanguage): Strin
     return "${language.text(TextKey.GENERATOR)}: $source$latency"
 }
 
+private fun automaticLabel(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "automatic"
+    AppLanguage.ENGLISH -> "automatic"
+    AppLanguage.SPANISH -> "automatico"
+    AppLanguage.CHINESE -> "\u81ea\u52a8"
+}
+
+private fun localLabel(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "local"
+    AppLanguage.ENGLISH -> "local"
+    AppLanguage.SPANISH -> "local"
+    AppLanguage.CHINESE -> "\u672c\u5730"
+}
 private fun fallbackText(session: Session, language: AppLanguage): String {
     val reason = session.ragFallbackReason.ifBlank { "IA" }
     return when (language) {

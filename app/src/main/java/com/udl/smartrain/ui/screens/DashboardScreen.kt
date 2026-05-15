@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.i18n.TextKey
+import com.udl.smartrain.ui.i18n.activityLabel
 import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.navigation.Screen
@@ -307,7 +308,7 @@ fun SessionItem(
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val dateString = dateFormat.format(session.startTime)
-    val syncLabel = if (session.isSynced) "OK" else "..."
+    val syncLabel = if (session.isSynced) language.text(TextKey.SYNCED) else language.text(TextKey.PENDING)
 
     GlassCard(
         modifier = Modifier
@@ -335,7 +336,7 @@ fun SessionItem(
                 )
                 if (session.mlPredictionCount > 0) {
                     Text(
-                        text = "${session.dominantActivity} · ${formatDashboardDuration(session.durationSeconds)} · ${formatDashboardDistance(session.distanceMetres)}",
+                        text = "${language.activityLabel(session.dominantActivity)} · ${formatDashboardDuration(session.durationSeconds)} · ${formatDashboardDistance(session.distanceMetres)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.88f)
                     )

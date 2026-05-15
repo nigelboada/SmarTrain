@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -23,7 +22,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.udl.smartrain.R
 import com.udl.smartrain.data.local.AppLanguage
 import com.udl.smartrain.ui.i18n.TextKey
 import com.udl.smartrain.ui.i18n.text
@@ -59,7 +60,7 @@ fun AppHeader(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = if (lang == currentLanguage) "${lang.label} ✓" else lang.label
+                                    text = if (lang == currentLanguage) "${lang.label} *" else lang.label
                                 )
                             },
                             onClick = {
@@ -73,7 +74,11 @@ fun AppHeader(
 
             Box {
                 IconButton(onClick = { showSettingsMenu = true }) {
-                    Icon(Icons.Default.Settings, contentDescription = currentLanguage.text(TextKey.PROFILE), tint = Color.White)
+                    Icon(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = currentLanguage.text(TextKey.PROFILE),
+                        tint = Color.Unspecified
+                    )
                 }
                 DropdownMenu(expanded = showSettingsMenu, onDismissRequest = { showSettingsMenu = false }) {
                     DropdownMenuItem(

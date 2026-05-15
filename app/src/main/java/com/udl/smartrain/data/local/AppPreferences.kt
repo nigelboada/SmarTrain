@@ -11,8 +11,8 @@ data class RememberedUser(
 enum class AppLanguage(val label: String) {
     ENGLISH("English"),
     CATALAN("Catala"),
-    SPANISH("Castella"),
-    CHINESE("Xines")
+    SPANISH("Castellano"),
+    CHINESE("\u4e2d\u6587")
 }
 
 class AppPreferences(context: Context) {

@@ -21,6 +21,8 @@ import com.udl.smartrain.ml.DebugRagGenerationSettings
 import com.udl.smartrain.ml.SessionRagRecommender
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
+import com.udl.smartrain.ui.i18n.TextKey
+import com.udl.smartrain.ui.i18n.text
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -47,7 +49,7 @@ class MainViewModel(
     private val _appLanguage = MutableStateFlow(appPreferences.loadLanguage())
     private val currentUserId = MutableStateFlow(auth.currentUser?.uid.orEmpty())
 
-    var currentUserName by mutableStateOf(auth.currentUser?.email ?: "Usuari")
+    var currentUserName by mutableStateOf(auth.currentUser?.email ?: _appLanguage.value.text(TextKey.USER))
         private set
 
     var authError by mutableStateOf<String?>(null)
@@ -100,7 +102,7 @@ class MainViewModel(
         onSuccess: () -> Unit
     ) {
         if (email.isBlank() || password.length < 6) {
-            authError = "Introdueix un email valid i una contrasenya de 6 caracters o mes."
+            authError = authValidationError(_appLanguage.value)
             return
         }
 
@@ -112,9 +114,9 @@ class MainViewModel(
                     auth.signInWithEmailAndPassword(email.trim(), password).await()
                 }
 
-                val user = auth.currentUser ?: error("Usuari no disponible")
+                val user = auth.currentUser ?: error(userUnavailableError(_appLanguage.value))
                 currentUserId.value = user.uid
-                currentUserName = user.email ?: "Usuari"
+                currentUserName = user.email ?: _appLanguage.value.text(TextKey.USER)
                 authError = null
                 if (rememberUser) {
                     appPreferences.saveRememberedUser(email.trim(), password)
@@ -123,7 +125,7 @@ class MainViewModel(
                 syncUserSessions(user.uid)
                 onSuccess()
             } catch (e: Exception) {
-                authError = e.localizedMessage ?: "No s'ha pogut iniciar sessio."
+                authError = e.localizedMessage ?: signInError(_appLanguage.value)
             }
         }
     }
@@ -131,7 +133,7 @@ class MainViewModel(
     fun signOut() {
         auth.signOut()
         currentUserId.value = ""
-        currentUserName = "Usuari"
+        currentUserName = _appLanguage.value.text(TextKey.USER)
         _currentSession.value = null
         TrackingSessionState.reset()
         ActivityRecognitionState.reset()
@@ -149,7 +151,8 @@ class MainViewModel(
         _ragGenerationUiState.value = RagGenerationUiState()
         _currentSession.value = Session(
             id = UUID.randomUUID().toString(),
-            userId = userId
+            userId = userId,
+            sessionName = _appLanguage.value.text(TextKey.NEW_SESSION)
         )
     }
 
@@ -187,14 +190,15 @@ class MainViewModel(
                 _ragGenerationUiState.value = RagGenerationUiState(
                     isGenerating = true,
                     message = if (settings.useOllama) {
-                        "Generant resum amb IA (${settings.ollamaModel})..."
+                        _appLanguage.value.text(TextKey.SESSION_SAVE_OLLAMA_GENERATING, settings.ollamaModel)
                     } else {
-                        "Generant resum local..."
+                        _appLanguage.value.text(TextKey.SESSION_SAVE_LOCAL_GENERATING)
                     }
                 )
                 val ragResult = SessionRagRecommender.buildInsightWithGenerator(
                     session = sessionWithMlResults,
-                    settings = settings
+                    settings = settings,
+                    language = _appLanguage.value
                 )
                 val ragInsight = ragResult.insight
                 val sessionWithRagResults = sessionWithMlResults.copy(
@@ -212,9 +216,9 @@ class MainViewModel(
                 _ragGenerationUiState.value = RagGenerationUiState(
                     isGenerating = false,
                     message = if (ragResult.usedFallback) {
-                        "Ollama no ha respost. S'ha guardat el resum local de fallback."
+                        _appLanguage.value.text(TextKey.SESSION_SAVE_FALLBACK)
                     } else {
-                        "Resum guardat amb ${ragResult.provider}:${ragResult.model}."
+                        _appLanguage.value.text(TextKey.SESSION_SAVE_SUCCESS, ragResult.provider, ragResult.model)
                     }
                 )
                 onSaved()
@@ -262,6 +266,27 @@ class MainViewModel(
     private suspend fun syncUserSessions(userId: String) {
         repository.syncRemoteSessions(userId)
         repository.syncPendingSessions(userId)
+    }
+
+    private fun authValidationError(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "Introdueix un email valid i una contrasenya de 6 caracters o mes."
+        AppLanguage.ENGLISH -> "Enter a valid email and a password of at least 6 characters."
+        AppLanguage.SPANISH -> "Introduce un email valido y una contrasena de 6 caracteres o mas."
+        AppLanguage.CHINESE -> "\u8bf7\u8f93\u5165\u6709\u6548\u90ae\u7bb1\u548c\u81f3\u5c11 6 \u4e2a\u5b57\u7b26\u7684\u5bc6\u7801\u3002"
+    }
+
+    private fun userUnavailableError(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "Usuari no disponible"
+        AppLanguage.ENGLISH -> "User unavailable"
+        AppLanguage.SPANISH -> "Usuario no disponible"
+        AppLanguage.CHINESE -> "\u7528\u6237\u4e0d\u53ef\u7528"
+    }
+
+    private fun signInError(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "No s'ha pogut iniciar sessio."
+        AppLanguage.ENGLISH -> "Could not sign in."
+        AppLanguage.SPANISH -> "No se ha podido iniciar sesion."
+        AppLanguage.CHINESE -> "\u65e0\u6cd5\u767b\u5f55\u3002"
     }
 }
 
