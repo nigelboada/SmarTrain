@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.data.local.AppLanguage
+import com.udl.smartrain.ml.DEFAULT_REMOTE_RAG_BASE_URL
 import com.udl.smartrain.ml.RagGenerationMode
 import com.udl.smartrain.ui.i18n.TextKey
 import com.udl.smartrain.ui.i18n.text
@@ -115,6 +116,9 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                                 text = { Text(ragModeTitle(mode, language)) },
                                 onClick = {
                                     selectedMode = mode
+                                    if (mode == RagGenerationMode.REMOTE_BACKEND && remoteRagBaseUrl == "http://10.0.2.2:8000") {
+                                        remoteRagBaseUrl = DEFAULT_REMOTE_RAG_BASE_URL
+                                    }
                                     showModeMenu = false
                                 }
                             )

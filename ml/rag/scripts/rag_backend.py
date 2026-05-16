@@ -152,7 +152,10 @@ def call_ollama(prompt: str) -> tuple[str, str, int]:
         "options": {"temperature": 0.2, "num_predict": 220},
     }
     started = time.perf_counter()
-    response = requests.post(endpoint, json=payload, headers=headers, timeout=int(os.environ.get("OLLAMA_TIMEOUT", "60")))
+    try:
+        response = requests.post(endpoint, json=payload, headers=headers, timeout=int(os.environ.get("OLLAMA_TIMEOUT", "60")))
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=502, detail=f"Ollama request failed: {exc}") from exc
     latency = int((time.perf_counter() - started) * 1000)
     if response.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Ollama HTTP {response.status_code}: {response.text[:500]}")

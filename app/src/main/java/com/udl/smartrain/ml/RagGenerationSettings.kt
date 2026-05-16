@@ -15,12 +15,14 @@ enum class RagGenerationMode {
 data class RagGenerationSettings(
     val mode: RagGenerationMode = RagGenerationMode.LOCAL_FALLBACK,
     val useRemoteRag: Boolean = false,
-    val remoteRagBaseUrl: String = "http://10.0.2.2:8000",
+    val remoteRagBaseUrl: String = DEFAULT_REMOTE_RAG_BASE_URL,
     val useOllama: Boolean = false,
     val ollamaBaseUrl: String = "https://ollama.com",
     val ollamaModel: String = "qwen3-coder-next",
     val ollamaApiKey: String = ""
 )
+
+const val DEFAULT_REMOTE_RAG_BASE_URL = "http://192.168.1.75:8000"
 
 fun RagGenerationSettings.resolved(): RagGenerationSettings {
     return when (mode) {

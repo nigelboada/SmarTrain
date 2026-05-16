@@ -115,8 +115,9 @@ A la pantalla de perfil:
 
 Per al mode `Backend RAG`:
 
-- URL emulador Android: `http://10.0.2.2:8000`.
-- URL mobil fisic: IP LAN del PC, per exemple `http://192.168.1.50:8000`.
+- URL mobil fisic configurada per a aquest entorn: `http://192.168.1.75:8000`.
+- URL emulador Android, si algun dia es fa servir: `http://10.0.2.2:8000`.
+- Si la IP del PC canvia, cal actualitzar el camp URL del backend a la pantalla de perfil.
 
 Si el backend remot o Ollama fallen, SmarTrain guarda fallback local per regles i mostra el motiu a la fitxa de sessio.
 
