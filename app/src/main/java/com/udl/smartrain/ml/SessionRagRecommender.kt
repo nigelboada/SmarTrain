@@ -148,7 +148,7 @@ object SessionRagRecommender {
                     provider = RuleBasedRagAnswerGenerator.provider,
                     model = RuleBasedRagAnswerGenerator.model,
                     latencyMillis = System.currentTimeMillis() - startedAt,
-                    usedFallback = settings.useOllama,
+                    usedFallback = settings.useRemoteRag || settings.useOllama,
                     fallbackReason = fallbackReasonFor(settings, error, language)
                 )
             }
@@ -183,6 +183,17 @@ object SessionRagRecommender {
     private fun fallbackReasonFor(settings: RagGenerationSettings, error: Throwable, language: AppLanguage): String {
         val message = error.localizedMessage.orEmpty()
         return when {
+            settings.useRemoteRag && (
+                message.contains("failed to connect", ignoreCase = true) ||
+                    message.contains("Connection refused", ignoreCase = true)
+                ) -> {
+                when (language) {
+                    AppLanguage.CATALAN -> "No s'ha pogut connectar amb el backend RAG a ${settings.remoteRagBaseUrl}. Arrenca FastAPI o revisa la IP/port accessibles des del dispositiu."
+                    AppLanguage.ENGLISH -> "Could not connect to the RAG backend at ${settings.remoteRagBaseUrl}. Start FastAPI or check that the device can reach the IP/port."
+                    AppLanguage.SPANISH -> "No se ha podido conectar con el backend RAG en ${settings.remoteRagBaseUrl}. Arranca FastAPI o revisa la IP/puerto accesibles desde el dispositivo."
+                    AppLanguage.CHINESE -> "\u65e0\u6cd5\u8fde\u63a5\u5230 ${settings.remoteRagBaseUrl} \u7684 RAG \u540e\u7aef\u3002\u8bf7\u542f\u52a8 FastAPI \u6216\u68c0\u67e5\u8bbe\u5907\u662f\u5426\u53ef\u8bbf\u95ee\u8be5 IP/\u7aef\u53e3\u3002"
+                }
+            }
             message.contains("failed to connect", ignoreCase = true) ||
                 message.contains("Connection refused", ignoreCase = true) -> {
                 when (language) {

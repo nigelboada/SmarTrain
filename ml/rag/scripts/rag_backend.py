@@ -9,18 +9,21 @@ import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from rag_common import CHROMA_DIR, COLLECTION_NAME, load_env_file
+try:
+    from rag_common import CHROMA_DIR, COLLECTION_NAME, load_env_file
+except ModuleNotFoundError:
+    from .rag_common import CHROMA_DIR, COLLECTION_NAME, load_env_file
 
 
 load_env_file()
 
 APP_TITLE = "SmarTrain RAG Backend"
 DEFAULT_PROMPT = """Ets l'assistent de SmarTrain.
-Respon només amb el context recuperat i les dades de la sessió.
-Si no hi ha informació suficient al context, digues-ho clarament.
-No inventis mètriques ni diagnòstics mèdics.
-Inclou una recomanació accionable i prudent.
-No escriguis raonament intern, només la resposta final."""
+Respon nomes amb el context recuperat i les dades de la sessio.
+Si no hi ha informacio suficient al context, digues-ho clarament.
+No inventis metriques ni diagnostics medics.
+Inclou una recomanacio accionable i prudent.
+No escriguis raonament intern, nomes la resposta final."""
 
 
 class SessionPayload(BaseModel):
@@ -57,6 +60,11 @@ class RagResponse(BaseModel):
     sources: list[SourceChunk]
 
 
+class RetrieveResponse(BaseModel):
+    query: str
+    sources: list[SourceChunk]
+
+
 app = FastAPI(title=APP_TITLE)
 _vectorstore = None
 
@@ -72,7 +80,7 @@ def get_vectorstore():
     chroma_dir = os.environ.get("SMARTRAIN_RAG_CHROMA_DIR", str(CHROMA_DIR))
     collection = os.environ.get("SMARTRAIN_RAG_COLLECTION", COLLECTION_NAME)
     embed_model = os.environ.get("SMARTRAIN_RAG_EMBED_MODEL", "nomic-embed-text")
-    ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    ollama_base_url = os.environ.get("SMARTRAIN_RAG_EMBED_BASE_URL", os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434"))
     if not Path(chroma_dir).exists():
         raise HTTPException(status_code=503, detail=f"Chroma index not found at {chroma_dir}. Run build_vector_index.py first.")
 
@@ -113,7 +121,7 @@ def language_instruction(language: str) -> str:
     return {
         "en": "Answer in English.",
         "es": "Responde en castellano.",
-        "zh": "请用中文回答。",
+        "zh": "\u8bf7\u7528\u4e2d\u6587\u56de\u7b54\u3002",
         "ca": "Respon en catala.",
     }.get(language, "Respon en catala.")
 
@@ -155,30 +163,74 @@ def call_ollama(prompt: str) -> tuple[str, str, int]:
     return answer, model, latency
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
-
-
-@app.post("/rag/session-summary", response_model=RagResponse)
-def session_summary(request: RagRequest) -> RagResponse:
+def retrieve_sources(request: RagRequest) -> tuple[str, list[SourceChunk]]:
     vectorstore = get_vectorstore()
     query = session_to_query(request.session, request.language)
-    retrieved = vectorstore.similarity_search_with_score(query, k=request.top_k)
-    sources = []
+    retrieved = vectorstore.similarity_search_with_score(query, k=max(request.top_k * 8, 32))
+    scored_sources = []
     for document, distance in retrieved:
         metadata = document.metadata or {}
-        sources.append(
+        score = adjusted_score(metadata, distance)
+        scored_sources.append(
             SourceChunk(
                 id=str(metadata.get("id", metadata.get("doc_id", ""))),
                 source=str(metadata.get("source", "unknown")),
                 category=str(metadata.get("category", "unknown")),
                 language=str(metadata.get("language", "ca")),
                 chunk_id=int(metadata.get("chunk_id", 0)),
-                score=round(max(0.0, 1.0 - float(distance)), 4),
+                score=round(score, 4),
                 text=document.page_content[:1200],
             )
         )
+    sources = select_diverse_sources(scored_sources, request.top_k)
+    return query, sources
+
+
+def select_diverse_sources(sources: list[SourceChunk], top_k: int) -> list[SourceChunk]:
+    selected: list[SourceChunk] = []
+    anonymous_count = 0
+    for source in sorted(sources, key=lambda item: item.score, reverse=True):
+        if source.category == "anonymous_sessions" and anonymous_count >= 1:
+            continue
+        selected.append(source)
+        if source.category == "anonymous_sessions":
+            anonymous_count += 1
+        if len(selected) >= top_k:
+            return selected
+    return selected
+
+
+def adjusted_score(metadata: dict[str, Any], distance: float) -> float:
+    base_score = max(0.0, 1.0 - float(distance))
+    category = str(metadata.get("category", ""))
+    source = str(metadata.get("source", ""))
+    boost = {
+        "training_recommendation": 0.08,
+        "model_interpretation": 0.04,
+        "ml_experiment": 0.02,
+        "rag_design": -0.03,
+        "project_report": -0.06,
+        "anonymous_sessions": -0.08,
+    }.get(category, 0.0)
+    if source == "sessions.jsonl":
+        boost -= 0.05
+    return max(0.0, base_score + boost)
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.post("/rag/retrieve", response_model=RetrieveResponse)
+def retrieve(request: RagRequest) -> RetrieveResponse:
+    query, sources = retrieve_sources(request)
+    return RetrieveResponse(query=query, sources=sources)
+
+
+@app.post("/rag/session-summary", response_model=RagResponse)
+def session_summary(request: RagRequest) -> RagResponse:
+    _, sources = retrieve_sources(request)
     answer, model, latency = call_ollama(build_prompt(request, sources))
     return RagResponse(
         title="Interpretacio post sessio",

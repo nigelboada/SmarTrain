@@ -441,6 +441,7 @@ private fun formatDurationShort(totalSeconds: Long): String {
 private fun buildRagMetadataText(session: Session, language: AppLanguage): String {
     val source = when {
         session.ragUsedFallback -> automaticLabel(language)
+        session.ragProvider == "remote-rag" -> remoteRagLabel(language, session.ragModel)
         session.ragProvider == "ollama" -> session.ragModel.ifBlank { automaticLabel(language) }
         else -> localLabel(language)
     }
@@ -465,6 +466,17 @@ private fun localLabel(language: AppLanguage): String = when (language) {
     AppLanguage.SPANISH -> "local"
     AppLanguage.CHINESE -> "\u672c\u5730"
 }
+
+private fun remoteRagLabel(language: AppLanguage, model: String): String {
+    val suffix = model.takeIf { it.isNotBlank() }?.let { ":$it" }.orEmpty()
+    return when (language) {
+        AppLanguage.CATALAN -> "backend RAG$suffix"
+        AppLanguage.ENGLISH -> "RAG backend$suffix"
+        AppLanguage.SPANISH -> "backend RAG$suffix"
+        AppLanguage.CHINESE -> "RAG \u540e\u7aef$suffix"
+    }
+}
+
 private fun fallbackText(session: Session, language: AppLanguage): String {
     val reason = session.ragFallbackReason.ifBlank { "IA" }
     return when (language) {

@@ -1,0 +1,472 @@
+{
+  "chunk_size": 700,
+  "chunk_overlap": 90,
+  "chunks": 42,
+  "results": [
+    {
+      "embedding_model": "nomic-embed-text",
+      "top_k": 6,
+      "questions": 6,
+      "hit_rate": 0.833,
+      "mrr": 0.708,
+      "details": [
+        {
+          "question_id": "q_001",
+          "question": "Que vol dir si la sessio te molta alta intensitat?",
+          "expected_ids": [
+            "kb_003",
+            "kb_009"
+          ],
+          "retrieved_ids": [
+            "PROJECT_REPORT",
+            "PROJECT_REPORT",
+            "s_001",
+            "kb_009",
+            "s_003",
+            "s_004"
+          ],
+          "scores": [
+            0.7436,
+            0.7358,
+            0.7284,
+            0.7159,
+            0.707,
+            0.7009
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_002",
+          "question": "Per que el model pot confondre seure i dret?",
+          "expected_ids": [
+            "kb_006"
+          ],
+          "retrieved_ids": [
+            "kb_006",
+            "kb_005",
+            "kb_008",
+            "PROJECT_REPORT",
+            "kb_004",
+            "PROJECT_REPORT"
+          ],
+          "scores": [
+            0.7346,
+            0.709,
+            0.6686,
+            0.6579,
+            0.6572,
+            0.6527
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_003",
+          "question": "Quin model final s'ha seleccionat i quines metriques te?",
+          "expected_ids": [
+            "kb_007"
+          ],
+          "retrieved_ids": [
+            "kb_008",
+            "kb_005",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT",
+            "kb_006"
+          ],
+          "scores": [
+            0.7189,
+            0.7113,
+            0.7003,
+            0.6915,
+            0.6872,
+            0.6861
+          ],
+          "hit": false
+        },
+        {
+          "question_id": "q_004",
+          "question": "Quines limitacions te UCI HAR per al futbol?",
+          "expected_ids": [
+            "kb_008",
+            "kb_005"
+          ],
+          "retrieved_ids": [
+            "kb_008",
+            "PROJECT_REPORT",
+            "kb_006",
+            "PROJECT_REPORT",
+            "s_002",
+            "s_004"
+          ],
+          "scores": [
+            0.7222,
+            0.7092,
+            0.6871,
+            0.6711,
+            0.659,
+            0.6578
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_005",
+          "question": "Com s'ha d'interpretar una confiança baixa del model?",
+          "expected_ids": [
+            "kb_004"
+          ],
+          "retrieved_ids": [
+            "kb_004",
+            "kb_005",
+            "kb_012",
+            "kb_006",
+            "PROJECT_REPORT",
+            "s_004"
+          ],
+          "scores": [
+            0.8514,
+            0.8096,
+            0.7624,
+            0.7347,
+            0.7305,
+            0.7051
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_006",
+          "question": "On es guarda la base documental del RAG?",
+          "expected_ids": [
+            "kb_011"
+          ],
+          "retrieved_ids": [
+            "kb_011",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT"
+          ],
+          "scores": [
+            0.6956,
+            0.6799,
+            0.6503,
+            0.6495,
+            0.6342,
+            0.6319
+          ],
+          "hit": true
+        }
+      ]
+    },
+    {
+      "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+      "top_k": 6,
+      "questions": 6,
+      "hit_rate": 0.833,
+      "mrr": 0.694,
+      "details": [
+        {
+          "question_id": "q_001",
+          "question": "Que vol dir si la sessio te molta alta intensitat?",
+          "expected_ids": [
+            "kb_003",
+            "kb_009"
+          ],
+          "retrieved_ids": [
+            "s_004",
+            "s_001",
+            "s_002",
+            "s_003",
+            "PROJECT_REPORT",
+            "kb_003"
+          ],
+          "scores": [
+            0.5234,
+            0.5198,
+            0.5122,
+            0.4698,
+            0.4071,
+            0.3919
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_002",
+          "question": "Per que el model pot confondre seure i dret?",
+          "expected_ids": [
+            "kb_006"
+          ],
+          "retrieved_ids": [
+            "kb_006",
+            "kb_005",
+            "PROJECT_REPORT",
+            "kb_004",
+            "s_004",
+            "PROJECT_REPORT"
+          ],
+          "scores": [
+            0.6054,
+            0.5381,
+            0.5308,
+            0.5002,
+            0.4661,
+            0.4461
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_003",
+          "question": "Quin model final s'ha seleccionat i quines metriques te?",
+          "expected_ids": [
+            "kb_007"
+          ],
+          "retrieved_ids": [
+            "kb_005",
+            "PROJECT_REPORT",
+            "kb_006",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT",
+            "kb_004"
+          ],
+          "scores": [
+            0.5064,
+            0.4971,
+            0.496,
+            0.448,
+            0.4405,
+            0.431
+          ],
+          "hit": false
+        },
+        {
+          "question_id": "q_004",
+          "question": "Quines limitacions te UCI HAR per al futbol?",
+          "expected_ids": [
+            "kb_008",
+            "kb_005"
+          ],
+          "retrieved_ids": [
+            "kb_008",
+            "PROJECT_REPORT",
+            "kb_002",
+            "kb_006",
+            "kb_009",
+            "PROJECT_REPORT"
+          ],
+          "scores": [
+            0.6024,
+            0.448,
+            0.4366,
+            0.3975,
+            0.3806,
+            0.373
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_005",
+          "question": "Com s'ha d'interpretar una confiança baixa del model?",
+          "expected_ids": [
+            "kb_004"
+          ],
+          "retrieved_ids": [
+            "kb_004",
+            "kb_005",
+            "PROJECT_REPORT",
+            "kb_006",
+            "kb_012",
+            "s_004"
+          ],
+          "scores": [
+            0.7394,
+            0.6857,
+            0.6163,
+            0.5925,
+            0.5556,
+            0.5313
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_006",
+          "question": "On es guarda la base documental del RAG?",
+          "expected_ids": [
+            "kb_011"
+          ],
+          "retrieved_ids": [
+            "kb_011",
+            "kb_010",
+            "PROJECT_REPORT",
+            "s_002",
+            "PROJECT_REPORT",
+            "PROJECT_REPORT"
+          ],
+          "scores": [
+            0.7149,
+            0.4947,
+            0.4657,
+            0.4435,
+            0.435,
+            0.4273
+          ],
+          "hit": true
+        }
+      ]
+    }
+  ],
+  "winner": {
+    "embedding_model": "nomic-embed-text",
+    "top_k": 6,
+    "questions": 6,
+    "hit_rate": 0.833,
+    "mrr": 0.708,
+    "details": [
+      {
+        "question_id": "q_001",
+        "question": "Que vol dir si la sessio te molta alta intensitat?",
+        "expected_ids": [
+          "kb_003",
+          "kb_009"
+        ],
+        "retrieved_ids": [
+          "PROJECT_REPORT",
+          "PROJECT_REPORT",
+          "s_001",
+          "kb_009",
+          "s_003",
+          "s_004"
+        ],
+        "scores": [
+          0.7436,
+          0.7358,
+          0.7284,
+          0.7159,
+          0.707,
+          0.7009
+        ],
+        "hit": true
+      },
+      {
+        "question_id": "q_002",
+        "question": "Per que el model pot confondre seure i dret?",
+        "expected_ids": [
+          "kb_006"
+        ],
+        "retrieved_ids": [
+          "kb_006",
+          "kb_005",
+          "kb_008",
+          "PROJECT_REPORT",
+          "kb_004",
+          "PROJECT_REPORT"
+        ],
+        "scores": [
+          0.7346,
+          0.709,
+          0.6686,
+          0.6579,
+          0.6572,
+          0.6527
+        ],
+        "hit": true
+      },
+      {
+        "question_id": "q_003",
+        "question": "Quin model final s'ha seleccionat i quines metriques te?",
+        "expected_ids": [
+          "kb_007"
+        ],
+        "retrieved_ids": [
+          "kb_008",
+          "kb_005",
+          "PROJECT_REPORT",
+          "PROJECT_REPORT",
+          "PROJECT_REPORT",
+          "kb_006"
+        ],
+        "scores": [
+          0.7189,
+          0.7113,
+          0.7003,
+          0.6915,
+          0.6872,
+          0.6861
+        ],
+        "hit": false
+      },
+      {
+        "question_id": "q_004",
+        "question": "Quines limitacions te UCI HAR per al futbol?",
+        "expected_ids": [
+          "kb_008",
+          "kb_005"
+        ],
+        "retrieved_ids": [
+          "kb_008",
+          "PROJECT_REPORT",
+          "kb_006",
+          "PROJECT_REPORT",
+          "s_002",
+          "s_004"
+        ],
+        "scores": [
+          0.7222,
+          0.7092,
+          0.6871,
+          0.6711,
+          0.659,
+          0.6578
+        ],
+        "hit": true
+      },
+      {
+        "question_id": "q_005",
+        "question": "Com s'ha d'interpretar una confiança baixa del model?",
+        "expected_ids": [
+          "kb_004"
+        ],
+        "retrieved_ids": [
+          "kb_004",
+          "kb_005",
+          "kb_012",
+          "kb_006",
+          "PROJECT_REPORT",
+          "s_004"
+        ],
+        "scores": [
+          0.8514,
+          0.8096,
+          0.7624,
+          0.7347,
+          0.7305,
+          0.7051
+        ],
+        "hit": true
+      },
+      {
+        "question_id": "q_006",
+        "question": "On es guarda la base documental del RAG?",
+        "expected_ids": [
+          "kb_011"
+        ],
+        "retrieved_ids": [
+          "kb_011",
+          "PROJECT_REPORT",
+          "PROJECT_REPORT",
+          "PROJECT_REPORT",
+          "PROJECT_REPORT",
+          "PROJECT_REPORT"
+        ],
+        "scores": [
+          0.6956,
+          0.6799,
+          0.6503,
+          0.6495,
+          0.6342,
+          0.6319
+        ],
+        "hit": true
+      }
+    ]
+  }
+}
