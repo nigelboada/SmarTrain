@@ -10,6 +10,7 @@ from typing import Any
 RAG_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = RAG_ROOT.parents[1]
 DATA_PATH = RAG_ROOT / "data" / "knowledge_base.jsonl"
+QUESTIONS_PATH = RAG_ROOT / "eval" / "questions.jsonl"
 RESULTS_DIR = RAG_ROOT / "results"
 CHROMA_DIR = RAG_ROOT / "chroma_db" / "smartrain"
 COLLECTION_NAME = "smartrain_rag"

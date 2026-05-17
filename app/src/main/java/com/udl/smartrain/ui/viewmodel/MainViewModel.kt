@@ -18,8 +18,10 @@ import com.udl.smartrain.data.repository.SessionRepository
 import com.udl.smartrain.domain.model.Session
 import com.udl.smartrain.ml.ActivityRecognitionState
 import com.udl.smartrain.ml.DebugRagGenerationSettings
+import com.udl.smartrain.ml.RagGenerationMode
 import com.udl.smartrain.ml.RagSourceDetail
 import com.udl.smartrain.ml.SessionRagRecommender
+import com.udl.smartrain.ml.resolved
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
 import com.udl.smartrain.ui.i18n.TextKey
@@ -188,7 +190,7 @@ class MainViewModel(
             )
             Log.d("DEBUG_VM", "Sessio trobada, guardant: ${sessionWithMlResults.id}")
             viewModelScope.launch {
-                val settings = DebugRagGenerationSettings.settings.value
+                val settings = DebugRagGenerationSettings.settings.value.resolved()
                 _ragGenerationUiState.value = RagGenerationUiState(
                     isGenerating = true,
                     message = when {
@@ -230,6 +232,7 @@ class MainViewModel(
     }
 
     fun updateRagGenerationSettings(
+        mode: RagGenerationMode,
         useRemoteRag: Boolean,
         remoteRagBaseUrl: String,
         useOllama: Boolean,
@@ -238,6 +241,7 @@ class MainViewModel(
         ollamaApiKey: String
     ) {
         DebugRagGenerationSettings.update(
+            mode = mode,
             useRemoteRag = useRemoteRag,
             remoteRagBaseUrl = remoteRagBaseUrl,
             useOllama = useOllama,
@@ -297,7 +301,7 @@ class MainViewModel(
     }
 
     private fun RagSourceDetail.serialize(): String {
-        return listOf(id, source, category, chunkId.toString(), String.format(Locale.US, "%.4f", score), text.take(220))
+        return listOf(id, source, category, chunkId.toString(), String.format(Locale.US, "%.4f", score), text.take(1200))
             .joinToString("~") { value ->
                 value.replace("%", "%25")
                     .replace("|", "%7C")

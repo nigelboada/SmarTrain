@@ -12,11 +12,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +32,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.ui.components.AppHeader
+import com.udl.smartrain.data.local.AppLanguage
+import com.udl.smartrain.ml.DEFAULT_REMOTE_RAG_BASE_URL
+import com.udl.smartrain.ml.RagGenerationMode
 import com.udl.smartrain.ui.i18n.TextKey
 import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.components.ProfileField
@@ -45,9 +49,9 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
     var showSaveConfirmation by remember { mutableStateOf(false) }
     val ragSettings by viewModel.ragGenerationSettings.collectAsState()
     val language by viewModel.appLanguage.collectAsState()
-    var useRemoteRag by remember(ragSettings.useRemoteRag) { mutableStateOf(ragSettings.useRemoteRag) }
+    var selectedMode by remember(ragSettings.mode) { mutableStateOf(ragSettings.mode) }
+    var showModeMenu by remember { mutableStateOf(false) }
     var remoteRagBaseUrl by remember(ragSettings.remoteRagBaseUrl) { mutableStateOf(ragSettings.remoteRagBaseUrl) }
-    var useOllama by remember(ragSettings.useOllama) { mutableStateOf(ragSettings.useOllama) }
     var ollamaBaseUrl by remember(ragSettings.ollamaBaseUrl) { mutableStateOf(ragSettings.ollamaBaseUrl) }
     var ollamaModel by remember(ragSettings.ollamaModel) { mutableStateOf(ragSettings.ollamaModel) }
     var ollamaApiKey by remember(ragSettings.ollamaApiKey) { mutableStateOf(ragSettings.ollamaApiKey) }
@@ -90,72 +94,74 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.72f)
                 )
+
+                Column {
+                    Button(
+                        onClick = { showModeMenu = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(ragModeTitle(selectedMode, language))
+                    }
+                    DropdownMenu(
+                        expanded = showModeMenu,
+                        onDismissRequest = { showModeMenu = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        listOf(
+                            RagGenerationMode.LOCAL_FALLBACK,
+                            RagGenerationMode.CLOUD_QWEN,
+                            RagGenerationMode.REMOTE_BACKEND
+                        ).forEach { mode ->
+                            DropdownMenuItem(
+                                text = { Text(ragModeTitle(mode, language)) },
+                                onClick = {
+                                    selectedMode = mode
+                                    if (
+                                        mode == RagGenerationMode.REMOTE_BACKEND &&
+                                        (remoteRagBaseUrl == "http://10.0.2.2:8000" || remoteRagBaseUrl == "http://192.168.1.75:8000")
+                                    ) {
+                                        remoteRagBaseUrl = DEFAULT_REMOTE_RAG_BASE_URL
+                                    }
+                                    showModeMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 Text(
-                    text = language.text(TextKey.IA_SETTINGS_HELP_CLOUD),
+                    text = ragModeDescription(selectedMode, language),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.72f)
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = language.text(TextKey.REMOTE_RAG),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
+
+                if (selectedMode == RagGenerationMode.CLOUD_QWEN) {
+                    OutlinedTextField(
+                        value = ollamaApiKey,
+                        onValueChange = { ollamaApiKey = it },
+                        label = { Text(language.text(TextKey.API_KEY)) },
+                        singleLine = true,
+                        colors = darkOutlinedTextFieldColors(),
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Switch(
-                        checked = useRemoteRag,
-                        onCheckedChange = { useRemoteRag = it }
+                    Text(
+                        text = language.text(TextKey.IA_SETTINGS_HELP_CLOUD),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.64f)
                     )
                 }
-                OutlinedTextField(
-                    value = remoteRagBaseUrl,
-                    onValueChange = { remoteRagBaseUrl = it },
-                    label = { Text(language.text(TextKey.REMOTE_RAG_URL)) },
-                    singleLine = true,
-                    colors = darkOutlinedTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = language.text(TextKey.USE_OLLAMA),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White
-                    )
-                    Switch(
-                        checked = useOllama,
-                        onCheckedChange = { useOllama = it }
+
+                if (selectedMode == RagGenerationMode.REMOTE_BACKEND) {
+                    OutlinedTextField(
+                        value = remoteRagBaseUrl,
+                        onValueChange = { remoteRagBaseUrl = it },
+                        label = { Text(language.text(TextKey.REMOTE_RAG_URL)) },
+                        singleLine = true,
+                        colors = darkOutlinedTextFieldColors(),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
-                OutlinedTextField(
-                    value = ollamaBaseUrl,
-                    onValueChange = { ollamaBaseUrl = it },
-                    label = { Text(language.text(TextKey.BASE_URL)) },
-                    singleLine = true,
-                    colors = darkOutlinedTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = ollamaModel,
-                    onValueChange = { ollamaModel = it },
-                    label = { Text(language.text(TextKey.MODEL)) },
-                    singleLine = true,
-                    colors = darkOutlinedTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = ollamaApiKey,
-                    onValueChange = { ollamaApiKey = it },
-                    label = { Text(language.text(TextKey.API_KEY)) },
-                    singleLine = true,
-                    colors = darkOutlinedTextFieldColors(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -178,9 +184,10 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 TextButton(onClick = {
                     viewModel.updateUserName(userName)
                     viewModel.updateRagGenerationSettings(
-                        useRemoteRag = useRemoteRag,
+                        mode = selectedMode,
+                        useRemoteRag = selectedMode == RagGenerationMode.REMOTE_BACKEND,
                         remoteRagBaseUrl = remoteRagBaseUrl,
-                        useOllama = useOllama,
+                        useOllama = selectedMode == RagGenerationMode.CLOUD_QWEN,
                         ollamaBaseUrl = ollamaBaseUrl,
                         ollamaModel = ollamaModel,
                         ollamaApiKey = ollamaApiKey
@@ -221,6 +228,54 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                 }
             }
         )
+    }
+}
+
+private fun ragModeTitle(mode: RagGenerationMode, language: AppLanguage): String {
+    return when (mode) {
+        RagGenerationMode.LOCAL_FALLBACK -> when (language) {
+            AppLanguage.CATALAN -> "Resum local"
+            AppLanguage.ENGLISH -> "Local summary"
+            AppLanguage.SPANISH -> "Resumen local"
+            AppLanguage.CHINESE -> "\u672c\u5730\u603b\u7ed3"
+        }
+        RagGenerationMode.CLOUD_QWEN -> "qwen3-coder-next"
+        RagGenerationMode.REMOTE_BACKEND -> when (language) {
+            AppLanguage.CATALAN -> "Backend RAG"
+            AppLanguage.ENGLISH -> "RAG backend"
+            AppLanguage.SPANISH -> "Backend RAG"
+            AppLanguage.CHINESE -> "RAG \u540e\u7aef"
+        }
+        RagGenerationMode.CUSTOM -> when (language) {
+            AppLanguage.CATALAN -> "Avancat"
+            AppLanguage.ENGLISH -> "Advanced"
+            AppLanguage.SPANISH -> "Avanzado"
+            AppLanguage.CHINESE -> "\u9ad8\u7ea7"
+        }
+    }
+}
+
+private fun ragModeDescription(mode: RagGenerationMode, language: AppLanguage): String {
+    return when (mode) {
+        RagGenerationMode.LOCAL_FALLBACK -> when (language) {
+            AppLanguage.CATALAN -> "Funciona sense internet. Genera una recomanacio prudent amb regles locals."
+            AppLanguage.ENGLISH -> "Works offline. Generates a careful recommendation with local rules."
+            AppLanguage.SPANISH -> "Funciona sin internet. Genera una recomendacion prudente con reglas locales."
+            AppLanguage.CHINESE -> "\u53ef\u79bb\u7ebf\u4f7f\u7528\uff0c\u7528\u672c\u5730\u89c4\u5219\u751f\u6210\u8c28\u614e\u5efa\u8bae\u3002"
+        }
+        RagGenerationMode.CLOUD_QWEN -> when (language) {
+            AppLanguage.CATALAN -> "Usa el model cloud seleccionat per generar un resum mes natural."
+            AppLanguage.ENGLISH -> "Uses the selected cloud model to generate a more natural summary."
+            AppLanguage.SPANISH -> "Usa el modelo cloud seleccionado para generar un resumen mas natural."
+            AppLanguage.CHINESE -> "\u4f7f\u7528\u5df2\u9009\u4e91\u7aef\u6a21\u578b\u751f\u6210\u66f4\u81ea\u7136\u7684\u603b\u7ed3\u3002"
+        }
+        RagGenerationMode.REMOTE_BACKEND -> when (language) {
+            AppLanguage.CATALAN -> "Usa el backend RAG amb ChromaDB i retorna fonts recuperades."
+            AppLanguage.ENGLISH -> "Uses the RAG backend with ChromaDB and returns retrieved sources."
+            AppLanguage.SPANISH -> "Usa el backend RAG con ChromaDB y devuelve fuentes recuperadas."
+            AppLanguage.CHINESE -> "\u4f7f\u7528 ChromaDB RAG \u540e\u7aef\u5e76\u8fd4\u56de\u68c0\u7d22\u6765\u6e90\u3002"
+        }
+        RagGenerationMode.CUSTOM -> ""
     }
 }
 

@@ -2,6 +2,8 @@ package com.udl.smartrain.data.local
 
 import android.content.Context
 import com.udl.smartrain.ml.RagGenerationSettings
+import com.udl.smartrain.ml.RagGenerationMode
+import com.udl.smartrain.ml.resolved
 
 data class RememberedUser(
     val email: String,
@@ -57,7 +59,11 @@ class AppPreferences(context: Context) {
 
     fun loadRagSettings(): RagGenerationSettings {
         val defaults = RagGenerationSettings()
+        val storedMode = preferences.getString(KEY_RAG_MODE, null)
+            ?.let { raw -> RagGenerationMode.entries.firstOrNull { it.name == raw } }
+            ?: legacyRagMode(defaults)
         return RagGenerationSettings(
+            mode = storedMode,
             useRemoteRag = preferences.getBoolean(KEY_RAG_USE_REMOTE, defaults.useRemoteRag),
             remoteRagBaseUrl = preferences.getString(KEY_RAG_REMOTE_BASE_URL, defaults.remoteRagBaseUrl).orEmpty()
                 .ifBlank { defaults.remoteRagBaseUrl },
@@ -67,29 +73,45 @@ class AppPreferences(context: Context) {
             ollamaModel = preferences.getString(KEY_RAG_MODEL, defaults.ollamaModel).orEmpty()
                 .ifBlank { defaults.ollamaModel },
             ollamaApiKey = preferences.getString(KEY_RAG_API_KEY, defaults.ollamaApiKey).orEmpty()
-        )
+        ).resolved()
     }
 
     fun saveRagSettings(settings: RagGenerationSettings) {
+        val resolved = settings.resolved()
         preferences.edit()
-            .putBoolean(KEY_RAG_USE_REMOTE, settings.useRemoteRag)
-            .putString(KEY_RAG_REMOTE_BASE_URL, settings.remoteRagBaseUrl)
-            .putBoolean(KEY_RAG_USE_OLLAMA, settings.useOllama)
-            .putString(KEY_RAG_BASE_URL, settings.ollamaBaseUrl)
-            .putString(KEY_RAG_MODEL, settings.ollamaModel)
-            .putString(KEY_RAG_API_KEY, settings.ollamaApiKey)
+            .putString(KEY_RAG_MODE, resolved.mode.name)
+            .putBoolean(KEY_RAG_USE_REMOTE, resolved.useRemoteRag)
+            .putString(KEY_RAG_REMOTE_BASE_URL, resolved.remoteRagBaseUrl)
+            .putBoolean(KEY_RAG_USE_OLLAMA, resolved.useOllama)
+            .putString(KEY_RAG_BASE_URL, resolved.ollamaBaseUrl)
+            .putString(KEY_RAG_MODEL, resolved.ollamaModel)
+            .putString(KEY_RAG_API_KEY, resolved.ollamaApiKey)
             .apply()
     }
 
     fun clearRagSettings() {
         preferences.edit()
             .remove(KEY_RAG_USE_REMOTE)
+            .remove(KEY_RAG_MODE)
             .remove(KEY_RAG_REMOTE_BASE_URL)
             .remove(KEY_RAG_USE_OLLAMA)
             .remove(KEY_RAG_BASE_URL)
             .remove(KEY_RAG_MODEL)
             .remove(KEY_RAG_API_KEY)
             .apply()
+    }
+
+    private fun legacyRagMode(defaults: RagGenerationSettings): RagGenerationMode {
+        val useRemote = preferences.getBoolean(KEY_RAG_USE_REMOTE, defaults.useRemoteRag)
+        val useOllama = preferences.getBoolean(KEY_RAG_USE_OLLAMA, defaults.useOllama)
+        val baseUrl = preferences.getString(KEY_RAG_BASE_URL, defaults.ollamaBaseUrl).orEmpty()
+        val model = preferences.getString(KEY_RAG_MODEL, defaults.ollamaModel).orEmpty()
+        return when {
+            useRemote -> RagGenerationMode.REMOTE_BACKEND
+            useOllama && baseUrl == "https://ollama.com" && model == "qwen3-coder-next" -> RagGenerationMode.CLOUD_QWEN
+            useOllama -> RagGenerationMode.CUSTOM
+            else -> RagGenerationMode.LOCAL_FALLBACK
+        }
     }
 
     fun loadLanguage(): AppLanguage {
@@ -117,6 +139,7 @@ class AppPreferences(context: Context) {
     private companion object {
         const val PREFERENCES_NAME = "smartrain_preferences"
         const val KEY_REMEMBERED_USERS = "remembered_users"
+        const val KEY_RAG_MODE = "rag_mode"
         const val KEY_RAG_USE_REMOTE = "rag_use_remote"
         const val KEY_RAG_REMOTE_BASE_URL = "rag_remote_base_url"
         const val KEY_RAG_USE_OLLAMA = "rag_use_ollama"

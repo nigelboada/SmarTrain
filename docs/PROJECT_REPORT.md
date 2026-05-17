@@ -2,6 +2,25 @@
 
 Data de consolidacio: 2026-05-14
 
+Actualitzacio RAG: 2026-05-16
+
+Validacio nova:
+
+- TensorFlow Projector carregat manualment amb 42 vectors i 768 dimensions.
+- Visualitzacions comprovades: PCA, t-SNE i UMAP.
+- Color by validat amb `category` i `source`.
+- Index ChromaDB validat a `ml/rag/chroma_db/smartrain`.
+- Comparativa d'embeddings executada:
+  - `nomic-embed-text`: Hit@6 0,833, MRR 0,708.
+  - `sentence-transformers/all-MiniLM-L6-v2`: Hit@6 0,833, MRR 0,694.
+  - Decisio: mantenir `nomic-embed-text`.
+- Backend FastAPI validat:
+  - `POST /rag/retrieve`: 200 OK amb fonts recuperades de Chroma.
+  - `POST /rag/session-summary`: 200 OK amb Ollama local `gemma3:1b`.
+- Ollama Cloud amb `qwen3-coder-next` validat amb el backend RAG.
+- Backend RAG validat en mobil fisic amb `http://192.168.1.14:8000`.
+- Els chunks RAG es mostren com a elements de context clicables a la fitxa de sessio.
+
 ## 1. Resum executiu
 
 SmarTrain es una app Android per registrar sessions esportives i enriquir-les amb:

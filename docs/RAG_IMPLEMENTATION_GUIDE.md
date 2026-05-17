@@ -1,14 +1,13 @@
-# SmarTrain RAG implementation guide
+# SmarTrain RAG Implementation Guide
 
-## Estat implementat
+## Estat Implementat
 
 - Base documental principal a `ml/rag/data/knowledge_base.jsonl`.
 - L'app Android empaqueta aquest JSONL com a asset i el carrega amb `SessionRagRecommender.initialize(...)`.
-- S'ha eliminat la dependencia funcional dels documents hardcoded en Kotlin per a la base catalana.
-- Script offline per construir index vectorial:
+- Script offline per construir index vectorial amb ChromaDB:
   - `ml/rag/scripts/build_vector_index.py`
-  - ChromaDB local per defecte.
-  - Pinecone opcional, nomes via entorn/backend.
+  - index validat a `ml/rag/chroma_db/smartrain`
+  - `raw_documents: 17`, `chunks: 42`, `embedding_dimension: 768`
 - Script per exportar embeddings a TensorFlow Projector:
   - `ml/rag/scripts/export_projector.py`
   - `ml/rag/results/projector/vectors.tsv`
@@ -16,77 +15,59 @@
   - `ml/rag/results/projector/pca_preview.png`
 - Backend intermedi FastAPI:
   - `ml/rag/scripts/rag_backend.py`
-  - endpoint `POST /rag/session-summary`
-  - consulta ChromaDB, genera resposta amb Ollama i retorna chunks, scores i latencia.
-- Android pot usar un `RemoteRagGenerator` contra el backend remot.
-- La fitxa de sessio mostra chunks font i scores si el backend els retorna.
-- Configuracio segura amb `.env` i `.env.example`.
-- Model LLM final documentat: `qwen3-coder-next` via Ollama Cloud.
+  - `POST /rag/retrieve` per validar recuperacio sense LLM/API key
+  - `POST /rag/session-summary` per recuperar chunks, generar resposta amb Ollama i retornar fonts, scores i latencia
+- Android pot usar `RemoteRagGenerator` contra el backend remot.
+- La fitxa de sessio mostra resposta RAG, proveidor/model, latencia, fallback i chunks font.
+- Model generatiu final documentat: `qwen3-coder-next` via Ollama Cloud.
 
 ## Instal·lacio
-
-Crear entorn Python i instal·lar dependencies:
 
 ```powershell
 pip install -r ml/requirements.txt
 ```
 
-Crear `.env` a partir de `.env.example`:
-
-```powershell
-copy .env.example .env
-```
-
-Configurar com a minim:
+Configuracio minima a `.env`:
 
 ```env
 OLLAMA_BASE_URL=https://ollama.com
 OLLAMA_API_KEY=...
 OLLAMA_MODEL=qwen3-coder-next
+SMARTRAIN_RAG_EMBED_BASE_URL=http://127.0.0.1:11434
 SMARTRAIN_RAG_VECTORSTORE=chroma
 SMARTRAIN_RAG_CHROMA_DIR=ml/rag/chroma_db/smartrain
 SMARTRAIN_RAG_COLLECTION=smartrain_rag
 ```
 
-No posar claus dins notebooks, codi Kotlin ni fitxers versionats.
+`SMARTRAIN_RAG_EMBED_BASE_URL` permet usar `nomic-embed-text` local per Chroma mentre `OLLAMA_BASE_URL` apunta a Ollama Cloud per generar text.
 
-## Construir l'index ChromaDB
+## Construir L'index
 
 ```powershell
 python ml/rag/scripts/build_vector_index.py --store chroma --embedding-provider ollama --embedding-model nomic-embed-text --reset
 ```
 
-Parametres per defecte:
+Parametres:
 
 - `chunk_size=700`
 - `chunk_overlap=90`
 - metadata: `id`, `source`, `category`, `language`, `chunk_id`
 
-Alternativa lleugera:
-
-```powershell
-python ml/rag/scripts/build_vector_index.py --store chroma --embedding-provider sentence-transformers --embedding-model sentence-transformers/all-MiniLM-L6-v2 --reset
-```
-
-## Pinecone opcional
-
-Pinecone queda pensat per demo cloud o backend compartit. No s'ha d'accedir mai directament des de l'app Android.
-
-```powershell
-python ml/rag/scripts/build_vector_index.py --store pinecone --embedding-provider sentence-transformers
-```
-
-Requereix `PINECONE_API_KEY` al `.env`.
-
 ## Backend RAG
 
-Arrencar el backend:
+Arrencar backend:
 
 ```powershell
 uvicorn ml.rag.scripts.rag_backend:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Endpoint principal:
+Validar recuperacio sense LLM:
+
+```http
+POST /rag/retrieve
+```
+
+Generar resum:
 
 ```http
 POST /rag/session-summary
@@ -97,6 +78,7 @@ Cos esperat:
 ```json
 {
   "language": "ca",
+  "top_k": 3,
   "session": {
     "dominantActivity": "Alta intensitat",
     "avgMlConfidence": 0.82,
@@ -115,45 +97,67 @@ Resposta:
 - `provider`
 - `model`
 - `latency_ms`
-- `sources[]` amb `source`, `category`, `chunk_id`, `score`, `text`
+- `sources[]` amb `id`, `source`, `category`, `chunk_id`, `score`, `text`
+
+Validacio feta:
+
+- `/rag/retrieve`: 200 OK amb fonts de Chroma.
+- `/rag/session-summary`: 200 OK amb Ollama local `gemma3:1b`, model retornat i latencia.
+- Ollama Cloud no s'ha pogut validar en aquest entorn per error DNS resolent `ollama.com`.
 
 ## Android
 
 A la pantalla de perfil:
 
-- Activar `Backend RAG remot`.
-- URL emulador Android: `http://10.0.2.2:8000`
-- URL mobil fisic: IP LAN del PC, per exemple `http://192.168.1.50:8000`
+- `Resum local`: opcio segura per defecte, sense internet ni API key.
+- `qwen3-coder-next`: usa Ollama Cloud directe. Requereix API key d'Ollama Cloud.
+- `Backend RAG`: usa FastAPI + ChromaDB. Permet veure chunks i scores a la fitxa de sessio.
 
-Si el backend remot falla, SmarTrain conserva fallback local/rules segons configuracio.
+Per al mode `Backend RAG`:
 
-## Export TensorFlow Projector
+- URL mobil fisic configurada per a aquest entorn: `http://192.168.1.14:8000`.
+- URL emulador Android, si algun dia es fa servir: `http://10.0.2.2:8000`.
+- Si la IP del PC canvia, cal actualitzar el camp URL del backend a la pantalla de perfil.
+
+Si el backend remot o Ollama fallen, SmarTrain guarda fallback local per regles i mostra el motiu a la fitxa de sessio.
+
+Funcionalitat diferencial del mode `Backend RAG`:
+
+- la resposta es genera amb context recuperat de ChromaDB;
+- la sessio guarda fonts, categories, scores i fragments;
+- els elements de context es poden clicar a la fitxa de sessio;
+- cada clic obre el chunk ampliat per revisar el text complet recuperat.
+
+## TensorFlow Projector
 
 ```powershell
 python ml/rag/scripts/export_projector.py --store chroma
 ```
 
-Obrir `https://projector.tensorflow.org` i carregar:
+Carregar a `https://projector.tensorflow.org`:
 
 - vectors: `ml/rag/results/projector/vectors.tsv`
 - metadata: `ml/rag/results/projector/metadata.tsv`
 
-La preview local queda a:
+Validat manualment:
 
-```text
-ml/rag/results/projector/pca_preview.png
-```
+- 42 punts carregats.
+- 768 dimensions.
+- PCA, t-SNE i UMAP visibles.
+- Color by `category` i `source` funcional.
 
-## Comparar embeddings
+## Comparativa D'embeddings
 
 ```powershell
-python ml/rag/scripts/compare_embedding_models.py
+python ml/rag/scripts/compare_embedding_models.py --ollama-base-url http://127.0.0.1:11434
 ```
 
-Compara:
+Resultat:
 
-- `nomic-embed-text`
-- `sentence-transformers/all-MiniLM-L6-v2`
+| Model | Hit@6 | MRR | Decisio |
+| --- | ---: | ---: | --- |
+| `nomic-embed-text` | 0,833 | 0,708 | Seleccionat |
+| `sentence-transformers/all-MiniLM-L6-v2` | 0,833 | 0,694 | Alternativa viable |
 
 Sortida:
 
@@ -161,33 +165,21 @@ Sortida:
 ml/rag/results/embedding_model_comparison.json
 ```
 
-## Avaluacio RAG
+## Estat Final I Pendent Manual
 
-Ja hi ha equivalents interns a RAGAS:
+Fet:
 
-- `ml/rag/scripts/evaluate_rag.py`
-- `ml/rag/scripts/evaluate_ollama_models.py`
-- `ml/rag/scripts/compare_generation_models.py`
+- ChromaDB creat amb `nomic-embed-text`.
+- Export Projector validat amb les captures aportades.
+- Comparativa d'embeddings executada.
+- Backend FastAPI corregit i validat amb recuperacio i generacio local.
+- Android corregit per marcar fallback remot i mostrar `backend RAG` a la fitxa.
+- Tests Android RAG en verd amb `.\gradlew.bat :app:testDebugUnitTest`.
 
-Metrics actuals:
+Pendent manual:
 
-- hit rate de fonts
-- MRR
-- grounded overlap
-- cobertura de termes esperats
-- risc de dades inventades
-- utilitat de recomanacio
-- qualitat linguistica
-
-## Pendent per completar l'apartat RAG
-
-1. Executar `build_vector_index.py` en un entorn amb Ollama i `nomic-embed-text` disponible.
-2. Executar `export_projector.py` i guardar captures del projector 3D/PCA per a la memoria.
-3. Executar `compare_embedding_models.py` i decidir si es manté `nomic-embed-text` o si MiniLM dona millor recuperacio.
-4. Arrencar `rag_backend.py` i provar `/rag/session-summary` amb sessions reals.
-5. Activar `Backend RAG remot` a l'app i validar una sessio de punta a punta.
-6. Afegir captures de la fitxa de sessio amb chunks i scores.
-7. Regenerar comparativa final de models LLM deixant `qwen3-coder-next` com a guanyador documentat.
-8. Revisar que `.env` no queda versionat i que no hi ha API keys en notebooks.
-9. Afegir al `PROJECT_REPORT.md` els resultats finals: index, embedding model, top_k, LLM final, latencia i exemples de resposta.
-10. Si es presenta Pinecone, explicar que nomes s'usa des del backend i que Android no conte claus.
+1. Validar `/rag/session-summary` amb `qwen3-coder-next` via Ollama Cloud quan `ollama.com` resolgui DNS i la API key sigui valida.
+2. Arrencar backend amb `uvicorn` i activar `Backend RAG remot` a l'app.
+3. Fer una sessio real o de demo i comprovar la fitxa de sessio amb resposta RAG, chunks i scores.
+4. Afegir captura final de la fitxa de sessio al report.
+5. Revisar que `.env` no queda versionat i que no hi ha API keys en notebooks.
