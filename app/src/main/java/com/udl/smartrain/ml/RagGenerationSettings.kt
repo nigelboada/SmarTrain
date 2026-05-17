@@ -22,7 +22,7 @@ data class RagGenerationSettings(
     val ollamaApiKey: String = ""
 )
 
-const val DEFAULT_REMOTE_RAG_BASE_URL = "http://192.168.1.75:8000"
+const val DEFAULT_REMOTE_RAG_BASE_URL = "http://192.168.1.14:8000"
 
 fun RagGenerationSettings.resolved(): RagGenerationSettings {
     return when (mode) {

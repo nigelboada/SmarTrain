@@ -116,7 +116,10 @@ fun ProfileScreen(viewModel: MainViewModel, navController: NavController) {
                                 text = { Text(ragModeTitle(mode, language)) },
                                 onClick = {
                                     selectedMode = mode
-                                    if (mode == RagGenerationMode.REMOTE_BACKEND && remoteRagBaseUrl == "http://10.0.2.2:8000") {
+                                    if (
+                                        mode == RagGenerationMode.REMOTE_BACKEND &&
+                                        (remoteRagBaseUrl == "http://10.0.2.2:8000" || remoteRagBaseUrl == "http://192.168.1.75:8000")
+                                    ) {
                                         remoteRagBaseUrl = DEFAULT_REMOTE_RAG_BASE_URL
                                     }
                                     showModeMenu = false

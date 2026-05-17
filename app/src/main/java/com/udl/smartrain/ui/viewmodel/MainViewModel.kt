@@ -301,7 +301,7 @@ class MainViewModel(
     }
 
     private fun RagSourceDetail.serialize(): String {
-        return listOf(id, source, category, chunkId.toString(), String.format(Locale.US, "%.4f", score), text.take(220))
+        return listOf(id, source, category, chunkId.toString(), String.format(Locale.US, "%.4f", score), text.take(1200))
             .joinToString("~") { value ->
                 value.replace("%", "%25")
                     .replace("|", "%7C")

@@ -243,3 +243,20 @@ def session_summary(request: RagRequest) -> RagResponse:
         latency_ms=latency,
         sources=sources,
     )
+
+
+@app.get("/rag/demo-session-summary", response_model=RagResponse)
+def demo_session_summary() -> RagResponse:
+    request = RagRequest(
+        language="ca",
+        top_k=3,
+        session=SessionPayload(
+            dominantActivity="Alta intensitat",
+            avgMlConfidence=0.82,
+            mlPredictionCount=24,
+            highIntensityCount=12,
+            durationSeconds=1800,
+            distanceMetres=3200.0,
+        ),
+    )
+    return session_summary(request)

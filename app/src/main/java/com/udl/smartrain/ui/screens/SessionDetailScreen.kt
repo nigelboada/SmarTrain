@@ -1,6 +1,7 @@
-package com.udl.smartrain.ui.screens
+﻿package com.udl.smartrain.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,20 +12,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -299,6 +306,7 @@ private fun TimelineSegmentRow(segment: ActivityTimelineSegment, language: AppLa
 
 @Composable
 private fun RagInsightCard(session: Session, insight: SessionRagInsight, language: AppLanguage) {
+    var selectedSource by remember { mutableStateOf<RagSourceDetail?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
@@ -347,26 +355,36 @@ private fun RagInsightCard(session: Session, insight: SessionRagInsight, languag
         if (insight.sourceDetails.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 insight.sourceDetails.take(4).forEach { source ->
-                    SourceChunkRow(source = source)
+                    SourceChunkRow(source = source, onClick = { selectedSource = source })
                 }
             }
         }
     }
+
+    selectedSource?.let { source ->
+        SourceChunkDialog(
+            source = source,
+            language = language,
+            onDismiss = { selectedSource = null }
+        )
+    }
 }
 
 @Composable
-private fun SourceChunkRow(source: RagSourceDetail) {
+private fun SourceChunkRow(source: RagSourceDetail, onClick: () -> Unit) {
     Surface(
         color = Color.White.copy(alpha = 0.06f),
         shape = MaterialTheme.shapes.small,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             Text(
-                text = "${source.source.ifBlank { source.id }} · score ${"%.2f".format(source.score)}",
+                text = "${source.source.ifBlank { source.id }} - score ${"%.2f".format(source.score)}",
                 style = MaterialTheme.typography.labelMedium,
                 color = Color.White.copy(alpha = 0.86f),
                 maxLines = 1,
@@ -381,6 +399,34 @@ private fun SourceChunkRow(source: RagSourceDetail) {
             )
         }
     }
+}
+
+@Composable
+private fun SourceChunkDialog(source: RagSourceDetail, language: AppLanguage, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(source.source.ifBlank { source.id }) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "${source.category} - chunk ${source.chunkId} - score ${"%.2f".format(source.score)}",
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(
+                    text = source.text,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(language.text(TextKey.CONFIRM))
+            }
+        }
+    )
 }
 
 @Composable
@@ -641,3 +687,4 @@ private fun colorForActivity(label: String): Color {
         else -> Color(0xFFD8B4FE)
     }
 }
+
