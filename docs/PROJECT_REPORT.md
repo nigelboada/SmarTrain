@@ -17,7 +17,9 @@ Validacio nova:
 - Backend FastAPI validat:
   - `POST /rag/retrieve`: 200 OK amb fonts recuperades de Chroma.
   - `POST /rag/session-summary`: 200 OK amb Ollama local `gemma3:1b`.
-- Ollama Cloud amb `qwen3-coder-next` queda pendent de validacio manual per error DNS resolent `ollama.com` en aquest entorn.
+- Ollama Cloud amb `qwen3-coder-next` validat amb el backend RAG.
+- Backend RAG validat en mobil fisic amb `http://192.168.1.14:8000`.
+- Els chunks RAG es mostren com a elements de context clicables a la fitxa de sessio.
 
 ## 1. Resum executiu
 

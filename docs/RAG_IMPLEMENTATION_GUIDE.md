@@ -121,6 +121,13 @@ Per al mode `Backend RAG`:
 
 Si el backend remot o Ollama fallen, SmarTrain guarda fallback local per regles i mostra el motiu a la fitxa de sessio.
 
+Funcionalitat diferencial del mode `Backend RAG`:
+
+- la resposta es genera amb context recuperat de ChromaDB;
+- la sessio guarda fonts, categories, scores i fragments;
+- els elements de context es poden clicar a la fitxa de sessio;
+- cada clic obre el chunk ampliat per revisar el text complet recuperat.
+
 ## TensorFlow Projector
 
 ```powershell
