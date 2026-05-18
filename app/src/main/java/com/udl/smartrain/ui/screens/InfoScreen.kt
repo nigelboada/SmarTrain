@@ -25,14 +25,6 @@ fun InfoScreen(language: AppLanguage) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Text(
-                text = infoTitle(language),
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        item {
             InfoCard(
                 title = modeTitle(language),
                 body = modeBody(language)
@@ -79,13 +71,6 @@ private fun InfoCard(title: String, body: String) {
             )
         }
     }
-}
-
-private fun infoTitle(language: AppLanguage): String = when (language) {
-    AppLanguage.CATALAN -> "Ajuda"
-    AppLanguage.ENGLISH -> "Help"
-    AppLanguage.SPANISH -> "Ayuda"
-    AppLanguage.CHINESE -> "\u5e2e\u52a9"
 }
 
 private fun modeTitle(language: AppLanguage): String = when (language) {

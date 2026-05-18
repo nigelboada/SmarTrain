@@ -178,6 +178,12 @@ def guided_question_text(question_id: str, language: str) -> str:
             "es": "Como debo interpretar los bloques de alta intensidad?",
             "zh": "\u6211\u5e94\u8be5\u5982\u4f55\u7406\u89e3\u9ad8\u5f3a\u5ea6\u7247\u6bb5\uff1f",
         },
+        "sensor_quality": {
+            "ca": "Com puc millorar la qualitat dels sensors del mobil?",
+            "en": "How can I improve the phone sensor quality?",
+            "es": "Como puedo mejorar la calidad de los sensores del movil?",
+            "zh": "\u5982\u4f55\u63d0\u9ad8\u624b\u673a\u4f20\u611f\u5668\u8d28\u91cf\uff1f",
+        },
     }
     return labels.get(question_id, labels["improve_next"]).get(language, labels["improve_next"]["ca"])
 
@@ -315,6 +321,7 @@ def guided_question(request: GuidedRagRequest) -> RagResponse:
         "recovery",
         "confidence_meaning",
         "high_intensity",
+        "sensor_quality",
     }
     if request.question_id not in allowed_questions:
         raise HTTPException(status_code=400, detail="Unknown guided question.")

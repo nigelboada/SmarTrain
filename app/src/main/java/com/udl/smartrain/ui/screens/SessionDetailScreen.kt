@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -318,6 +319,7 @@ private fun RagInsightCard(
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            SummarySourceChip(session = session, language = language)
             Text(
                 text = insight.title,
                 style = MaterialTheme.typography.titleMedium,
@@ -372,7 +374,8 @@ private fun RagInsightCard(
         if (guidedQuestionsEnabled) {
             Button(
                 onClick = { showFaqDialog = true },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = faqRagButtonColors()
             ) {
                 Icon(
                     Icons.Default.ChatBubbleOutline,
@@ -435,6 +438,31 @@ private fun RagInsightCard(
 }
 
 @Composable
+private fun SummarySourceChip(session: Session, language: AppLanguage) {
+    Surface(
+        color = summarySourceColor(session),
+        shape = RoundedCornerShape(50),
+    ) {
+        Text(
+            text = summarySourceLabel(session, language),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+private fun summarySourceColor(session: Session): Color {
+    return when {
+        session.ragUsedFallback -> Color(0xFF8A6D2F)
+        session.ragProvider == "remote-rag" -> Color(0xFF2F6F6A)
+        session.ragProvider == "ollama" -> Color(0xFF5145A6)
+        else -> Color(0xFF5B6472)
+    }
+}
+
+@Composable
 private fun GuidedRagQuestionDialog(
     language: AppLanguage,
     loadingQuestionId: String?,
@@ -457,7 +485,8 @@ private fun GuidedRagQuestionDialog(
                     Button(
                         onClick = { onQuestionClick(question) },
                         enabled = loadingQuestionId == null,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = faqRagButtonColors()
                     ) {
                         if (loadingQuestionId == question.id) {
                             Row(
@@ -484,6 +513,23 @@ private fun GuidedRagQuestionDialog(
             }
         }
     )
+}
+
+@Composable
+private fun faqRagButtonColors() = if (isDarkSmarTrainTheme()) {
+    ButtonDefaults.buttonColors(
+        containerColor = Color(0xFF5145A6),
+        contentColor = Color.White,
+        disabledContainerColor = Color(0xFF2F2A49),
+        disabledContentColor = Color.White.copy(alpha = 0.42f)
+    )
+} else {
+    ButtonDefaults.buttonColors()
+}
+
+@Composable
+private fun isDarkSmarTrainTheme(): Boolean {
+    return MaterialTheme.colorScheme.background == Color(0xFF101218)
 }
 
 @Composable
@@ -700,7 +746,8 @@ private fun guidedRagQuestions(language: AppLanguage): List<GuidedRagQuestion> {
             GuidedRagQuestion("prediction_limits", "Limitacions de la predicció"),
             GuidedRagQuestion("recovery", "Quina recuperació em convé?"),
             GuidedRagQuestion("confidence_meaning", "Què significa la confiança?"),
-            GuidedRagQuestion("high_intensity", "Com interpreto l'alta intensitat?")
+            GuidedRagQuestion("high_intensity", "Com interpreto l'alta intensitat?"),
+            GuidedRagQuestion("sensor_quality", "Com milloro la qualitat dels sensors?")
         )
         AppLanguage.ENGLISH -> listOf(
             GuidedRagQuestion("improve_next", "How can I improve the next session?"),
@@ -708,7 +755,8 @@ private fun guidedRagQuestions(language: AppLanguage): List<GuidedRagQuestion> {
             GuidedRagQuestion("prediction_limits", "Prediction limitations"),
             GuidedRagQuestion("recovery", "What recovery is appropriate?"),
             GuidedRagQuestion("confidence_meaning", "What does confidence mean?"),
-            GuidedRagQuestion("high_intensity", "How should I read high intensity?")
+            GuidedRagQuestion("high_intensity", "How should I read high intensity?"),
+            GuidedRagQuestion("sensor_quality", "How can I improve sensor quality?")
         )
         AppLanguage.SPANISH -> listOf(
             GuidedRagQuestion("improve_next", "Como puedo mejorar la proxima sesion?"),
@@ -716,7 +764,8 @@ private fun guidedRagQuestions(language: AppLanguage): List<GuidedRagQuestion> {
             GuidedRagQuestion("prediction_limits", "Limitaciones de la prediccion"),
             GuidedRagQuestion("recovery", "Que recuperacion me conviene?"),
             GuidedRagQuestion("confidence_meaning", "Que significa la confianza?"),
-            GuidedRagQuestion("high_intensity", "Como interpreto la alta intensidad?")
+            GuidedRagQuestion("high_intensity", "Como interpreto la alta intensidad?"),
+            GuidedRagQuestion("sensor_quality", "Como mejoro la calidad de los sensores?")
         )
         AppLanguage.CHINESE -> listOf(
             GuidedRagQuestion("improve_next", "\u5982\u4f55\u6539\u8fdb\u4e0b\u4e00\u6b21\u8bad\u7ec3\uff1f"),
@@ -724,7 +773,8 @@ private fun guidedRagQuestions(language: AppLanguage): List<GuidedRagQuestion> {
             GuidedRagQuestion("prediction_limits", "\u9884\u6d4b\u5c40\u9650"),
             GuidedRagQuestion("recovery", "\u6211\u5e94\u8be5\u5982\u4f55\u6062\u590d\uff1f"),
             GuidedRagQuestion("confidence_meaning", "\u7f6e\u4fe1\u5ea6\u662f\u4ec0\u4e48\uff1f"),
-            GuidedRagQuestion("high_intensity", "\u5982\u4f55\u7406\u89e3\u9ad8\u5f3a\u5ea6\uff1f")
+            GuidedRagQuestion("high_intensity", "\u5982\u4f55\u7406\u89e3\u9ad8\u5f3a\u5ea6\uff1f"),
+            GuidedRagQuestion("sensor_quality", "\u5982\u4f55\u63d0\u9ad8\u4f20\u611f\u5668\u8d28\u91cf\uff1f")
         )
     }
 }
@@ -766,6 +816,43 @@ private fun buildRagMetadataText(session: Session, language: AppLanguage): Strin
         ""
     }
     return "${language.text(TextKey.GENERATOR)}: $source$latency"
+}
+
+private fun summarySourceLabel(session: Session, language: AppLanguage): String {
+    return when {
+        session.ragUsedFallback -> localFallbackChipLabel(language)
+        session.ragProvider == "remote-rag" -> backendRagChipLabel(language)
+        session.ragProvider == "ollama" -> cloudAiChipLabel(language)
+        else -> localChipLabel(language)
+    }
+}
+
+private fun localFallbackChipLabel(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Resum local"
+    AppLanguage.ENGLISH -> "Local summary"
+    AppLanguage.SPANISH -> "Resumen local"
+    AppLanguage.CHINESE -> "\u672c\u5730\u603b\u7ed3"
+}
+
+private fun localChipLabel(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Resum local"
+    AppLanguage.ENGLISH -> "Local summary"
+    AppLanguage.SPANISH -> "Resumen local"
+    AppLanguage.CHINESE -> "\u672c\u5730\u603b\u7ed3"
+}
+
+private fun cloudAiChipLabel(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "IA cloud"
+    AppLanguage.ENGLISH -> "Cloud AI"
+    AppLanguage.SPANISH -> "IA cloud"
+    AppLanguage.CHINESE -> "\u4e91\u7aef AI"
+}
+
+private fun backendRagChipLabel(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Backend RAG"
+    AppLanguage.ENGLISH -> "RAG backend"
+    AppLanguage.SPANISH -> "Backend RAG"
+    AppLanguage.CHINESE -> "RAG \u540e\u7aef"
 }
 
 private fun automaticLabel(language: AppLanguage): String = when (language) {

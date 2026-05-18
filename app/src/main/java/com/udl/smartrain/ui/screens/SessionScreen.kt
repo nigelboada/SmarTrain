@@ -63,6 +63,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
     val language by viewModel.appLanguage.collectAsState()
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var permissionMessage by remember { mutableStateOf<String?>(null) }
+    var startCountdown by remember { mutableStateOf<Int?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -87,6 +88,17 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
         while (trackingMetrics.isTracking) {
             nowMillis = System.currentTimeMillis()
             delay(1000)
+        }
+    }
+
+    LaunchedEffect(startCountdown) {
+        val countdown = startCountdown ?: return@LaunchedEffect
+        if (countdown > 0) {
+            delay(1000)
+            startCountdown = countdown - 1
+        } else {
+            startCountdown = null
+            permissionLauncher.launch(trackingPermissions())
         }
     }
 
@@ -120,11 +132,12 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
                 ActionPanel(
                     isTracking = trackingMetrics.isTracking,
                     isGeneratingRag = ragGenerationState.isGenerating,
+                    startCountdown = startCountdown,
                     permissionMessage = permissionMessage,
                     generationMessage = ragGenerationState.message,
                     language = language,
                     onStart = {
-                        permissionLauncher.launch(trackingPermissions())
+                        startCountdown = 3
                     },
                     onFinish = {
                         viewModel.finishAndSaveSession(context, onSaved = onStopSession)
@@ -295,6 +308,7 @@ private fun PredictionCard(prediction: ActivityPrediction?, language: AppLanguag
 private fun ActionPanel(
     isTracking: Boolean,
     isGeneratingRag: Boolean,
+    startCountdown: Int?,
     permissionMessage: String?,
     generationMessage: String?,
     language: AppLanguage,
@@ -322,22 +336,111 @@ private fun ActionPanel(
         if (isGeneratingRag) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
+        if (!isTracking) {
+            StablePhoneNotice(language = language, startCountdown = startCountdown)
+        }
         Button(
             onClick = onStart,
-            enabled = !isTracking && !isGeneratingRag,
-            modifier = Modifier.fillMaxWidth()
+            enabled = !isTracking && !isGeneratingRag && startCountdown == null,
+            modifier = Modifier.fillMaxWidth(),
+            colors = primarySessionButtonColors()
         ) {
-            Text(text = if (isTracking) language.text(TextKey.SESSION_ACTIVE) else language.text(TextKey.START_SENSORING))
+            Text(
+                text = when {
+                    isTracking -> language.text(TextKey.SESSION_ACTIVE)
+                    startCountdown != null -> countdownButtonText(language, startCountdown)
+                    else -> language.text(TextKey.START_SENSORING)
+                }
+            )
         }
         Button(
             onClick = onFinish,
             enabled = !isGeneratingRag,
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            colors = finishSessionButtonColors()
         ) {
             Text(if (isGeneratingRag) language.text(TextKey.GENERATING_SUMMARY) else language.text(TextKey.FINISH_SAVE))
         }
     }
+}
+
+@Composable
+private fun StablePhoneNotice(language: AppLanguage, startCountdown: Int?) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = stablePhoneTitle(language),
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = startCountdown?.let { countdownHelpText(language, it) } ?: stablePhoneBody(language),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.76f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun primarySessionButtonColors() = if (isDarkSmarTrainTheme()) {
+    ButtonDefaults.buttonColors(
+        containerColor = Color(0xFF2E7D72),
+        contentColor = Color.White,
+        disabledContainerColor = Color(0xFF243B3D),
+        disabledContentColor = Color.White.copy(alpha = 0.42f)
+    )
+} else {
+    ButtonDefaults.buttonColors()
+}
+
+@Composable
+private fun finishSessionButtonColors() = if (isDarkSmarTrainTheme()) {
+    ButtonDefaults.buttonColors(
+        containerColor = Color(0xFFA64253),
+        contentColor = Color.White,
+        disabledContainerColor = Color(0xFF432B34),
+        disabledContentColor = Color.White.copy(alpha = 0.42f)
+    )
+} else {
+    ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+}
+
+@Composable
+private fun isDarkSmarTrainTheme(): Boolean {
+    return MaterialTheme.colorScheme.background == Color(0xFF101218)
+}
+
+private fun stablePhoneTitle(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Mobil estable"
+    AppLanguage.ENGLISH -> "Steady phone"
+    AppLanguage.SPANISH -> "Movil estable"
+    AppLanguage.CHINESE -> "\u4fdd\u6301\u624b\u673a\u7a33\u5b9a"
+}
+
+private fun stablePhoneBody(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Abans de comencar, fixa el mobil a la mateixa posicio i evita moure'l amb la ma."
+    AppLanguage.ENGLISH -> "Before starting, keep the phone fixed in the same position and avoid holding it in your hand."
+    AppLanguage.SPANISH -> "Antes de empezar, fija el movil en la misma posicion y evita moverlo con la mano."
+    AppLanguage.CHINESE -> "\u5f00\u59cb\u524d\uff0c\u8bf7\u5c06\u624b\u673a\u56fa\u5b9a\u5728\u76f8\u540c\u4f4d\u7f6e\uff0c\u907f\u514d\u624b\u6301\u6643\u52a8\u3002"
+}
+
+private fun countdownHelpText(language: AppLanguage, seconds: Int): String = when (language) {
+    AppLanguage.CATALAN -> "Prepara't: inici en $seconds segons. Mantingues el mobil quiet."
+    AppLanguage.ENGLISH -> "Get ready: starting in $seconds seconds. Keep the phone still."
+    AppLanguage.SPANISH -> "Preparate: inicio en $seconds segundos. Manten el movil quieto."
+    AppLanguage.CHINESE -> "\u51c6\u5907\uff1a$seconds \u79d2\u540e\u5f00\u59cb\u3002\u8bf7\u4fdd\u6301\u624b\u673a\u9759\u6b62\u3002"
+}
+
+private fun countdownButtonText(language: AppLanguage, seconds: Int): String = when (language) {
+    AppLanguage.CATALAN -> "Comenca en $seconds..."
+    AppLanguage.ENGLISH -> "Starting in $seconds..."
+    AppLanguage.SPANISH -> "Empieza en $seconds..."
+    AppLanguage.CHINESE -> "$seconds \u79d2\u540e\u5f00\u59cb..."
 }
 
 @Composable

@@ -2,5 +2,13 @@
 {"id":"q_002","question":"Per que el model pot confondre seure i dret?","expected_ids":["kb_006"]}
 {"id":"q_003","question":"Quin model final s'ha seleccionat i quines metriques te?","expected_ids":["kb_007"]}
 {"id":"q_004","question":"Quines limitacions te UCI HAR per al futbol?","expected_ids":["kb_008","kb_005"]}
-{"id":"q_005","question":"Com s'ha d'interpretar una confiança baixa del model?","expected_ids":["kb_004"]}
+{"id":"q_005","question":"Com s'ha d'interpretar una confianca baixa del model?","expected_ids":["kb_004"]}
 {"id":"q_006","question":"On es guarda la base documental del RAG?","expected_ids":["kb_011"]}
+
+{"id":"q_010","question":"Que caldria per classificar millor accions especifiques de futbol?","expected_ids":["kb_026","kb_024"]}
+{"id":"q_009","question":"Que he de fer si la sessio mostra poca confianca o resultats estranys?","expected_ids":["kb_025","kb_021"]}
+{"id":"q_008","question":"Per que els primers segons de sensoritzacio poden ser menys fiables?","expected_ids":["kb_023"]}
+{"id":"q_007","question":"Com puc fer que els sensors del mobil siguin mes fiables?","expected_ids":["kb_021","kb_022"]}
+{"id":"q_011","question":"Que he de fer just abans de comencar una sensoritzacio?","expected_ids":["kb_027","kb_023"]}
+{"id":"q_012","question":"On he de portar el mobil durant una demo per tenir dades mes estables?","expected_ids":["kb_028","kb_021"]}
+{"id":"q_013","question":"Millorar el sensor permet reconeixer accions especifiques de futbol?","expected_ids":["kb_029","kb_026"]}
