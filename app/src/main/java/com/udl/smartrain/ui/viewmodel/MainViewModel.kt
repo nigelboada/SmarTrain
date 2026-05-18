@@ -53,9 +53,12 @@ class MainViewModel(
     private val _ragGenerationUiState = MutableStateFlow(RagGenerationUiState())
     private val _rememberedUsers = MutableStateFlow(appPreferences.getRememberedUsers())
     private val _appLanguage = MutableStateFlow(appPreferences.loadLanguage())
+    private val _darkMode = MutableStateFlow(appPreferences.loadDarkMode())
     private val currentUserId = MutableStateFlow(auth.currentUser?.uid.orEmpty())
 
-    var currentUserName by mutableStateOf(auth.currentUser?.email ?: _appLanguage.value.text(TextKey.USER))
+    var currentUserName by mutableStateOf(
+        appPreferences.loadUserName().ifBlank { auth.currentUser?.email ?: _appLanguage.value.text(TextKey.USER) }
+    )
         private set
 
     var authError by mutableStateOf<String?>(null)
@@ -68,6 +71,7 @@ class MainViewModel(
     val ragGenerationSettings = DebugRagGenerationSettings.settings
     val rememberedUsers: StateFlow<List<RememberedUser>> = _rememberedUsers.asStateFlow()
     val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+    val darkMode: StateFlow<Boolean> = _darkMode.asStateFlow()
 
     val sessionsHistory = currentUserId
         .flatMapLatest { userId ->
@@ -158,7 +162,7 @@ class MainViewModel(
         _currentSession.value = Session(
             id = UUID.randomUUID().toString(),
             userId = userId,
-            sessionName = _appLanguage.value.text(TextKey.NEW_SESSION)
+            sessionName = defaultSessionName()
         )
     }
 
@@ -197,7 +201,7 @@ class MainViewModel(
                     isGenerating = true,
                     message = when {
                         settings.useRemoteRag -> _appLanguage.value.text(TextKey.SESSION_SAVE_OLLAMA_GENERATING, "Remote RAG")
-                        settings.useOllama -> _appLanguage.value.text(TextKey.SESSION_SAVE_OLLAMA_GENERATING, settings.ollamaModel)
+                        settings.useOllama -> _appLanguage.value.text(TextKey.SESSION_SAVE_OLLAMA_GENERATING, cloudAiLabel(_appLanguage.value))
                         else -> _appLanguage.value.text(TextKey.SESSION_SAVE_LOCAL_GENERATING)
                     }
                 )
@@ -225,7 +229,7 @@ class MainViewModel(
                     message = if (ragResult.usedFallback) {
                         _appLanguage.value.text(TextKey.SESSION_SAVE_FALLBACK)
                     } else {
-                        _appLanguage.value.text(TextKey.SESSION_SAVE_SUCCESS, ragResult.provider, ragResult.model)
+                        _appLanguage.value.text(TextKey.SESSION_SAVE_SUCCESS, ragResult.provider, displayModelName(ragResult.model, _appLanguage.value))
                     }
                 )
                 onSaved()
@@ -256,11 +260,9 @@ class MainViewModel(
 
     suspend fun generateGuidedRagAnswer(session: Session, questionId: String): Result<SessionRagInsight> {
         val settings = DebugRagGenerationSettings.settings.value.resolved()
-        if (!settings.useRemoteRag) {
-            return Result.failure(IllegalStateException(guidedRagRequiresBackend(_appLanguage.value)))
-        }
+        val remoteBaseUrl = settings.remoteRagBaseUrl.ifBlank { com.udl.smartrain.ml.DEFAULT_REMOTE_RAG_BASE_URL }
         return runCatching {
-            RemoteRagGenerator(settings.remoteRagBaseUrl).generateGuidedQuestion(
+            RemoteRagGenerator(remoteBaseUrl).generateGuidedQuestion(
                 session = session,
                 language = _appLanguage.value,
                 questionId = questionId
@@ -271,6 +273,11 @@ class MainViewModel(
     fun updateLanguage(language: AppLanguage) {
         _appLanguage.value = language
         appPreferences.saveLanguage(language)
+    }
+
+    fun updateDarkMode(enabled: Boolean) {
+        _darkMode.value = enabled
+        appPreferences.saveDarkMode(enabled)
     }
 
     fun deleteSession(session: Session) {
@@ -286,8 +293,22 @@ class MainViewModel(
     }
 
     fun updateUserName(newName: String) {
-        currentUserName = newName
+        currentUserName = newName.trim().ifBlank { auth.currentUser?.email ?: _appLanguage.value.text(TextKey.USER) }
+        appPreferences.saveUserName(currentUserName)
         Log.d("DEBUG_VM", "Nom d'usuari actualitzat a: $newName")
+    }
+
+    private fun defaultSessionName(): String {
+        val name = currentUserName.trim()
+        if (name.isBlank() || name == _appLanguage.value.text(TextKey.USER)) {
+            return _appLanguage.value.text(TextKey.NEW_SESSION)
+        }
+        return when (_appLanguage.value) {
+            AppLanguage.CATALAN -> "Sessio de $name"
+            AppLanguage.ENGLISH -> "$name session"
+            AppLanguage.SPANISH -> "Sesion de $name"
+            AppLanguage.CHINESE -> "$name \u8bad\u7ec3"
+        }
     }
 
     private suspend fun syncUserSessions(userId: String) {
@@ -316,11 +337,15 @@ class MainViewModel(
         AppLanguage.CHINESE -> "\u65e0\u6cd5\u767b\u5f55\u3002"
     }
 
-    private fun guidedRagRequiresBackend(language: AppLanguage): String = when (language) {
-        AppLanguage.CATALAN -> "Les preguntes guiades necessiten el mode Backend RAG."
-        AppLanguage.ENGLISH -> "Guided questions require the RAG backend mode."
-        AppLanguage.SPANISH -> "Las preguntas guiadas necesitan el modo Backend RAG."
-        AppLanguage.CHINESE -> "\u5f15\u5bfc\u95ee\u9898\u9700\u8981 RAG \u540e\u7aef\u6a21\u5f0f\u3002"
+    private fun cloudAiLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "IA cloud"
+        AppLanguage.ENGLISH -> "Cloud AI"
+        AppLanguage.SPANISH -> "IA cloud"
+        AppLanguage.CHINESE -> "\u4e91\u7aef AI"
+    }
+
+    private fun displayModelName(model: String, language: AppLanguage): String {
+        return if (model == "qwen3-coder-next") cloudAiLabel(language) else model
     }
 
     private fun RagSourceDetail.serialize(): String {

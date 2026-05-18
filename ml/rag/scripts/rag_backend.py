@@ -160,6 +160,24 @@ def guided_question_text(question_id: str, language: str) -> str:
             "es": "Que limitaciones tiene esta prediccion?",
             "zh": "\u8fd9\u4e2a\u9884\u6d4b\u6709\u54ea\u4e9b\u5c40\u9650\uff1f",
         },
+        "recovery": {
+            "ca": "Quina recuperacio em convé despres d'aquesta sessio?",
+            "en": "What recovery is appropriate after this session?",
+            "es": "Que recuperacion me conviene despues de esta sesion?",
+            "zh": "\u8fd9\u6b21\u8bad\u7ec3\u540e\u6211\u5e94\u8be5\u5982\u4f55\u6062\u590d\uff1f",
+        },
+        "confidence_meaning": {
+            "ca": "Que significa la confianca del model?",
+            "en": "What does the model confidence mean?",
+            "es": "Que significa la confianza del modelo?",
+            "zh": "\u6a21\u578b\u7f6e\u4fe1\u5ea6\u610f\u5473\u7740\u4ec0\u4e48\uff1f",
+        },
+        "high_intensity": {
+            "ca": "Com he d'interpretar els blocs d'alta intensitat?",
+            "en": "How should I interpret high-intensity blocks?",
+            "es": "Como debo interpretar los bloques de alta intensidad?",
+            "zh": "\u6211\u5e94\u8be5\u5982\u4f55\u7406\u89e3\u9ad8\u5f3a\u5ea6\u7247\u6bb5\uff1f",
+        },
     }
     return labels.get(question_id, labels["improve_next"]).get(language, labels["improve_next"]["ca"])
 
@@ -290,7 +308,15 @@ def session_summary(request: RagRequest) -> RagResponse:
 
 @app.post("/rag/guided-question", response_model=RagResponse)
 def guided_question(request: GuidedRagRequest) -> RagResponse:
-    if request.question_id not in {"improve_next", "why_recommendation", "prediction_limits"}:
+    allowed_questions = {
+        "improve_next",
+        "why_recommendation",
+        "prediction_limits",
+        "recovery",
+        "confidence_meaning",
+        "high_intensity",
+    }
+    if request.question_id not in allowed_questions:
         raise HTTPException(status_code=400, detail="Unknown guided question.")
     question = guided_question_text(request.question_id, request.language)
     query = f"{question} {session_to_query(request.session, request.language)}"

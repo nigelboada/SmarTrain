@@ -1,20 +1,19 @@
 package com.udl.smartrain.ui.theme
 
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Color(0xFFB7A6FF),
+    secondary = Color(0xFF9DA3B5),
+    tertiary = Color(0xFFE1BEE7),
+    background = Color(0xFF101218),
+    surface = Color(0xFF1D1B24),
+    onPrimary = Color.White,
+    onSurface = Color(0xFFECEAF2)
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -28,10 +27,11 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun SmarTrainTheme(
+    darkMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = LightColorScheme,
+        colorScheme = if (darkMode) DarkColorScheme else LightColorScheme,
         typography = Typography, // La teva tipografia existent
         content = content
     )

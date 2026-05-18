@@ -105,7 +105,7 @@ En mode Backend RAG, el detall de sessió mostra:
 - fragments de context recuperats;
 - scores de recuperació;
 - fitxes de chunks clicables;
-- preguntes guiades post-sessió amb RAG.
+- FAQ RAG post-sessió amb preguntes guiades.
 
 ## Funcionalitat RAG a l'app
 
@@ -115,10 +115,14 @@ Funcionalitats visibles:
 
 - interpretació post-sessió amb context recuperat;
 - fonts/chunks clicables per veure el text complet;
+- FAQ RAG disponible des del detall de sessió encara que el resum principal s'hagi creat amb mode local o cloud, sempre que el backend estigui actiu;
 - preguntes guiades post-sessió:
   - com millorar la propera sessió;
   - per què es recomana una acció;
-  - quines limitacions té la predicció.
+  - quines limitacions té la predicció;
+  - recuperació recomanada;
+  - significat de la confiança;
+  - interpretació dels blocs d'alta intensitat.
 
 Aquesta és la funcionalitat diferencial del RAG propi respecte del mode cloud directe: no només genera text, sinó que pot mostrar d'on surt la resposta i respondre preguntes acotades amb el mateix context documental.
 
@@ -168,6 +172,7 @@ Validació manual ja feta en mòbil físic:
 
 - `/health` retorna `{"status":"ok"}`;
 - `/rag/demo-session-summary` retorna resposta amb `qwen3-coder-next`;
+- `/rag/demo-guided-question?question_id=confidence_meaning` retorna una FAQ RAG;
 - el selector de Perfil mostra els tres modes;
 - el mode Backend RAG genera resum i fonts;
 - els chunks es poden obrir individualment.

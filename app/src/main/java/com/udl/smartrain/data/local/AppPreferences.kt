@@ -57,6 +57,14 @@ class AppPreferences(context: Context) {
             .apply()
     }
 
+    fun loadUserName(): String {
+        return preferences.getString(KEY_USER_NAME, "").orEmpty()
+    }
+
+    fun saveUserName(name: String) {
+        preferences.edit().putString(KEY_USER_NAME, name.trim()).apply()
+    }
+
     fun loadRagSettings(): RagGenerationSettings {
         val defaults = RagGenerationSettings()
         val storedMode = preferences.getString(KEY_RAG_MODE, null)
@@ -124,6 +132,14 @@ class AppPreferences(context: Context) {
         preferences.edit().putString(KEY_LANGUAGE, language.name).apply()
     }
 
+    fun loadDarkMode(): Boolean {
+        return preferences.getBoolean(KEY_DARK_MODE, false)
+    }
+
+    fun saveDarkMode(enabled: Boolean) {
+        preferences.edit().putBoolean(KEY_DARK_MODE, enabled).apply()
+    }
+
     private fun String.encodePreferenceValue(): String {
         return replace("%", "%25")
             .replace("|", "%7C")
@@ -139,6 +155,7 @@ class AppPreferences(context: Context) {
     private companion object {
         const val PREFERENCES_NAME = "smartrain_preferences"
         const val KEY_REMEMBERED_USERS = "remembered_users"
+        const val KEY_USER_NAME = "user_name"
         const val KEY_RAG_MODE = "rag_mode"
         const val KEY_RAG_USE_REMOTE = "rag_use_remote"
         const val KEY_RAG_REMOTE_BASE_URL = "rag_remote_base_url"
@@ -147,6 +164,7 @@ class AppPreferences(context: Context) {
         const val KEY_RAG_MODEL = "rag_model"
         const val KEY_RAG_API_KEY = "rag_api_key"
         const val KEY_LANGUAGE = "app_language"
+        const val KEY_DARK_MODE = "dark_mode"
         const val USER_SEPARATOR = "|"
         const val FIELD_SEPARATOR = ":"
         const val MAX_REMEMBERED_USERS = 5

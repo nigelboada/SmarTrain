@@ -18,8 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -98,7 +96,7 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
+            contentPadding = PaddingValues(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
@@ -268,10 +266,7 @@ private fun MetricCard(label: String, value: String, modifier: Modifier = Modifi
 private fun PredictionCard(prediction: ActivityPrediction?, language: AppLanguage) {
     val confidence = prediction?.confidence ?: 0f
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f))
-    ) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -361,10 +356,7 @@ private fun EmptyHistoryCard(language: AppLanguage) {
 private fun PredictionHistoryRow(prediction: ActivityPrediction, language: AppLanguage) {
     val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f))
-    ) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

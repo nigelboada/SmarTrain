@@ -7,6 +7,7 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Session : Screen("session")
     object Profile : Screen("profile") // Nova ruta
+    object Info : Screen("info")
     object SessionDetail : Screen("session_detail/{sessionId}") {
         const val ARG_SESSION_ID = "sessionId"
 

@@ -24,10 +24,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,28 +68,20 @@ fun SessionDetailScreen(
     val language by viewModel.appLanguage.collectAsState()
     val session = sessions.firstOrNull { it.id == sessionId }
 
-    Scaffold(
-        containerColor = Color.Transparent
-    ) { paddingValues ->
-        if (session == null) {
-            SessionNotFound(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                language = language,
-                onBack = { navController.popBackStack() }
-            )
-        } else {
-            SessionDetailContent(
-                viewModel = viewModel,
-                session = session,
-                language = language,
-                onBack = { navController.popBackStack() },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            )
-        }
+    if (session == null) {
+        SessionNotFound(
+            modifier = Modifier.fillMaxSize(),
+            language = language,
+            onBack = { navController.popBackStack() }
+        )
+    } else {
+        SessionDetailContent(
+            viewModel = viewModel,
+            session = session,
+            language = language,
+            onBack = { navController.popBackStack() },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
@@ -300,17 +292,11 @@ private fun TimelineSegmentRow(segment: ActivityTimelineSegment, language: AppLa
         }
         Text(
             text = language.activityLabel(segment.label),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth(),
             style = MaterialTheme.typography.bodySmall,
             color = Color.White.copy(alpha = 0.9f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = formatDurationCompact(segment.durationMillis),
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White,
-            fontWeight = FontWeight.SemiBold
         )
     }
 }
@@ -326,8 +312,9 @@ private fun RagInsightCard(
     var selectedGuidedAnswer by remember { mutableStateOf<GuidedRagAnswer?>(null) }
     var guidedError by remember { mutableStateOf<String?>(null) }
     var loadingQuestionId by remember { mutableStateOf<String?>(null) }
+    var showFaqDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-    val guidedQuestionsEnabled = session.ragProvider == "remote-rag" && !session.ragUsedFallback
+    val guidedQuestionsEnabled = session.mlPredictionCount > 0
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -383,9 +370,26 @@ private fun RagInsightCard(
         }
 
         if (guidedQuestionsEnabled) {
-            GuidedRagQuestionSection(
+            Button(
+                onClick = { showFaqDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.Default.ChatBubbleOutline,
+                    contentDescription = guidedQuestionsTitle(language),
+                    modifier = Modifier
+                        .size(18.dp)
+                        .padding(end = 4.dp)
+                )
+                Text(guidedQuestionsTitle(language))
+            }
+        }
+
+        if (showFaqDialog) {
+            GuidedRagQuestionDialog(
                 language = language,
                 loadingQuestionId = loadingQuestionId,
+                onDismiss = { showFaqDialog = false },
                 onQuestionClick = { question ->
                     loadingQuestionId = question.id
                     guidedError = null
@@ -431,52 +435,79 @@ private fun RagInsightCard(
 }
 
 @Composable
-private fun GuidedRagQuestionSection(
+private fun GuidedRagQuestionDialog(
     language: AppLanguage,
     loadingQuestionId: String?,
+    onDismiss: () -> Unit,
     onQuestionClick: (GuidedRagQuestion) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = guidedQuestionsTitle(language),
-            style = MaterialTheme.typography.titleSmall,
-            color = Color.White,
-            fontWeight = FontWeight.SemiBold
-        )
-        guidedRagQuestions(language).forEach { question ->
-            Button(
-                onClick = { onQuestionClick(question) },
-                enabled = loadingQuestionId == null,
-                modifier = Modifier.fillMaxWidth()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(guidedQuestionsTitle(language)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (loadingQuestionId == question.id) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = Color.White
-                    )
-                } else {
-                    Text(question.label)
+                Text(
+                    text = guidedQuestionsIntro(language),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                guidedRagQuestions(language).forEach { question ->
+                    Button(
+                        onClick = { onQuestionClick(question) },
+                        enabled = loadingQuestionId == null,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (loadingQuestionId == question.id) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.White
+                                )
+                                Text(consultingSourcesText(language))
+                            }
+                        } else {
+                            Text(question.label)
+                        }
+                    }
                 }
             }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(language.text(TextKey.CANCEL))
+            }
         }
-    }
+    )
 }
 
 @Composable
 private fun GuidedRagAnswerDialog(answer: GuidedRagAnswer, language: AppLanguage, onDismiss: () -> Unit) {
+    var selectedSource by remember { mutableStateOf<RagSourceDetail?>(null) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(answer.question.label) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = answer.insight.answer,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Surface(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = answer.insight.answer,
+                        modifier = Modifier.padding(12.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 if (answer.insight.sourceDetails.isNotEmpty()) {
                     Text(
                         text = "${language.text(TextKey.RAG_CONTEXT_ITEMS)}: ${answer.insight.sourceDetails.size}",
@@ -484,10 +515,7 @@ private fun GuidedRagAnswerDialog(answer: GuidedRagAnswer, language: AppLanguage
                         fontWeight = FontWeight.SemiBold
                     )
                     answer.insight.sourceDetails.take(3).forEach { source ->
-                        Text(
-                            text = "${source.source.ifBlank { source.id }} - score ${"%.2f".format(source.score)}",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        GuidedSourceMiniCard(source = source, onClick = { selectedSource = source })
                     }
                 }
             }
@@ -498,6 +526,42 @@ private fun GuidedRagAnswerDialog(answer: GuidedRagAnswer, language: AppLanguage
             }
         }
     )
+    selectedSource?.let { source ->
+        SourceChunkDialog(
+            source = source,
+            language = language,
+            onDismiss = { selectedSource = null }
+        )
+    }
+}
+
+@Composable
+private fun GuidedSourceMiniCard(source: RagSourceDetail, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
+        shape = MaterialTheme.shapes.small,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Text(
+                text = "${source.source.ifBlank { source.id }} - score ${"%.2f".format(source.score)}",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = source.text,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
 }
 
 @Composable
@@ -615,33 +679,52 @@ private fun formatDistance(distanceMetres: Double): String {
 }
 
 private fun guidedQuestionsTitle(language: AppLanguage): String = when (language) {
-    AppLanguage.CATALAN -> "Preguntes guiades RAG"
-    AppLanguage.ENGLISH -> "Guided RAG questions"
-    AppLanguage.SPANISH -> "Preguntas guiadas RAG"
+    AppLanguage.CATALAN -> "FAQ RAG"
+    AppLanguage.ENGLISH -> "RAG FAQ"
+    AppLanguage.SPANISH -> "FAQ RAG"
     AppLanguage.CHINESE -> "RAG \u5f15\u5bfc\u95ee\u9898"
+}
+
+private fun guidedQuestionsIntro(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Tria una pregunta. El backend RAG recuperarà fonts i respondrà segons la sessió."
+    AppLanguage.ENGLISH -> "Choose a question. The RAG backend will retrieve sources and answer from this session."
+    AppLanguage.SPANISH -> "Elige una pregunta. El backend RAG recuperara fuentes y respondera segun la sesion."
+    AppLanguage.CHINESE -> "\u9009\u62e9\u4e00\u4e2a\u95ee\u9898\u3002RAG \u540e\u7aef\u4f1a\u68c0\u7d22\u6765\u6e90\u5e76\u6839\u636e\u8bad\u7ec3\u56de\u7b54\u3002"
 }
 
 private fun guidedRagQuestions(language: AppLanguage): List<GuidedRagQuestion> {
     return when (language) {
         AppLanguage.CATALAN -> listOf(
-            GuidedRagQuestion("improve_next", "Com puc millorar la propera sessio?"),
-            GuidedRagQuestion("why_recommendation", "Per que recomanes aixo?"),
-            GuidedRagQuestion("prediction_limits", "Limitacions de la prediccio")
+            GuidedRagQuestion("improve_next", "Com puc millorar la propera sessió?"),
+            GuidedRagQuestion("why_recommendation", "Per què recomanes això?"),
+            GuidedRagQuestion("prediction_limits", "Limitacions de la predicció"),
+            GuidedRagQuestion("recovery", "Quina recuperació em convé?"),
+            GuidedRagQuestion("confidence_meaning", "Què significa la confiança?"),
+            GuidedRagQuestion("high_intensity", "Com interpreto l'alta intensitat?")
         )
         AppLanguage.ENGLISH -> listOf(
             GuidedRagQuestion("improve_next", "How can I improve the next session?"),
             GuidedRagQuestion("why_recommendation", "Why do you recommend this?"),
-            GuidedRagQuestion("prediction_limits", "Prediction limitations")
+            GuidedRagQuestion("prediction_limits", "Prediction limitations"),
+            GuidedRagQuestion("recovery", "What recovery is appropriate?"),
+            GuidedRagQuestion("confidence_meaning", "What does confidence mean?"),
+            GuidedRagQuestion("high_intensity", "How should I read high intensity?")
         )
         AppLanguage.SPANISH -> listOf(
             GuidedRagQuestion("improve_next", "Como puedo mejorar la proxima sesion?"),
             GuidedRagQuestion("why_recommendation", "Por que recomiendas esto?"),
-            GuidedRagQuestion("prediction_limits", "Limitaciones de la prediccion")
+            GuidedRagQuestion("prediction_limits", "Limitaciones de la prediccion"),
+            GuidedRagQuestion("recovery", "Que recuperacion me conviene?"),
+            GuidedRagQuestion("confidence_meaning", "Que significa la confianza?"),
+            GuidedRagQuestion("high_intensity", "Como interpreto la alta intensidad?")
         )
         AppLanguage.CHINESE -> listOf(
             GuidedRagQuestion("improve_next", "\u5982\u4f55\u6539\u8fdb\u4e0b\u4e00\u6b21\u8bad\u7ec3\uff1f"),
             GuidedRagQuestion("why_recommendation", "\u4e3a\u4ec0\u4e48\u8fd9\u6837\u5efa\u8bae\uff1f"),
-            GuidedRagQuestion("prediction_limits", "\u9884\u6d4b\u5c40\u9650")
+            GuidedRagQuestion("prediction_limits", "\u9884\u6d4b\u5c40\u9650"),
+            GuidedRagQuestion("recovery", "\u6211\u5e94\u8be5\u5982\u4f55\u6062\u590d\uff1f"),
+            GuidedRagQuestion("confidence_meaning", "\u7f6e\u4fe1\u5ea6\u662f\u4ec0\u4e48\uff1f"),
+            GuidedRagQuestion("high_intensity", "\u5982\u4f55\u7406\u89e3\u9ad8\u5f3a\u5ea6\uff1f")
         )
     }
 }
@@ -651,6 +734,13 @@ private fun guidedQuestionError(language: AppLanguage): String = when (language)
     AppLanguage.ENGLISH -> "The RAG backend could not generate the guided answer."
     AppLanguage.SPANISH -> "No se ha podido generar la respuesta guiada con el backend RAG."
     AppLanguage.CHINESE -> "\u65e0\u6cd5\u901a\u8fc7 RAG \u540e\u7aef\u751f\u6210\u5f15\u5bfc\u56de\u7b54\u3002"
+}
+
+private fun consultingSourcesText(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Consultant fonts..."
+    AppLanguage.ENGLISH -> "Checking sources..."
+    AppLanguage.SPANISH -> "Consultando fuentes..."
+    AppLanguage.CHINESE -> "\u6b63\u5728\u67e5\u8be2\u6765\u6e90..."
 }
 
 private fun formatDurationShort(totalSeconds: Long): String {
@@ -667,7 +757,7 @@ private fun buildRagMetadataText(session: Session, language: AppLanguage): Strin
     val source = when {
         session.ragUsedFallback -> automaticLabel(language)
         session.ragProvider == "remote-rag" -> remoteRagLabel(language, session.ragModel)
-        session.ragProvider == "ollama" -> session.ragModel.ifBlank { automaticLabel(language) }
+        session.ragProvider == "ollama" -> displayModelName(session.ragModel, language).ifBlank { automaticLabel(language) }
         else -> localLabel(language)
     }
     val latency = if (session.ragLatencyMillis > 0) {
@@ -693,12 +783,25 @@ private fun localLabel(language: AppLanguage): String = when (language) {
 }
 
 private fun remoteRagLabel(language: AppLanguage, model: String): String {
-    val suffix = model.takeIf { it.isNotBlank() }?.let { ":$it" }.orEmpty()
+    val suffix = displayModelName(model, language).takeIf { it.isNotBlank() }?.let { ":$it" }.orEmpty()
     return when (language) {
         AppLanguage.CATALAN -> "backend RAG$suffix"
         AppLanguage.ENGLISH -> "RAG backend$suffix"
         AppLanguage.SPANISH -> "backend RAG$suffix"
         AppLanguage.CHINESE -> "RAG \u540e\u7aef$suffix"
+    }
+}
+
+private fun displayModelName(model: String, language: AppLanguage): String {
+    return if (model == "qwen3-coder-next") {
+        when (language) {
+            AppLanguage.CATALAN -> "IA cloud"
+            AppLanguage.ENGLISH -> "Cloud AI"
+            AppLanguage.SPANISH -> "IA cloud"
+            AppLanguage.CHINESE -> "\u4e91\u7aef AI"
+        }
+    } else {
+        model
     }
 }
 

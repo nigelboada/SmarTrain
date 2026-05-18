@@ -124,6 +124,7 @@ El corpus RAG combina:
 
 - base de coneixement pròpia sobre interpretació del model;
 - recomanacions d'entrenament prudents;
+- documents FAQ per respondre preguntes guiades;
 - resultats i informes d'experimentació;
 - sessions anonimitzades de prova.
 
@@ -157,8 +158,8 @@ S'han validat tres parts:
 Resultat de l'índex Chroma:
 
 ```text
-raw_documents: 17
-chunks: 42
+raw_documents: 24
+chunks: 24
 embedding_dimension: 768
 ```
 
@@ -199,15 +200,19 @@ El mode `Backend RAG` aporta funcionalitats que el mode directe de model no pot 
 - chunks visibles;
 - scores de similitud;
 - fragments clicables i ampliables;
-- preguntes guiades post-sessió.
+- FAQ RAG amb preguntes guiades post-sessió.
 
 Les preguntes guiades implementades són:
 
 - com millorar la propera sessió;
 - per què es recomana una acció;
-- quines limitacions té la predicció.
+- quines limitacions té la predicció;
+- quina recuperació convé;
+- què significa la confiança del model;
+- com interpretar els blocs d'alta intensitat.
 
 Aquest enfocament evita un chatbot genèric i dona una utilitat concreta al RAG dins el flux principal de l'app.
+Les FAQ poden funcionar encara que el resum principal s'hagi generat amb mode local o cloud, sempre que el backend RAG estigui actiu i accessible.
 
 ## 12. Resultats experimentals
 
