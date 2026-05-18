@@ -1,24 +1,24 @@
 # SmarTrain
 
-SmarTrain ÃƒÂ©s una aplicaciÃƒÂ³ Android per registrar sessions esportives, classificar activitat amb un model ML al dispositiu i generar una interpretaciÃƒÂ³ post-sessiÃƒÂ³ amb IA. El sistema combina TensorFlow Lite, Room, Firebase i un backend RAG propi amb FastAPI, ChromaDB i Ollama.
+SmarTrain és una aplicació Android per registrar sessions esportives, classificar activitat amb un model ML al dispositiu i generar una interpretació post-sessió amb IA. El sistema combina TensorFlow Lite, Room, Firebase i un backend RAG propi amb FastAPI, ChromaDB i Ollama.
 
 ## Estat del projecte
 
-| Ãƒâ‚¬rea | Estat |
+| Àrea | Estat |
 | --- | --- |
-| App Android | Funcional en mÃƒÂ²bil fÃƒÂ­sic |
+| App Android | Funcional en mòbil físic |
 | Model ML | Integrat amb TensorFlow Lite |
 | Backend | Integrat amb FastAPI |
 | RAG | ChromaDB + embeddings `nomic-embed-text` |
 | IA generativa | `qwen3-coder-next` via Ollama |
 | Mode segur | Resum local si falla la IA |
 
-## DocumentaciÃƒÂ³
+## Documentació
 
-- `README.md`: execuciÃƒÂ³ del sistema complet i ÃƒÂºs de l'app.
-- `ML_EXPERIMENTS.md`: document final d'experimentaciÃƒÂ³ ML i RAG.
+- `README.md`: execució del sistema complet i ús de l'app.
+- `ML_EXPERIMENTS.md`: document final d'experimentació ML i RAG.
 
-La documentaciÃƒÂ³ del projecte s'ha unificat en aquests dos fitxers per evitar duplicats.
+La documentació del projecte s'ha unificat en aquests dos fitxers per evitar duplicats.
 
 ## Requisits
 
@@ -28,7 +28,7 @@ La documentaciÃƒÂ³ del projecte s'ha unificat en aquests dos fitxers per evi
 - Ollama local amb el model d'embeddings `nomic-embed-text`.
 - Clau d'Ollama Cloud per al model `qwen3-coder-next`.
 
-## ConfiguraciÃƒÂ³
+## Configuració
 
 Crea o revisa el fitxer `.env` a l'arrel del projecte. No s'ha de pujar a Git.
 
@@ -46,11 +46,11 @@ SMARTRAIN_RAG_COLLECTION=smartrain_rag
 SMARTRAIN_RAG_TOP_K=3
 ```
 
-La generaciÃƒÂ³ de text usa Ollama Cloud. Els embeddings del RAG es generen localment amb Ollama perquÃƒÂ¨ ChromaDB pugui recuperar fragments del corpus.
+La generació de text usa Ollama Cloud. Els embeddings del RAG es generen localment amb Ollama perquè ChromaDB pugui recuperar fragments del corpus.
 
-## ExecuciÃƒÂ³ del RAG
+## Execució del RAG
 
-InstalÃ‚Â·la les dependÃƒÂ¨ncies Python:
+Instal·la les dependències Python:
 
 ```powershell
 pip install -r ml/rag/requirements.txt
@@ -63,19 +63,19 @@ ollama list
 ollama pull nomic-embed-text
 ```
 
-Construeix l'ÃƒÂ­ndex vectorial:
+Construeix l'índex vectorial:
 
 ```powershell
 python ml/rag/scripts/build_vector_index.py
 ```
 
-Arrenca el backend accessible des del mÃƒÂ²bil:
+Arrenca el backend accessible des del mòbil:
 
 ```powershell
 uvicorn ml.rag.scripts.rag_backend:app --host 0.0.0.0 --port 8000
 ```
 
-Des del mÃƒÂ²bil, valida:
+Des del mòbil, valida:
 
 ```text
 http://192.168.1.14:8000/health
@@ -85,47 +85,47 @@ http://192.168.1.14:8000/rag/demo-guided-question?question_id=improve_next
 
 La IP pot canviar segons la xarxa. Si canvia, actualitza-la a Perfil > Assistent IA > Backend RAG.
 
-## ExecuciÃƒÂ³ de l'app
+## Execució de l'app
 
 1. Obre el projecte amb Android Studio.
-2. Connecta el mÃƒÂ²bil fÃƒÂ­sic amb depuraciÃƒÂ³ USB.
+2. Connecta el mòbil físic amb depuració USB.
 3. Executa l'app.
 4. Ves a Perfil > Assistent IA i tria un mode:
    - `Resum local`: sempre funciona i no requereix xarxa.
    - `qwen3-coder-next`: genera el resum directament amb el model cloud.
    - `Backend RAG`: usa el backend propi, recupera fonts i mostra chunks/scores.
 5. Guarda els canvis.
-6. Fes una sessiÃƒÂ³ i finalitza-la.
-7. Obre el detall de sessiÃƒÂ³ per veure la interpretaciÃƒÂ³ post-sessiÃƒÂ³.
+6. Fes una sessió i finalitza-la.
+7. Obre el detall de sessió per veure la interpretació post-sessió.
 
-En mode Backend RAG, el detall de sessiÃƒÂ³ mostra:
+En mode Backend RAG, el detall de sessió mostra:
 
 - resposta generada;
-- model i latÃƒÂ¨ncia;
+- model i latència;
 - fragments de context recuperats;
-- scores de recuperaciÃƒÂ³;
+- scores de recuperació;
 - fitxes de chunks clicables;
-- FAQ RAG post-sessiÃƒÂ³ amb preguntes guiades.
+- FAQ RAG post-sessió amb preguntes guiades.
 
 ## Funcionalitat RAG a l'app
 
-El RAG no substitueix el model ML. El model ML classifica blocs de moviment i el RAG transforma aquestes prediccions en una explicaciÃƒÂ³ ÃƒÂºtil per a l'usuari.
+El RAG no substitueix el model ML. El model ML classifica blocs de moviment i el RAG transforma aquestes prediccions en una explicació útil per a l'usuari.
 
 Funcionalitats visibles:
 
-- interpretaciÃƒÂ³ post-sessiÃƒÂ³ amb context recuperat;
+- interpretació post-sessió amb context recuperat;
 - fonts/chunks clicables per veure el text complet;
-- FAQ RAG disponible des del detall de sessiÃƒÂ³ encara que el resum principal s'hagi creat amb mode local o cloud, sempre que el backend estigui actiu;
-- preguntes guiades post-sessiÃƒÂ³:
-  - com millorar la propera sessiÃƒÂ³;
-  - per quÃƒÂ¨ es recomana una acciÃƒÂ³;
-  - quines limitacions tÃƒÂ© la predicciÃƒÂ³;
-  - recuperaciÃƒÂ³ recomanada;
-  - significat de la confianÃƒÂ§a;
-  - interpretaciÃƒÂ³ dels blocs d'alta intensitat;
+- FAQ RAG disponible des del detall de sessió encara que el resum principal s'hagi creat amb mode local o cloud, sempre que el backend estigui actiu;
+- preguntes guiades post-sessió:
+  - com millorar la propera sessió;
+  - per què es recomana una acció;
+  - quines limitacions té la predicció;
+  - recuperació recomanada;
+  - significat de la confiança;
+  - interpretació dels blocs d'alta intensitat;
   - millora de qualitat dels sensors i posicio del mobil.
 
-Aquesta ÃƒÂ©s la funcionalitat diferencial del RAG propi respecte del mode cloud directe: no nomÃƒÂ©s genera text, sinÃƒÂ³ que pot mostrar d'on surt la resposta i respondre preguntes acotades amb el mateix context documental.
+Aquesta és la funcionalitat diferencial del RAG propi respecte del mode cloud directe: no només genera text, sinó que pot mostrar d'on surt la resposta i respondre preguntes acotades amb el mateix context documental.
 
 ## Experiments
 
@@ -158,7 +158,7 @@ ml/rag/results/projector/metadata.tsv
 ml/rag/results/projector/pca_preview.png
 ```
 
-## VerificaciÃƒÂ³
+## Verificació
 
 Tests Android:
 
@@ -172,7 +172,7 @@ Backend:
 python -m py_compile ml/rag/scripts/rag_backend.py
 ```
 
-ValidaciÃƒÂ³ manual ja feta en mÃƒÂ²bil fÃƒÂ­sic:
+Validació manual ja feta en mòbil físic:
 
 - `/health` retorna `{"status":"ok"}`;
 - `/rag/demo-session-summary` retorna resposta amb `qwen3-coder-next`;
@@ -181,6 +181,15 @@ ValidaciÃƒÂ³ manual ja feta en mÃƒÂ²bil fÃƒÂ­sic:
 - el mode Backend RAG genera resum i fonts;
 - els chunks es poden obrir individualment.
 
+<<<<<<< HEAD
+## Captures recomanades per a l'entrega
+
+Les captures actuals són suficients per documentar la integració. Per completar la nova funcionalitat, és recomanable afegir-ne una més:
+
+- detall de sessió amb la secció `Preguntes guiades RAG`;
+- diàleg d'una pregunta guiada amb resposta i fonts.
+=======
+>>>>>>> edc21a04612964deda8fe53149ca4d8f509a5c2c
 
 ## Estructura rellevant
 
@@ -189,12 +198,12 @@ app/
   src/main/java/com/udl/smartrain/
     ml/                       Generadors RAG i TFLite
     ui/screens/               Pantalles Compose
-    ui/viewmodel/             Flux app, sessions i preferÃƒÂ¨ncies
+    ui/viewmodel/             Flux app, sessions i preferències
 ml/
   models/                     Model TensorFlow Lite
   rag/
     data/                     Corpus RAG
-    chroma_db/smartrain/      ÃƒÂndex ChromaDB
-    scripts/                  ConstrucciÃƒÂ³, avaluaciÃƒÂ³ i backend
+    chroma_db/smartrain/      Índex ChromaDB
+    scripts/                  Construcció, avaluació i backend
     results/                  Resultats i export Projector
 ```
