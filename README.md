@@ -181,12 +181,15 @@ Validació manual ja feta en mòbil físic:
 - el mode Backend RAG genera resum i fonts;
 - els chunks es poden obrir individualment.
 
+<<<<<<< HEAD
 ## Captures recomanades per a l'entrega
 
 Les captures actuals són suficients per documentar la integració. Per completar la nova funcionalitat, és recomanable afegir-ne una més:
 
 - detall de sessió amb la secció `Preguntes guiades RAG`;
 - diàleg d'una pregunta guiada amb resposta i fonts.
+=======
+>>>>>>> edc21a04612964deda8fe53149ca4d8f509a5c2c
 
 ## Estructura rellevant
 
