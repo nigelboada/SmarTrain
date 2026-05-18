@@ -119,14 +119,14 @@ class OllamaRagGenerator(
         }
         val sessionSummary = SessionRagRecommender.localizedSessionSummary(session, language)
         val languageInstruction = when (language) {
-            AppLanguage.CATALAN -> "Respon en catala"
-            AppLanguage.ENGLISH -> "Answer in English"
-            AppLanguage.SPANISH -> "Responde en castellano"
-            AppLanguage.CHINESE -> "\u8bf7\u7528\u4e2d\u6587\u56de\u7b54"
+            AppLanguage.CATALAN -> "Respon exclusivament en catala. No facis servir castella."
+            AppLanguage.ENGLISH -> "Answer exclusively in English."
+            AppLanguage.SPANISH -> "Responde exclusivamente en castellano."
+            AppLanguage.CHINESE -> "\u8bf7\u53ea\u7528\u4e2d\u6587\u56de\u7b54\u3002"
         }
 
         return """
-            You are the SmarTrain assistant. $languageInstruction. Be brief and careful.
+            You are the SmarTrain assistant. $languageInstruction Be brief and careful.
             Base the answer only on the retrieved context and the session data.
             Do not invent metrics or medical diagnoses. Include one actionable recommendation.
 

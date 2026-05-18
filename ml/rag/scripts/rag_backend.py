@@ -123,10 +123,10 @@ def session_to_query(session: SessionPayload, language: str) -> str:
 
 def language_instruction(language: str) -> str:
     return {
-        "en": "Answer in English.",
-        "es": "Responde en castellano.",
-        "zh": "\u8bf7\u7528\u4e2d\u6587\u56de\u7b54\u3002",
-        "ca": "Respon en catala.",
+        "en": "Answer exclusively in English.",
+        "es": "Responde exclusivamente en castellano.",
+        "zh": "\u8bf7\u53ea\u7528\u4e2d\u6587\u56de\u7b54\u3002",
+        "ca": "Respon exclusivament en catala. No facis servir castella.",
     }.get(language, "Respon en catala.")
 
 
@@ -183,6 +183,96 @@ def guided_question_text(question_id: str, language: str) -> str:
             "en": "How can I improve the phone sensor quality?",
             "es": "Como puedo mejorar la calidad de los sensores del movil?",
             "zh": "\u5982\u4f55\u63d0\u9ad8\u624b\u673a\u4f20\u611f\u5668\u8d28\u91cf\uff1f",
+        },
+        "phone_position": {
+            "ca": "On hauria de portar el mobil?",
+            "en": "Where should I carry the phone?",
+            "es": "Donde deberia llevar el movil?",
+            "zh": "\u624b\u673a\u5e94\u8be5\u653e\u5728\u54ea\u91cc\uff1f",
+        },
+        "warmup_first_seconds": {
+            "ca": "Els primers segons son fiables?",
+            "en": "Are the first seconds reliable?",
+            "es": "Son fiables los primeros segundos?",
+            "zh": "\u524d\u51e0\u79d2\u53ef\u9760\u5417\uff1f",
+        },
+        "repeat_session": {
+            "ca": "Hauria de repetir aquesta sessio?",
+            "en": "Should I repeat this session?",
+            "es": "Deberia repetir esta sesion?",
+            "zh": "\u6211\u5e94\u8be5\u91cd\u590d\u8fd9\u6b21\u8bad\u7ec3\u5417\uff1f",
+        },
+        "load_control": {
+            "ca": "Com puc controlar la carrega?",
+            "en": "How can I control training load?",
+            "es": "Como puedo controlar la carga?",
+            "zh": "\u5982\u4f55\u63a7\u5236\u8bad\u7ec3\u8d1f\u8377\uff1f",
+        },
+        "next_training_focus": {
+            "ca": "Quin focus hauria de tenir el proper entrenament?",
+            "en": "What should the next training focus be?",
+            "es": "Que enfoque deberia tener el proximo entreno?",
+            "zh": "\u4e0b\u6b21\u8bad\u7ec3\u5e94\u5173\u6ce8\u4ec0\u4e48\uff1f",
+        },
+        "low_confidence_causes": {
+            "ca": "Que pot causar baixa confianca?",
+            "en": "What can cause low confidence?",
+            "es": "Que puede causar baja confianza?",
+            "zh": "\u4ec0\u4e48\u4f1a\u5bfc\u81f4\u4f4e\u7f6e\u4fe1\u5ea6\uff1f",
+        },
+        "football_limits": {
+            "ca": "Que limita l'us en futbol?",
+            "en": "What limits football use?",
+            "es": "Que limita el uso en futbol?",
+            "zh": "\u8db3\u7403\u573a\u666f\u6709\u4ec0\u4e48\u9650\u5236\uff1f",
+        },
+        "data_needed": {
+            "ca": "Quines dades caldrien per millorar el model?",
+            "en": "What data would improve the model?",
+            "es": "Que datos mejorarian el modelo?",
+            "zh": "\u54ea\u4e9b\u6570\u636e\u53ef\u4ee5\u6539\u8fdb\u6a21\u578b\uff1f",
+        },
+        "dominant_activity": {
+            "ca": "Que vol dir l'activitat dominant?",
+            "en": "What does dominant activity mean?",
+            "es": "Que significa la actividad dominante?",
+            "zh": "\u4e3b\u8981\u6d3b\u52a8\u662f\u4ec0\u4e48\u610f\u601d\uff1f",
+        },
+        "rest_interpretation": {
+            "ca": "Com interpreto una sessio suau o de repos?",
+            "en": "How do I read a light or rest session?",
+            "es": "Como interpreto una sesion suave o de reposo?",
+            "zh": "\u5982\u4f55\u89e3\u8bfb\u8f7b\u5ea6\u6216\u4f11\u606f\u8bad\u7ec3\uff1f",
+        },
+        "intensity_ratio": {
+            "ca": "Hi ha massa alta intensitat?",
+            "en": "Is there too much high intensity?",
+            "es": "Hay demasiada alta intensidad?",
+            "zh": "\u9ad8\u5f3a\u5ea6\u662f\u5426\u8fc7\u591a\uff1f",
+        },
+        "model_metrics": {
+            "ca": "Quines metriques te el model final?",
+            "en": "What metrics does the final model have?",
+            "es": "Que metricas tiene el modelo final?",
+            "zh": "\u6700\u7ec8\u6a21\u578b\u7684\u6307\u6807\u662f\u4ec0\u4e48\uff1f",
+        },
+        "rag_sources": {
+            "ca": "D'on surten les fonts del RAG?",
+            "en": "Where do RAG sources come from?",
+            "es": "De donde salen las fuentes del RAG?",
+            "zh": "RAG \u6765\u6e90\u4ece\u54ea\u91cc\u6765\uff1f",
+        },
+        "demo_best_mode": {
+            "ca": "Quin mode conve per a una demo?",
+            "en": "Which mode is best for a demo?",
+            "es": "Que modo conviene para una demo?",
+            "zh": "\u6f14\u793a\u65f6\u6700\u9002\u5408\u7528\u54ea\u79cd\u6a21\u5f0f\uff1f",
+        },
+        "practical_tip": {
+            "ca": "Dona'm un consell practic per avui",
+            "en": "Give me one practical tip for today",
+            "es": "Dame un consejo practico para hoy",
+            "zh": "\u7ed9\u6211\u4e00\u4e2a\u4eca\u5929\u7684\u5b9e\u7528\u5efa\u8bae",
         },
     }
     return labels.get(question_id, labels["improve_next"]).get(language, labels["improve_next"]["ca"])
@@ -322,6 +412,21 @@ def guided_question(request: GuidedRagRequest) -> RagResponse:
         "confidence_meaning",
         "high_intensity",
         "sensor_quality",
+        "phone_position",
+        "warmup_first_seconds",
+        "repeat_session",
+        "load_control",
+        "next_training_focus",
+        "low_confidence_causes",
+        "football_limits",
+        "data_needed",
+        "dominant_activity",
+        "rest_interpretation",
+        "intensity_ratio",
+        "model_metrics",
+        "rag_sources",
+        "demo_best_mode",
+        "practical_tip",
     }
     if request.question_id not in allowed_questions:
         raise HTTPException(status_code=400, detail="Unknown guided question.")

@@ -116,19 +116,6 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
             }
 
             item {
-                MetricsGrid(
-                    metrics = trackingMetrics,
-                    predictionCount = predictionHistory.size,
-                    nowMillis = nowMillis,
-                    language = language
-                )
-            }
-
-            item {
-                PredictionCard(prediction = currentPrediction, language = language)
-            }
-
-            item {
                 ActionPanel(
                     isTracking = trackingMetrics.isTracking,
                     isGeneratingRag = ragGenerationState.isGenerating,
@@ -142,6 +129,19 @@ fun SessionScreen(viewModel: MainViewModel, onStopSession: () -> Unit) {
                     onFinish = {
                         viewModel.finishAndSaveSession(context, onSaved = onStopSession)
                     }
+                )
+            }
+
+            item {
+                PredictionCard(prediction = currentPrediction, language = language)
+            }
+
+            item {
+                MetricsGrid(
+                    metrics = trackingMetrics,
+                    predictionCount = predictionHistory.size,
+                    nowMillis = nowMillis,
+                    language = language,
                 )
             }
 
