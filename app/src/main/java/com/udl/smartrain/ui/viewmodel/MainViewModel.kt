@@ -20,7 +20,9 @@ import com.udl.smartrain.ml.ActivityRecognitionState
 import com.udl.smartrain.ml.DebugRagGenerationSettings
 import com.udl.smartrain.ml.RagGenerationMode
 import com.udl.smartrain.ml.RagSourceDetail
+import com.udl.smartrain.ml.RemoteRagGenerator
 import com.udl.smartrain.ml.SessionRagRecommender
+import com.udl.smartrain.ml.SessionRagInsight
 import com.udl.smartrain.ml.resolved
 import com.udl.smartrain.service.TrackingService
 import com.udl.smartrain.service.TrackingSessionState
@@ -252,6 +254,20 @@ class MainViewModel(
         appPreferences.saveRagSettings(DebugRagGenerationSettings.settings.value)
     }
 
+    suspend fun generateGuidedRagAnswer(session: Session, questionId: String): Result<SessionRagInsight> {
+        val settings = DebugRagGenerationSettings.settings.value.resolved()
+        if (!settings.useRemoteRag) {
+            return Result.failure(IllegalStateException(guidedRagRequiresBackend(_appLanguage.value)))
+        }
+        return runCatching {
+            RemoteRagGenerator(settings.remoteRagBaseUrl).generateGuidedQuestion(
+                session = session,
+                language = _appLanguage.value,
+                questionId = questionId
+            )
+        }
+    }
+
     fun updateLanguage(language: AppLanguage) {
         _appLanguage.value = language
         appPreferences.saveLanguage(language)
@@ -298,6 +314,13 @@ class MainViewModel(
         AppLanguage.ENGLISH -> "Could not sign in."
         AppLanguage.SPANISH -> "No se ha podido iniciar sesion."
         AppLanguage.CHINESE -> "\u65e0\u6cd5\u767b\u5f55\u3002"
+    }
+
+    private fun guidedRagRequiresBackend(language: AppLanguage): String = when (language) {
+        AppLanguage.CATALAN -> "Les preguntes guiades necessiten el mode Backend RAG."
+        AppLanguage.ENGLISH -> "Guided questions require the RAG backend mode."
+        AppLanguage.SPANISH -> "Las preguntas guiadas necesitan el modo Backend RAG."
+        AppLanguage.CHINESE -> "\u5f15\u5bfc\u95ee\u9898\u9700\u8981 RAG \u540e\u7aef\u6a21\u5f0f\u3002"
     }
 
     private fun RagSourceDetail.serialize(): String {

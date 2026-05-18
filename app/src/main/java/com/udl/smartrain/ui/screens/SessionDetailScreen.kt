@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -53,6 +56,7 @@ import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @Composable
 fun SessionDetailScreen(
@@ -77,6 +81,7 @@ fun SessionDetailScreen(
             )
         } else {
             SessionDetailContent(
+                viewModel = viewModel,
                 session = session,
                 language = language,
                 onBack = { navController.popBackStack() },
@@ -90,6 +95,7 @@ fun SessionDetailScreen(
 
 @Composable
 private fun SessionDetailContent(
+    viewModel: MainViewModel,
     session: Session,
     language: AppLanguage,
     onBack: () -> Unit,
@@ -191,7 +197,12 @@ private fun SessionDetailContent(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    RagInsightCard(session = session, insight = insight, language = language)
+                    RagInsightCard(
+                        viewModel = viewModel,
+                        session = session,
+                        insight = insight,
+                        language = language
+                    )
                 }
             }
         }
@@ -305,8 +316,19 @@ private fun TimelineSegmentRow(segment: ActivityTimelineSegment, language: AppLa
 }
 
 @Composable
-private fun RagInsightCard(session: Session, insight: SessionRagInsight, language: AppLanguage) {
+private fun RagInsightCard(
+    viewModel: MainViewModel,
+    session: Session,
+    insight: SessionRagInsight,
+    language: AppLanguage
+) {
     var selectedSource by remember { mutableStateOf<RagSourceDetail?>(null) }
+    var selectedGuidedAnswer by remember { mutableStateOf<GuidedRagAnswer?>(null) }
+    var guidedError by remember { mutableStateOf<String?>(null) }
+    var loadingQuestionId by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    val guidedQuestionsEnabled = session.ragProvider == "remote-rag" && !session.ragUsedFallback
+
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
@@ -359,6 +381,36 @@ private fun RagInsightCard(session: Session, insight: SessionRagInsight, languag
                 }
             }
         }
+
+        if (guidedQuestionsEnabled) {
+            GuidedRagQuestionSection(
+                language = language,
+                loadingQuestionId = loadingQuestionId,
+                onQuestionClick = { question ->
+                    loadingQuestionId = question.id
+                    guidedError = null
+                    coroutineScope.launch {
+                        val result = viewModel.generateGuidedRagAnswer(session, question.id)
+                        loadingQuestionId = null
+                        result
+                            .onSuccess { answer ->
+                                selectedGuidedAnswer = GuidedRagAnswer(question = question, insight = answer)
+                            }
+                            .onFailure { error ->
+                                guidedError = error.localizedMessage ?: guidedQuestionError(language)
+                            }
+                    }
+                }
+            )
+        }
+
+        guidedError?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFFFC857)
+            )
+        }
     }
 
     selectedSource?.let { source ->
@@ -368,6 +420,84 @@ private fun RagInsightCard(session: Session, insight: SessionRagInsight, languag
             onDismiss = { selectedSource = null }
         )
     }
+
+    selectedGuidedAnswer?.let { answer ->
+        GuidedRagAnswerDialog(
+            answer = answer,
+            language = language,
+            onDismiss = { selectedGuidedAnswer = null }
+        )
+    }
+}
+
+@Composable
+private fun GuidedRagQuestionSection(
+    language: AppLanguage,
+    loadingQuestionId: String?,
+    onQuestionClick: (GuidedRagQuestion) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = guidedQuestionsTitle(language),
+            style = MaterialTheme.typography.titleSmall,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold
+        )
+        guidedRagQuestions(language).forEach { question ->
+            Button(
+                onClick = { onQuestionClick(question) },
+                enabled = loadingQuestionId == null,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (loadingQuestionId == question.id) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.White
+                    )
+                } else {
+                    Text(question.label)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuidedRagAnswerDialog(answer: GuidedRagAnswer, language: AppLanguage, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(answer.question.label) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = answer.insight.answer,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (answer.insight.sourceDetails.isNotEmpty()) {
+                    Text(
+                        text = "${language.text(TextKey.RAG_CONTEXT_ITEMS)}: ${answer.insight.sourceDetails.size}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    answer.insight.sourceDetails.take(3).forEach { source ->
+                        Text(
+                            text = "${source.source.ifBlank { source.id }} - score ${"%.2f".format(source.score)}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(language.text(TextKey.CONFIRM))
+            }
+        }
+    )
 }
 
 @Composable
@@ -429,6 +559,16 @@ private fun SourceChunkDialog(source: RagSourceDetail, language: AppLanguage, on
     )
 }
 
+private data class GuidedRagQuestion(
+    val id: String,
+    val label: String
+)
+
+private data class GuidedRagAnswer(
+    val question: GuidedRagQuestion,
+    val insight: SessionRagInsight
+)
+
 @Composable
 private fun DetailMetric(label: String, value: String, modifier: Modifier = Modifier) {
     Column(
@@ -472,6 +612,45 @@ private fun formatDistance(distanceMetres: Double): String {
     } else {
         "${distanceMetres.toInt()} m"
     }
+}
+
+private fun guidedQuestionsTitle(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "Preguntes guiades RAG"
+    AppLanguage.ENGLISH -> "Guided RAG questions"
+    AppLanguage.SPANISH -> "Preguntas guiadas RAG"
+    AppLanguage.CHINESE -> "RAG \u5f15\u5bfc\u95ee\u9898"
+}
+
+private fun guidedRagQuestions(language: AppLanguage): List<GuidedRagQuestion> {
+    return when (language) {
+        AppLanguage.CATALAN -> listOf(
+            GuidedRagQuestion("improve_next", "Com puc millorar la propera sessio?"),
+            GuidedRagQuestion("why_recommendation", "Per que recomanes aixo?"),
+            GuidedRagQuestion("prediction_limits", "Limitacions de la prediccio")
+        )
+        AppLanguage.ENGLISH -> listOf(
+            GuidedRagQuestion("improve_next", "How can I improve the next session?"),
+            GuidedRagQuestion("why_recommendation", "Why do you recommend this?"),
+            GuidedRagQuestion("prediction_limits", "Prediction limitations")
+        )
+        AppLanguage.SPANISH -> listOf(
+            GuidedRagQuestion("improve_next", "Como puedo mejorar la proxima sesion?"),
+            GuidedRagQuestion("why_recommendation", "Por que recomiendas esto?"),
+            GuidedRagQuestion("prediction_limits", "Limitaciones de la prediccion")
+        )
+        AppLanguage.CHINESE -> listOf(
+            GuidedRagQuestion("improve_next", "\u5982\u4f55\u6539\u8fdb\u4e0b\u4e00\u6b21\u8bad\u7ec3\uff1f"),
+            GuidedRagQuestion("why_recommendation", "\u4e3a\u4ec0\u4e48\u8fd9\u6837\u5efa\u8bae\uff1f"),
+            GuidedRagQuestion("prediction_limits", "\u9884\u6d4b\u5c40\u9650")
+        )
+    }
+}
+
+private fun guidedQuestionError(language: AppLanguage): String = when (language) {
+    AppLanguage.CATALAN -> "No s'ha pogut generar la resposta guiada amb el backend RAG."
+    AppLanguage.ENGLISH -> "The RAG backend could not generate the guided answer."
+    AppLanguage.SPANISH -> "No se ha podido generar la respuesta guiada con el backend RAG."
+    AppLanguage.CHINESE -> "\u65e0\u6cd5\u901a\u8fc7 RAG \u540e\u7aef\u751f\u6210\u5f15\u5bfc\u56de\u7b54\u3002"
 }
 
 private fun formatDurationShort(totalSeconds: Long): String {

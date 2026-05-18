@@ -41,6 +41,10 @@ class RagRequest(BaseModel):
     top_k: int = Field(default_factory=lambda: int(os.environ.get("SMARTRAIN_RAG_TOP_K", "6")))
 
 
+class GuidedRagRequest(RagRequest):
+    question_id: str = "improve_next"
+
+
 class SourceChunk(BaseModel):
     id: str
     source: str
@@ -136,6 +140,45 @@ def build_prompt(request: RagRequest, sources: list[SourceChunk]) -> str:
     )
 
 
+def guided_question_text(question_id: str, language: str) -> str:
+    labels = {
+        "improve_next": {
+            "ca": "Com puc millorar la propera sessio?",
+            "en": "How can I improve the next session?",
+            "es": "Como puedo mejorar la proxima sesion?",
+            "zh": "\u6211\u5982\u4f55\u6539\u8fdb\u4e0b\u4e00\u6b21\u8bad\u7ec3\uff1f",
+        },
+        "why_recommendation": {
+            "ca": "Per que recomanes aixo?",
+            "en": "Why do you recommend this?",
+            "es": "Por que recomiendas esto?",
+            "zh": "\u4f60\u4e3a\u4ec0\u4e48\u8fd9\u6837\u5efa\u8bae\uff1f",
+        },
+        "prediction_limits": {
+            "ca": "Quines limitacions te aquesta prediccio?",
+            "en": "What limitations does this prediction have?",
+            "es": "Que limitaciones tiene esta prediccion?",
+            "zh": "\u8fd9\u4e2a\u9884\u6d4b\u6709\u54ea\u4e9b\u5c40\u9650\uff1f",
+        },
+    }
+    return labels.get(question_id, labels["improve_next"]).get(language, labels["improve_next"]["ca"])
+
+
+def build_guided_prompt(request: GuidedRagRequest, sources: list[SourceChunk]) -> str:
+    question = guided_question_text(request.question_id, request.language)
+    context = "\n".join(f"[{source.id}] {source.source} ({source.category}, score={source.score:.4f}): {source.text}" for source in sources)
+    return (
+        f"{DEFAULT_PROMPT}\n{language_instruction(request.language)}\n\n"
+        "Estas responent una pregunta guiada post-sessio. "
+        "Respon de forma breu, practica i fonamentada en les fonts recuperades. "
+        "No facis diagnostics medics ni inventis dades que no apareguin a la sessio.\n\n"
+        f"Pregunta de l'usuari:\n{question}\n\n"
+        f"Context RAG:\n{context}\n\n"
+        f"Resum de sessio:\n{session_to_query(request.session, request.language)}\n\n"
+        "Resposta:"
+    )
+
+
 def call_ollama(prompt: str) -> tuple[str, str, int]:
     base_url = os.environ.get("OLLAMA_BASE_URL", "https://ollama.com").rstrip("/")
     model = os.environ.get("OLLAMA_MODEL", "qwen3-coder-next")
@@ -166,9 +209,9 @@ def call_ollama(prompt: str) -> tuple[str, str, int]:
     return answer, model, latency
 
 
-def retrieve_sources(request: RagRequest) -> tuple[str, list[SourceChunk]]:
+def retrieve_sources(request: RagRequest, query_override: str | None = None) -> tuple[str, list[SourceChunk]]:
     vectorstore = get_vectorstore()
-    query = session_to_query(request.session, request.language)
+    query = query_override or session_to_query(request.session, request.language)
     retrieved = vectorstore.similarity_search_with_score(query, k=max(request.top_k * 8, 32))
     scored_sources = []
     for document, distance in retrieved:
@@ -245,6 +288,24 @@ def session_summary(request: RagRequest) -> RagResponse:
     )
 
 
+@app.post("/rag/guided-question", response_model=RagResponse)
+def guided_question(request: GuidedRagRequest) -> RagResponse:
+    if request.question_id not in {"improve_next", "why_recommendation", "prediction_limits"}:
+        raise HTTPException(status_code=400, detail="Unknown guided question.")
+    question = guided_question_text(request.question_id, request.language)
+    query = f"{question} {session_to_query(request.session, request.language)}"
+    _, sources = retrieve_sources(request, query_override=query)
+    answer, model, latency = call_ollama(build_guided_prompt(request, sources))
+    return RagResponse(
+        title=question,
+        answer=answer,
+        provider="remote-rag",
+        model=model,
+        latency_ms=latency,
+        sources=sources,
+    )
+
+
 @app.get("/rag/demo-session-summary", response_model=RagResponse)
 def demo_session_summary() -> RagResponse:
     request = RagRequest(
@@ -260,3 +321,21 @@ def demo_session_summary() -> RagResponse:
         ),
     )
     return session_summary(request)
+
+
+@app.get("/rag/demo-guided-question", response_model=RagResponse)
+def demo_guided_question(question_id: str = "improve_next") -> RagResponse:
+    request = GuidedRagRequest(
+        language="ca",
+        top_k=3,
+        question_id=question_id,
+        session=SessionPayload(
+            dominantActivity="Alta intensitat",
+            avgMlConfidence=0.82,
+            mlPredictionCount=24,
+            highIntensityCount=12,
+            durationSeconds=1800,
+            distanceMetres=3200.0,
+        ),
+    )
+    return guided_question(request)
