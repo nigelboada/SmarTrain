@@ -1,52 +1,37 @@
-# ML_EXPERIMENTS.md
+# SmarTrain: experimentació ML i RAG
 
-## 1. Descripcion Del Problema
+Aquest document resumeix el procés d'entrenament, selecció, exportació i integració del model ML de SmarTrain, i també la implementació del RAG propi utilitzat a l'aplicació.
 
-SmarTrain busca registrar sesiones deportivas desde un movil y enriquecerlas con dos capas de inteligencia:
+## 1. Descripció del problema
 
-- un modelo ML embarcado que interpreta ventanas cortas de movimiento a partir del acelerometro;
-- un sistema RAG que convierte el resumen ML de la sesion en una recomendacion explicable y prudente.
+SmarTrain vol convertir dades de moviment capturades pel mòbil en informació útil per a una sessió esportiva. El problema té dues parts:
 
-El objetivo no es diagnosticar rendimiento deportivo profesional, sino validar un flujo completo app-modelo-IA: capturar datos, ejecutar inferencia, guardar resultados, recuperar conocimiento relevante y generar una interpretacion post-sesion.
+- classificar finestres de sensor amb un model ML lleuger;
+- explicar el resultat a l'usuari amb llenguatge natural i fonts de context.
 
-## 2. Dataset Utilizado
+El model ML dona prediccions i confiança. El RAG aporta interpretació, prudència i traçabilitat.
 
-Dataset principal: UCI Human Activity Recognition using Smartphones.
+## 2. Dataset utilitzat
 
-Caracteristicas:
+El model d'activitat s'ha entrenat amb UCI HAR. Aquest dataset conté lectures d'acceleròmetre i giroscopi amb etiquetes d'activitat humana.
 
-| Elemento | Valor |
-| --- | ---: |
-| Muestras totales | 10.299 |
-| Train original | 7.352 |
-| Test original | 2.947 |
-| Frecuencia | 50 Hz |
-| Ventana | 128 muestras |
-| Duracion aproximada ventana | 2,56 s |
+Limitació important: UCI HAR no és un dataset específic de futbol. Per això SmarTrain interpreta algunes classes com a aproximacions tècniques:
 
-Clases UCI HAR usadas:
+- pujar o baixar escales com a indicador d'alta intensitat;
+- caminar com a desplaçament suau;
+- estar quiet com a repòs.
 
-- Walking
-- Walking upstairs
-- Walking downstairs
-- Sitting
-- Standing
-- Laying
+Aquesta limitació es mostra a l'app mitjançant el resum RAG.
 
-Mapeo a categorias SmarTrain:
+## 3. Preprocessament
 
-| UCI HAR | SmarTrain |
-| --- | --- |
-| Walking | Desplacament suau |
-| Walking upstairs | Alta intensitat |
-| Walking downstairs | Alta intensitat |
-| Sitting | Repos |
-| Standing | Repos |
-| Laying | Repos |
+El preprocessament converteix les lectures en finestres compatibles amb el model:
 
-Limitacion: UCI HAR no contiene acciones especificas de futbol como sprint, cambio de direccion, presion, conduccion o golpeo. Por eso, las categorias de SmarTrain son una aproximacion tecnica.
-
-## 3. Preprocesamiento
+- càrrega de dades;
+- normalització;
+- separació d'entrenament i validació;
+- construcció de tensors;
+- generació de metadades per a entrenament i exportació.
 
 Script principal:
 
@@ -54,228 +39,131 @@ Script principal:
 ml/scripts/preprocess.py
 ```
 
-Entradas principales:
+## 4. Models avaluats
+
+Durant l'experimentació s'han comparat diversos enfocaments de classificació de sèries temporals:
+
+- models densos sobre característiques agregades;
+- xarxes convolucionals lleugeres;
+- variants amb diferent mida de finestra;
+- variants amb diferent nombre d'unitats i capes.
+
+Els criteris de selecció han estat:
+
+- exactitud i estabilitat;
+- mida del model;
+- latència al mòbil;
+- facilitat d'exportació a TensorFlow Lite.
+
+## 5. Ajust d'hiperparàmetres
+
+Els hiperparàmetres explorats han inclòs:
+
+- mida de batch;
+- nombre d'èpoques;
+- taxa d'aprenentatge;
+- nombre de capes;
+- nombre d'unitats;
+- regularització;
+- mida de finestra.
+
+La selecció final prioritza un equilibri entre qualitat i ús real en mòbil.
+
+## 6. Model final i exportació
+
+El model final s'exporta a TensorFlow Lite per executar-se dins l'app Android.
+
+Fitxers rellevants:
 
 ```text
-ml/data/raw/
-ml/data/raw/train/Inertial Signals/
+ml/models/
+app/src/main/assets/
 ```
 
-Salidas:
+Flux:
 
 ```text
-ml/data/processed/X_train.npy
-ml/data/processed/y_train.npy
+dades sensor -> preprocessament -> entrenament -> export TFLite -> app Android
 ```
 
-Proceso:
+## 7. Integració a l'app
 
-- lectura de senales inerciales;
-- seleccion de aceleracion total en tres ejes;
-- construccion de ventanas compatibles con el modelo Android;
-- normalizacion y preparacion para entrenamiento;
-- generacion de visualizaciones exploratorias.
+L'app captura dades del dispositiu, executa el model i guarda les sessions.
 
-## 4. Modelos Evaluados
-
-Scripts:
+Flux end-to-end:
 
 ```text
-ml/scripts/train_baseline.py
-ml/scripts/train_cnn.py
-ml/scripts/train_model_comparison.py
+mòbil
+  -> sensors
+  -> model TensorFlow Lite
+  -> resum ML de sessió
+  -> generador local, qwen3-coder-next o Backend RAG
+  -> detall de sessió
 ```
 
-Modelos evaluados:
+La interfície mostra:
 
-| Modelo | Objetivo |
-| --- | --- |
-| Random Forest | Baseline clasico |
-| CNN inicial | Primera CNN 1D |
-| cnn_lite | Modelo pequeno para movil |
-| cnn_deep | Mejor capacidad |
-| cnn_separable | Reducir parametros |
+- durada;
+- distància;
+- activitat dominant;
+- confiança mitjana;
+- nombre de prediccions;
+- blocs d'alta intensitat;
+- línia temporal d'activitat;
+- interpretació post-sessió.
 
-Resultados principales:
-
-| Modelo | Resultado |
-| --- | ---: |
-| Random Forest | Accuracy 92,06% |
-| CNN inicial | Validation accuracy 86,13% |
-| cnn_lite | F1 weighted 94,84% |
-| cnn_deep | F1 weighted 96,02% |
-| cnn_separable | F1 weighted 91,35% |
-
-## 5. Ajuste De Hiperparametros
-
-Se compararon arquitecturas CNN con distinto tamano y complejidad:
-
-- profundidad de red;
-- numero de filtros;
-- convoluciones estandar frente a separables;
-- balance entre precision, tamano exportado e inferencia movil.
-
-La decision final priorizo:
-
-- rendimiento alto;
-- tamano bajo;
-- inferencia rapida;
-- exportacion estable a TensorFlow Lite;
-- integracion sencilla en Android.
-
-## 6. Modelo Final Seleccionado
-
-Modelo final: `cnn_deep`.
-
-| Metrica | Valor |
-| --- | ---: |
-| Accuracy test | 96,01% |
-| F1 weighted | 96,02% |
-| Tamano TFLite | 55.208 bytes |
-| Inferencia media TFLite | 0,078 ms |
-
-Archivos:
-
-```text
-ml/models/model_v1.tflite
-app/src/main/assets/model_v1.tflite
-```
-
-Hash validado:
-
-```text
-3A0176C01ACE86F258E87B9B60763C44A2216AC70A04F0A3D685210577BC00B8
-```
-
-## 7. Integracion En Android
-
-Componentes:
-
-| Archivo | Funcion |
-| --- | --- |
-| `ActivityClassifier.kt` | Carga y ejecuta TFLite |
-| `ActivityRecognitionState.kt` | Agrega predicciones y resumen ML |
-| `TrackingService.kt` | Captura sensores en segundo plano |
-| `Session.kt` | Persiste metricas ML y RAG |
-| `SessionDetailScreen.kt` | Muestra resultados al usuario |
-
-Flujo:
-
-```text
-SensorProvider
-  -> TrackingService
-  -> ventana de acelerometro
-  -> ActivityClassifier TFLite
-  -> ActivityRecognitionState
-  -> resumen de sesion
-  -> RAG / IA
-  -> Room + Firestore
-  -> pantalla de detalle
-```
-
-## 8. RAG Para La Aplicacion
+## 8. RAG per a l'aplicació
 
 ### Problema
 
-El modelo ML produce etiquetas y estadisticas, pero el usuario necesita una interpretacion comprensible. El RAG aporta contexto documental para explicar:
+El classificador dona una etiqueta, però un usuari no expert necessita una explicació. El RAG permet transformar la sortida del model en una recomanació contextualitzada i verificable.
 
-- que significa la actividad dominante;
-- como interpretar la confianza del modelo;
-- que limitaciones tiene UCI HAR aplicado a futbol;
-- que recomendacion prudente hacer despues de la sesion.
+### Dades utilitzades
 
-### Datos Usados
+El corpus RAG combina:
 
-Corpus principal:
+- base de coneixement pròpia sobre interpretació del model;
+- recomanacions d'entrenament prudents;
+- documents FAQ per respondre preguntes guiades;
+- resultats i informes d'experimentació;
+- sessions anonimitzades de prova.
 
-```text
-ml/rag/data/knowledge_base.jsonl
-```
-
-Fuentes adicionales para Chroma:
-
-```text
-docs/PROJECT_REPORT.md
-ml/rag/eval/sessions.jsonl
-ml/rag/results/*.md
-```
-
-Index validado:
-
-| Elemento | Valor |
-| --- | ---: |
-| Raw documents | 17 |
-| Chunks | 42 |
-| Embedding dimension | 768 |
-| Vectorstore | ChromaDB |
-| Embedding seleccionado | nomic-embed-text |
-
-### Estructura De Carpetas RAG
+### Estructura
 
 ```text
 ml/rag/
-  data/knowledge_base.jsonl
-  eval/questions.jsonl
-  eval/sessions.jsonl
-  scripts/build_vector_index.py
-  scripts/export_projector.py
-  scripts/compare_embedding_models.py
-  scripts/compare_generation_models.py
-  scripts/rag_backend.py
-  chroma_db/smartrain/
-  results/
+  data/                     Corpus en JSONL
+  eval/                     Preguntes i sessions de prova
+  chroma_db/smartrain/      Índex vectorial
+  scripts/                  Construcció, comparació i backend
+  results/                  Resultats d'avaluació
 ```
 
-### Tecnologia Usada
+### Tecnologia
 
-| Capa | Tecnologia |
-| --- | --- |
-| Vectorstore | ChromaDB |
-| Embeddings | Ollama `nomic-embed-text` |
-| Backend | FastAPI |
-| Generacion | Ollama Cloud `qwen3-coder-next` |
-| App | Android Kotlin + Jetpack Compose |
-| Fallback | Reglas locales |
+- FastAPI per exposar el backend.
+- ChromaDB com a vector store.
+- `nomic-embed-text` per generar embeddings locals.
+- Ollama Cloud amb `qwen3-coder-next` per generar respostes.
+- TensorFlow Projector per visualitzar embeddings.
 
-## 9. Experimentacion RAG
+## 9. Experimentació RAG
 
-### Retrieval Clasico
+S'han validat tres parts:
 
-Script:
+- recuperació de fragments rellevants;
+- generació amb diferents models;
+- integració completa amb l'app Android.
+
+Resultat de l'índex Chroma:
 
 ```text
-ml/rag/scripts/evaluate_rag.py
+raw_documents: 24
+chunks: 24
+embedding_dimension: 768
 ```
 
-| Recuperador | Top K | Hit@3 | MRR | Decision |
-| --- | ---: | ---: | ---: | --- |
-| keyword_overlap | 3 | 100% | 0,83 | Baseline |
-| tfidf_cosine | 3 | 100% | 1,00 | Mejor baseline clasico |
-
-### Comparacion De Embeddings
-
-Script:
-
-```powershell
-python ml/rag/scripts/compare_embedding_models.py --ollama-base-url http://127.0.0.1:11434
-```
-
-| Modelo | Hit@6 | MRR | Decision |
-| --- | ---: | ---: | --- |
-| nomic-embed-text | 0,833 | 0,708 | Seleccionado |
-| sentence-transformers/all-MiniLM-L6-v2 | 0,833 | 0,694 | Alternativa viable |
-
-`nomic-embed-text` se mantiene porque empata en Hit@6 y obtiene mejor MRR.
-
-### TensorFlow Projector
-
-Export:
-
-```powershell
-python ml/rag/scripts/export_projector.py --store chroma
-```
-
-Archivos:
+Export TensorFlow Projector:
 
 ```text
 ml/rag/results/projector/vectors.tsv
@@ -283,101 +171,123 @@ ml/rag/results/projector/metadata.tsv
 ml/rag/results/projector/pca_preview.png
 ```
 
-Validado manualmente:
+La visualització amb PCA, t-SNE i UMAP mostra agrupacions per `category` i `source`, cosa que ajuda a comprovar que els documents no estan barrejats aleatòriament.
 
-- 42 puntos;
-- 768 dimensiones;
-- PCA, t-SNE y UMAP;
-- color por `category` y `source`.
+## 10. Comparació de models amb RAG
 
-## 10. Comparacion Entre Modelos Usando El RAG
+S'han comparat respostes generades amb diferents opcions locals i cloud. El criteri principal no ha estat només la fluïdesa, sinó:
 
-Script:
+- respecte pel context recuperat;
+- no invenció de mètriques;
+- resposta en català;
+- utilitat per a l'usuari;
+- latència acceptable;
+- capacitat de seguir una resposta prudent.
 
-```powershell
-python ml/rag/scripts/compare_generation_models.py --timeout 180
+El model seleccionat per al mode cloud i el backend és:
+
+```text
+qwen3-coder-next
 ```
 
-Modelos comparados:
+El mode local per regles es manté com a fallback perquè l'app continuï funcionant si falla la xarxa, el backend o la API.
 
-| Proveedor | Modelo | OK | Errores | Latencia media | Decision |
-| --- | --- | ---: | ---: | ---: | --- |
-| cloud | gemma3:4b | 10/10 | 0 | 702,98 ms | Rapido, demasiado breve |
-| local | gemma4:latest | 10/10 | 0 | 43.190,86 ms | Calidad correcta, lento |
-| cloud | qwen3-coder-next | 10/10 | 0 | 3.378,32 ms | Seleccionado |
-| local | gemma3:1b | 10/10 | 0 | 8.022,97 ms | Viable local, menor calidad |
-| local | qwen3.6:latest | 9/10 | 1 | 63.571,25 ms | Lento |
-| cloud | gpt-oss:20b | 8/10 | 2 | 1.554,34 ms | Respuestas vacias |
+## 11. Funcionalitats RAG pròpies
 
-Decision final: `qwen3-coder-next` via Ollama Cloud.
+El mode `Backend RAG` aporta funcionalitats que el mode directe de model no pot oferir sol:
 
-Motivos:
+- fonts recuperades;
+- chunks visibles;
+- scores de similitud;
+- fragments clicables i ampliables;
+- FAQ RAG amb preguntes guiades post-sessió.
 
-- completa 10/10 tareas;
-- latencia aceptable;
-- buena utilidad de recomendacion;
-- buen respeto al contexto;
-- integracion directa en app y backend.
+Les preguntes guiades implementades són:
 
-## 11. Funcionalidad RAG Propia En La App
+- com millorar la propera sessió;
+- per què es recomana una acció;
+- quines limitacions té la predicció;
+- quina recuperació convé;
+- què significa la confiança del model;
+- com interpretar els blocs d'alta intensitat.
 
-La funcionalidad propia del RAG no es solo el texto generado. El modo `Backend RAG` aporta una experiencia que el modo cloud directo no tiene:
+Aquest enfocament evita un chatbot genèric i dona una utilitat concreta al RAG dins el flux principal de l'app.
+Les FAQ poden funcionar encara que el resum principal s'hagi generat amb mode local o cloud, sempre que el backend RAG estigui actiu i accessible.
 
-- recupera chunks reales desde ChromaDB;
-- genera la respuesta con contexto recuperado;
-- guarda fuentes, categorias, scores y textos;
-- muestra los elementos de contexto en la ficha de sesion;
-- permite pulsar cada fuente para ver el chunk ampliado.
+## 12. Resultats experimentals
 
-Esto convierte el resumen en una recomendacion explicable: el usuario no solo ve una respuesta IA, tambien ve de que conocimiento procede.
+El sistema complet funciona end-to-end:
 
-## 12. Discusion De Resultados
+- el model TFLite s'executa dins l'app;
+- la sessió guarda mètriques i prediccions;
+- el selector de Perfil permet triar el mode IA;
+- el backend RAG recupera chunks amb ChromaDB;
+- `qwen3-coder-next` genera la interpretació;
+- l'app mostra resposta, fonts i latència.
 
-El sistema ML cumple el objetivo tecnico de clasificar actividad desde sensores moviles y ejecutarse localmente con TFLite. El rendimiento experimental es alto, aunque la transferencia a futbol real esta limitada por UCI HAR.
+Validacions manuals en mòbil físic:
 
-El RAG mejora la utilidad del resumen post-sesion porque limita la generacion a contexto controlado. El fallback local mantiene la app funcional si no hay red, si falla Ollama o si el backend no esta disponible.
+- `http://192.168.1.14:8000/health` retorna `{"status":"ok"}`;
+- `http://192.168.1.14:8000/rag/demo-session-summary` retorna resposta RAG;
+- el mode Backend RAG funciona des de l'app;
+- les fitxes de chunks es poden obrir individualment.
 
-El backend RAG es la opcion mas completa para demo porque ensena trazabilidad: respuesta, modelo, latencia, fuentes, chunks y scores.
+## 13. Discussió
 
-## 13. Conclusiones
+El sistema és útil perquè separa clarament tres nivells:
 
-- La app integra el modelo ML final en Android.
-- El flujo sensor -> modelo -> resumen -> persistencia -> UI funciona end-to-end.
-- El modelo final `cnn_deep` esta exportado a TensorFlow Lite.
-- El RAG propio esta implementado con ChromaDB, FastAPI y Ollama.
-- `qwen3-coder-next` es el modelo generativo seleccionado.
-- El modo Backend RAG funciona en movil fisico con la URL LAN del PC.
-- La documentacion y scripts permiten reproducir los experimentos principales.
+- ML: predicció objectiva de finestres de moviment;
+- RAG: recuperació de coneixement controlat;
+- IA generativa: explicació final per a l'usuari.
 
-## 14. Reproduccion Rapida
+La limitació principal és que el dataset no és específic de futbol. Per això les recomanacions es formulen com a aproximacions i no com a diagnòstics esportius definitius.
+
+## 14. Conclusions
+
+SmarTrain compleix el flux complet demanat:
+
+- entrenament i exportació d'un model ML;
+- integració del model a l'app;
+- interfície per mostrar resultats;
+- backend integrat;
+- RAG propi funcional;
+- documentació reproduïble.
+
+La funcionalitat RAG final no és només un resum: permet veure fonts i fer preguntes guiades sobre la sessió, cosa que dona valor real a la integració.
+
+## 15. Reproducció
+
+Entrenament i exportació ML:
+
+```powershell
+python ml/scripts/preprocess.py
+python ml/scripts/train_model.py
+python ml/scripts/convert_to_tflite.py
+```
+
+Construcció RAG:
+
+```powershell
+python ml/rag/scripts/build_knowledge_base.py
+python ml/rag/scripts/build_vector_index.py
+```
+
+Backend:
+
+```powershell
+uvicorn ml.rag.scripts.rag_backend:app --host 0.0.0.0 --port 8000
+```
+
+Avaluació RAG:
+
+```powershell
+python ml/rag/scripts/compare_embedding_models.py
+python ml/rag/scripts/compare_generation_models.py
+python ml/rag/scripts/export_projector.py
+```
 
 Tests Android:
 
 ```powershell
 .\gradlew.bat :app:testDebugUnitTest
-```
-
-Backend RAG:
-
-```powershell
-python -m uvicorn ml.rag.scripts.rag_backend:app --host 0.0.0.0 --port 8000
-```
-
-Health:
-
-```text
-http://192.168.1.14:8000/health
-```
-
-Demo RAG:
-
-```text
-http://192.168.1.14:8000/rag/demo-session-summary
-```
-
-Comparativas:
-
-```powershell
-python ml/rag/scripts/compare_embedding_models.py --ollama-base-url http://127.0.0.1:11434
-python ml/rag/scripts/compare_generation_models.py --timeout 180
 ```

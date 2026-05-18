@@ -25,7 +25,24 @@ class RemoteRagGenerator(
             .put("language", language.apiCode())
             .put("session", session.toJson())
 
-        val connection = (URL(endpoint()).openConnection() as HttpURLConnection)
+        postInsight(endpoint(), payload, language)
+    }
+
+    suspend fun generateGuidedQuestion(
+        session: Session,
+        language: AppLanguage,
+        questionId: String
+    ): SessionRagInsight = withContext(Dispatchers.IO) {
+        val payload = JSONObject()
+            .put("language", language.apiCode())
+            .put("question_id", questionId)
+            .put("session", session.toJson())
+
+        postInsight(guidedEndpoint(), payload, language)
+    }
+
+    private fun postInsight(endpoint: String, payload: JSONObject, language: AppLanguage): SessionRagInsight {
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection)
         connection.requestMethod = "POST"
         connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
         connection.readTimeout = READ_TIMEOUT_MILLIS
@@ -64,7 +81,7 @@ class RemoteRagGenerator(
             }
         }
 
-        SessionRagInsight(
+        return SessionRagInsight(
             title = title,
             answer = answer,
             sourceTitles = details.map { it.source.ifBlank { it.id } },
@@ -73,6 +90,7 @@ class RemoteRagGenerator(
     }
 
     private fun endpoint(): String = "${baseUrl.trimEnd('/')}/rag/session-summary"
+    private fun guidedEndpoint(): String = "${baseUrl.trimEnd('/')}/rag/guided-question"
 
     private fun readResponseText(connection: HttpURLConnection, responseCode: Int): String {
         val stream = if (responseCode in HTTP_SUCCESS_RANGE) {

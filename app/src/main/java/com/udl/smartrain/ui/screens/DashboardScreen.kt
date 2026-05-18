@@ -12,17 +12,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -39,13 +36,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.udl.smartrain.domain.model.Session
-import com.udl.smartrain.ui.components.AppHeader
 import com.udl.smartrain.ui.i18n.TextKey
 import com.udl.smartrain.ui.i18n.activityLabel
 import com.udl.smartrain.ui.i18n.text
 import com.udl.smartrain.ui.components.GlassCard
 import com.udl.smartrain.ui.navigation.Screen
-import com.udl.smartrain.ui.theme.PurplePrimary
 import com.udl.smartrain.ui.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -57,7 +52,6 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var sessionToDelete by remember { mutableStateOf<Session?>(null) }
-    var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var sessionToEdit by remember { mutableStateOf<Session?>(null) }
     var editUserName by remember { mutableStateOf("") }
@@ -126,93 +120,44 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
         )
     }
 
-    Scaffold(
-        topBar = {
-            AppHeader(
-                title = language.text(TextKey.DASHBOARD),
-                currentLanguage = language,
-                onLanguageSelected = viewModel::updateLanguage,
-                onProfileClick = { navController.navigate(Screen.Profile.route) },
-                onLogoutClick = { showLogoutDialog = true }
-            )
-        },
-        containerColor = Color.Transparent,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.Session.route) },
-                containerColor = Color.White
-            ) {
-                Icon(Icons.Default.Add, contentDescription = language.text(TextKey.NEW_SESSION), tint = PurplePrimary)
+    if (sessions.isEmpty()) {
+        EmptyDashboard(language)
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                DashboardSummary(sessions = sessions, language = language)
+            }
+            items(sessions) { session ->
+                SessionItem(
+                    session = session,
+                    onDelete = {
+                        sessionToDelete = session
+                        showDeleteDialog = true
+                    },
+                    onEdit = {
+                        sessionToEdit = session
+                        editUserName = session.userId
+                        editSessionName = session.sessionName
+                        showEditDialog = true
+                    },
+                    onOpen = {
+                        navController.navigate(Screen.SessionDetail.createRoute(session.id))
+                    },
+                    language = language
+                )
             }
         }
-    ) { paddingValues ->
-        if (sessions.isEmpty()) {
-            EmptyDashboard(paddingValues, language)
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    DashboardSummary(sessions = sessions, language = language)
-                }
-                items(sessions) { session ->
-                    SessionItem(
-                        session = session,
-                        onDelete = {
-                            sessionToDelete = session
-                            showDeleteDialog = true
-                        },
-                        onEdit = {
-                            sessionToEdit = session
-                            editUserName = session.userId
-                            editSessionName = session.sessionName
-                            showEditDialog = true
-                        },
-                        onOpen = {
-                            navController.navigate(Screen.SessionDetail.createRoute(session.id))
-                        },
-                        language = language
-                    )
-                }
-            }
-        }
-    }
-
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = { Text(language.text(TextKey.SIGN_OUT)) },
-            text = { Text(language.text(TextKey.SIGN_OUT_QUESTION)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showLogoutDialog = false
-                    viewModel.signOut()
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }) {
-                    Text(language.text(TextKey.SIGN_OUT))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
-                    Text(language.text(TextKey.CANCEL))
-                }
-            }
-        )
     }
 }
 
 @Composable
-private fun EmptyDashboard(paddingValues: PaddingValues, language: com.udl.smartrain.data.local.AppLanguage) {
+private fun EmptyDashboard(language: com.udl.smartrain.data.local.AppLanguage) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Text(
