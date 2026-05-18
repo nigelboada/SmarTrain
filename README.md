@@ -181,12 +181,6 @@ ValidaciÃƒÂ³ manual ja feta en mÃƒÂ²bil fÃƒÂ­sic:
 - el mode Backend RAG genera resum i fonts;
 - els chunks es poden obrir individualment.
 
-## Captures recomanades per a l'entrega
-
-Les captures actuals sÃƒÂ³n suficients per documentar la integraciÃƒÂ³. Per completar la nova funcionalitat, ÃƒÂ©s recomanable afegir-ne una mÃƒÂ©s:
-
-- detall de sessiÃƒÂ³ amb la secciÃƒÂ³ `Preguntes guiades RAG`;
-- diÃƒÂ leg d'una pregunta guiada amb resposta i fonts.
 
 ## Estructura rellevant
 
