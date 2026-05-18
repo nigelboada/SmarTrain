@@ -16,7 +16,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--store", choices=["chroma", "pinecone"], default=os.environ.get("SMARTRAIN_RAG_VECTORSTORE", "chroma"))
     parser.add_argument("--embedding-provider", choices=["ollama", "sentence-transformers"], default="ollama")
     parser.add_argument("--embedding-model", default="", help="Default: nomic-embed-text for Ollama, all-MiniLM-L6-v2 for sentence-transformers.")
-    parser.add_argument("--ollama-base-url", default=os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434"))
+    parser.add_argument(
+        "--ollama-base-url",
+        default=os.environ.get("SMARTRAIN_RAG_EMBED_BASE_URL", os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")),
+    )
     parser.add_argument("--chunk-size", type=int, default=700)
     parser.add_argument("--chunk-overlap", type=int, default=90)
     parser.add_argument("--chroma-dir", default=os.environ.get("SMARTRAIN_RAG_CHROMA_DIR", str(CHROMA_DIR)))

@@ -1,12 +1,12 @@
 {
-  "corpus_documents": 12,
-  "questions": 6,
+  "corpus_documents": 29,
+  "questions": 13,
   "evaluations": [
     {
       "retriever": "keyword_overlap",
       "top_k": 3,
       "hit_rate": 1.0,
-      "mrr": 0.8333333333333334,
+      "mrr": 0.8846153846153846,
       "details": [
         {
           "question_id": "q_001",
@@ -56,22 +56,22 @@
             "kb_005"
           ],
           "retrieved_ids": [
+            "kb_018",
             "kb_005",
-            "kb_008",
-            "kb_006"
+            "kb_008"
           ],
           "hit": true
         },
         {
           "question_id": "q_005",
-          "question": "Com s'ha d'interpretar una confiança baixa del model?",
+          "question": "Com s'ha d'interpretar una confianca baixa del model?",
           "expected_ids": [
             "kb_004"
           ],
           "retrieved_ids": [
             "kb_004",
-            "kb_002",
-            "kb_008"
+            "kb_015",
+            "kb_025"
           ],
           "hit": true
         },
@@ -84,7 +84,104 @@
           "retrieved_ids": [
             "kb_011",
             "kb_010",
-            "kb_001"
+            "kb_017"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_010",
+          "question": "Que caldria per classificar millor accions especifiques de futbol?",
+          "expected_ids": [
+            "kb_026",
+            "kb_024"
+          ],
+          "retrieved_ids": [
+            "kb_024",
+            "kb_029",
+            "kb_005"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_009",
+          "question": "Que he de fer si la sessio mostra poca confianca o resultats estranys?",
+          "expected_ids": [
+            "kb_025",
+            "kb_021"
+          ],
+          "retrieved_ids": [
+            "kb_025",
+            "kb_001",
+            "kb_006"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_008",
+          "question": "Per que els primers segons de sensoritzacio poden ser menys fiables?",
+          "expected_ids": [
+            "kb_023"
+          ],
+          "retrieved_ids": [
+            "kb_023",
+            "kb_022",
+            "kb_013"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_007",
+          "question": "Com puc fer que els sensors del mobil siguin mes fiables?",
+          "expected_ids": [
+            "kb_021",
+            "kb_022"
+          ],
+          "retrieved_ids": [
+            "kb_022",
+            "kb_026",
+            "kb_027"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_011",
+          "question": "Que he de fer just abans de comencar una sensoritzacio?",
+          "expected_ids": [
+            "kb_027",
+            "kb_023"
+          ],
+          "retrieved_ids": [
+            "kb_027",
+            "kb_023",
+            "kb_022"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_012",
+          "question": "On he de portar el mobil durant una demo per tenir dades mes estables?",
+          "expected_ids": [
+            "kb_028",
+            "kb_021"
+          ],
+          "retrieved_ids": [
+            "kb_021",
+            "kb_026",
+            "kb_028"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_013",
+          "question": "Millorar el sensor permet reconeixer accions especifiques de futbol?",
+          "expected_ids": [
+            "kb_029",
+            "kb_026"
+          ],
+          "retrieved_ids": [
+            "kb_029",
+            "kb_024",
+            "kb_005"
           ],
           "hit": true
         }
@@ -94,7 +191,7 @@
       "retriever": "tfidf_cosine",
       "top_k": 3,
       "hit_rate": 1.0,
-      "mrr": 1.0,
+      "mrr": 0.9615384615384616,
       "details": [
         {
           "question_id": "q_001",
@@ -105,7 +202,7 @@
           ],
           "retrieved_ids": [
             "kb_003",
-            "kb_009",
+            "kb_016",
             "kb_001"
           ],
           "hit": true
@@ -118,8 +215,8 @@
           ],
           "retrieved_ids": [
             "kb_006",
-            "kb_004",
-            "kb_005"
+            "kb_029",
+            "kb_004"
           ],
           "hit": true
         },
@@ -131,8 +228,8 @@
           ],
           "retrieved_ids": [
             "kb_007",
-            "kb_004",
-            "kb_010"
+            "kb_010",
+            "kb_004"
           ],
           "hit": true
         },
@@ -144,22 +241,22 @@
             "kb_005"
           ],
           "retrieved_ids": [
+            "kb_018",
             "kb_008",
-            "kb_005",
-            "kb_010"
+            "kb_026"
           ],
           "hit": true
         },
         {
           "question_id": "q_005",
-          "question": "Com s'ha d'interpretar una confiança baixa del model?",
+          "question": "Com s'ha d'interpretar una confianca baixa del model?",
           "expected_ids": [
             "kb_004"
           ],
           "retrieved_ids": [
             "kb_004",
-            "kb_005",
-            "kb_012"
+            "kb_015",
+            "kb_005"
           ],
           "hit": true
         },
@@ -172,7 +269,104 @@
           "retrieved_ids": [
             "kb_011",
             "kb_010",
-            "kb_001"
+            "kb_020"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_010",
+          "question": "Que caldria per classificar millor accions especifiques de futbol?",
+          "expected_ids": [
+            "kb_026",
+            "kb_024"
+          ],
+          "retrieved_ids": [
+            "kb_024",
+            "kb_029",
+            "kb_008"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_009",
+          "question": "Que he de fer si la sessio mostra poca confianca o resultats estranys?",
+          "expected_ids": [
+            "kb_025",
+            "kb_021"
+          ],
+          "retrieved_ids": [
+            "kb_025",
+            "kb_015",
+            "kb_006"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_008",
+          "question": "Per que els primers segons de sensoritzacio poden ser menys fiables?",
+          "expected_ids": [
+            "kb_023"
+          ],
+          "retrieved_ids": [
+            "kb_023",
+            "kb_022",
+            "kb_027"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_007",
+          "question": "Com puc fer que els sensors del mobil siguin mes fiables?",
+          "expected_ids": [
+            "kb_021",
+            "kb_022"
+          ],
+          "retrieved_ids": [
+            "kb_022",
+            "kb_027",
+            "kb_026"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_011",
+          "question": "Que he de fer just abans de comencar una sensoritzacio?",
+          "expected_ids": [
+            "kb_027",
+            "kb_023"
+          ],
+          "retrieved_ids": [
+            "kb_027",
+            "kb_022",
+            "kb_023"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_012",
+          "question": "On he de portar el mobil durant una demo per tenir dades mes estables?",
+          "expected_ids": [
+            "kb_028",
+            "kb_021"
+          ],
+          "retrieved_ids": [
+            "kb_021",
+            "kb_028",
+            "kb_026"
+          ],
+          "hit": true
+        },
+        {
+          "question_id": "q_013",
+          "question": "Millorar el sensor permet reconeixer accions especifiques de futbol?",
+          "expected_ids": [
+            "kb_029",
+            "kb_026"
+          ],
+          "retrieved_ids": [
+            "kb_029",
+            "kb_024",
+            "kb_018"
           ],
           "hit": true
         }
@@ -185,28 +379,28 @@
       "question": "Que vol dir si la sessio te molta alta intensitat?",
       "retrieved_ids": [
         "kb_003",
-        "kb_009",
+        "kb_016",
         "kb_001"
       ],
-      "answer": "Pregunta: Que vol dir si la sessio te molta alta intensitat?\nResposta basada en context: Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients. Despres d'una sessio amb alta intensitat, es recomana incloure recuperacio, hidratacio i analisi de carrega. Si hi ha massa blocs intensos seguits, la propera sessio pot prioritzar tecnica, mobilitat o treball aerobi suau."
+      "answer": "Pregunta: Que vol dir si la sessio te molta alta intensitat?\nResposta basada en context: Les classes pujar escales i baixar escales s'utilitzen com aproximacio tecnica a accions d'alta intensitat. Si apareixen sovint, la sessio pot contenir canvis de ritme, acceleracions o moviments exigents. Es recomana alternar aquests blocs amb recuperacions suficients. Els blocs d'alta intensitat a SmarTrain s'han de llegir com a senyal d'accions exigents aproximades. Poden correspondre a canvis de ritme, acceleracions, pujades, frenades o moviments verticals. La recomanacio es alternar-los amb pauses o activitat suau."
     },
     {
       "question": "Per que el model pot confondre seure i dret?",
       "retrieved_ids": [
         "kb_006",
-        "kb_004",
-        "kb_005"
+        "kb_029",
+        "kb_004"
       ],
-      "answer": "Pregunta: Per que el model pot confondre seure i dret?\nResposta basada en context: La matriu de confusio mostra que les classes seure i dret son les mes similars. Aquesta confusio es esperable perque totes dues son posturals i tenen patrons d'acceleracio amb poca variacio. Per futbol, totes dues es poden agrupar com baixa intensitat o repos. Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu."
+      "answer": "Pregunta: Per que el model pot confondre seure i dret?\nResposta basada en context: La matriu de confusio mostra que les classes seure i dret son les mes similars. Aquesta confusio es esperable perque totes dues son posturals i tenen patrons d'acceleracio amb poca variacio. Per futbol, totes dues es poden agrupar com baixa intensitat o repos. Es pot millorar l'estabilitat del sensor amb una posicio consistent, mostreig regular, finestres agregades i eliminacio de moviments aliens. No es pot convertir UCI HAR en un dataset de futbol nomes amb millor sensor: per reconeixer accions futbolistiques calen dades etiquetades especifiques."
     },
     {
       "question": "Quin model final s'ha seleccionat i quines metriques te?",
       "retrieved_ids": [
         "kb_007",
-        "kb_004",
-        "kb_010"
+        "kb_010",
+        "kb_004"
       ],
-      "answer": "Pregunta: Quin model final s'ha seleccionat i quines metriques te?\nResposta basada en context: El model seleccionat per a l'entrega final es cnn_deep. Obte 96,01 per cent d'accuracy, 96,02 per cent de F1 weighted, ocupa 55.208 bytes en format TFLite i te una inferencia mitjana de 0,078 ms en l'entorn d'avaluacio. Quan la confiança mitjana del model es baixa, la prediccio s'ha d'interpretar amb prudencia. Pot indicar soroll del sensor, mobil mal posicionat, activitat no representada al dataset o transicions entre moviments. En aquest cas, l'app ha de mostrar el resultat com orientatiu."
+      "answer": "Pregunta: Quin model final s'ha seleccionat i quines metriques te?\nResposta basada en context: El model final seleccionat i integrat a l'app es el candidat CNN 1D ajustat amb hiperparametres. La millor configuracio usa 48 i 96 filtres, 80 unitats denses, dropout 0,35, learning rate 0,0005 i batch size 64. Les metriques finals son 96,37 per cent d'accuracy i 96,37 per cent de F1 weighted en test. El model ocupa 38.528 bytes en format TFLite i te una inferencia mitjana de 0,058 ms en l'entorn d'avaluacio. El RAG de SmarTrain recupera fragments documentals sobre interpretacio del model, limitacions del dataset i recomanacions d'entrenament. La resposta final ha de basar-se en els fragments recuperats i evitar conclusions no suportades per les dades de la sessio."
     }
   ]
 }
