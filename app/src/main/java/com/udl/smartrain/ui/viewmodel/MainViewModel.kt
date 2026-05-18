@@ -61,6 +61,9 @@ class MainViewModel(
     )
         private set
 
+    var shouldRequestNickname by mutableStateOf(appPreferences.loadUserName().isBlank() && auth.currentUser != null)
+        private set
+
     var authError by mutableStateOf<String?>(null)
         private set
 
@@ -126,7 +129,9 @@ class MainViewModel(
 
                 val user = auth.currentUser ?: error(userUnavailableError(_appLanguage.value))
                 currentUserId.value = user.uid
-                currentUserName = user.email ?: _appLanguage.value.text(TextKey.USER)
+                val savedUserName = appPreferences.loadUserName()
+                currentUserName = savedUserName.ifBlank { user.email ?: _appLanguage.value.text(TextKey.USER) }
+                shouldRequestNickname = savedUserName.isBlank()
                 authError = null
                 if (rememberUser) {
                     appPreferences.saveRememberedUser(email.trim(), password)
@@ -144,6 +149,7 @@ class MainViewModel(
         auth.signOut()
         currentUserId.value = ""
         currentUserName = _appLanguage.value.text(TextKey.USER)
+        shouldRequestNickname = false
         _currentSession.value = null
         TrackingSessionState.reset()
         ActivityRecognitionState.reset()
@@ -295,6 +301,7 @@ class MainViewModel(
     fun updateUserName(newName: String) {
         currentUserName = newName.trim().ifBlank { auth.currentUser?.email ?: _appLanguage.value.text(TextKey.USER) }
         appPreferences.saveUserName(currentUserName)
+        shouldRequestNickname = false
         Log.d("DEBUG_VM", "Nom d'usuari actualitzat a: $newName")
     }
 
