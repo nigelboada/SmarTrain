@@ -36,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -133,6 +134,7 @@ fun SmarTrainApp(viewModel: MainViewModel) {
     val currentRoute = backStackEntry?.destination?.route
     var showSplash by remember { mutableStateOf(true) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var nicknameDraft by remember { mutableStateOf("") }
     val view = LocalView.current
     val systemBarColor = barColor(darkMode).toArgb()
 
@@ -277,6 +279,42 @@ fun SmarTrainApp(viewModel: MainViewModel) {
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
                     Text(language.text(TextKey.CANCEL))
+                }
+            }
+        )
+    }
+
+    if (viewModel.shouldRequestNickname && currentRoute != Screen.Login.route && !showSplash) {
+        val suggestedNickname = remember(viewModel.currentUserName) {
+            viewModel.currentUserName
+                .substringBefore("@")
+                .trim()
+                .ifBlank { language.text(TextKey.USER) }
+        }
+        LaunchedEffect(suggestedNickname) {
+            if (nicknameDraft.isBlank()) {
+                nicknameDraft = suggestedNickname
+            }
+        }
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(nicknameDialogTitle(language)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(nicknameDialogHelp(language))
+                    TextField(
+                        value = nicknameDraft,
+                        onValueChange = { nicknameDraft = it },
+                        singleLine = true,
+                        label = { Text(nicknameDialogLabel(language)) }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.updateUserName(nicknameDraft.ifBlank { suggestedNickname })
+                }) {
+                    Text(language.text(TextKey.CONFIRM))
                 }
             }
         )
@@ -457,6 +495,33 @@ private fun themeModeLabel(darkMode: Boolean, language: AppLanguage): String {
         AppLanguage.ENGLISH -> if (darkMode) "Light mode" else "Dark mode"
         AppLanguage.SPANISH -> if (darkMode) "Modo claro" else "Modo oscuro"
         AppLanguage.CHINESE -> if (darkMode) "\u6d45\u8272\u6a21\u5f0f" else "\u6df1\u8272\u6a21\u5f0f"
+    }
+}
+
+private fun nicknameDialogTitle(language: AppLanguage): String {
+    return when (language) {
+        AppLanguage.CATALAN -> "Com vols aparèixer?"
+        AppLanguage.ENGLISH -> "How should we call you?"
+        AppLanguage.SPANISH -> "¿Cómo quieres aparecer?"
+        AppLanguage.CHINESE -> "\u4f60\u60f3\u5982\u4f55\u663e\u793a\u540d\u79f0\uff1f"
+    }
+}
+
+private fun nicknameDialogHelp(language: AppLanguage): String {
+    return when (language) {
+        AppLanguage.CATALAN -> "Aquest nickname es guardarà al perfil i s'usarà per defecte en les noves sessions."
+        AppLanguage.ENGLISH -> "This nickname will be saved in your profile and used by default for new sessions."
+        AppLanguage.SPANISH -> "Este nickname se guardará en el perfil y se usará por defecto en las nuevas sesiones."
+        AppLanguage.CHINESE -> "\u8be5\u6635\u79f0\u5c06\u4fdd\u5b58\u5230\u4e2a\u4eba\u8d44\u6599\uff0c\u5e76\u9ed8\u8ba4\u7528\u4e8e\u65b0\u8bad\u7ec3\u3002"
+    }
+}
+
+private fun nicknameDialogLabel(language: AppLanguage): String {
+    return when (language) {
+        AppLanguage.CATALAN -> "Nickname"
+        AppLanguage.ENGLISH -> "Nickname"
+        AppLanguage.SPANISH -> "Nickname"
+        AppLanguage.CHINESE -> "\u6635\u79f0"
     }
 }
 

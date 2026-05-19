@@ -77,9 +77,9 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
             },
             confirmButton = {
                 Button(onClick = {
+                    viewModel.updateUserName(editUserName)
                     viewModel.updateSession(
                         sessionToEdit!!.copy(
-                            userId = editUserName,
                             sessionName = editSessionName
                         )
                     )
@@ -140,7 +140,7 @@ fun DashboardScreen(viewModel: MainViewModel, navController: NavController) {
                     },
                     onEdit = {
                         sessionToEdit = session
-                        editUserName = session.userId
+                        editUserName = viewModel.currentUserName
                         editSessionName = session.sessionName
                         showEditDialog = true
                     },

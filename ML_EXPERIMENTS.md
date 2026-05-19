@@ -1,37 +1,37 @@
-﻿# SmarTrain: experimentaciÃƒÆ’Ã‚Â³ ML i RAG
+# SmarTrain: experimentació ML i RAG
 
-Aquest document resumeix el procÃƒÆ’Ã‚Â©s d'entrenament, selecciÃƒÆ’Ã‚Â³, exportaciÃƒÆ’Ã‚Â³ i integraciÃƒÆ’Ã‚Â³ del model ML de SmarTrain, i tambÃƒÆ’Ã‚Â© la implementaciÃƒÆ’Ã‚Â³ del RAG propi utilitzat a l'aplicaciÃƒÆ’Ã‚Â³.
+Aquest document resumeix el procés d'entrenament, selecció, exportació i integració del model ML de SmarTrain, i també la implementació del RAG propi utilitzat a l'aplicació.
 
-## 1. DescripciÃƒÆ’Ã‚Â³ del problema
+## 1. Descripció del problema
 
-SmarTrain vol convertir dades de moviment capturades pel mÃƒÆ’Ã‚Â²bil en informaciÃƒÆ’Ã‚Â³ ÃƒÆ’Ã‚Âºtil per a una sessiÃƒÆ’Ã‚Â³ esportiva. El problema tÃƒÆ’Ã‚Â© dues parts:
+SmarTrain vol convertir dades de moviment capturades pel mòbil en informació útil per a una sessió esportiva. El problema té dues parts:
 
 - classificar finestres de sensor amb un model ML lleuger;
 - explicar el resultat a l'usuari amb llenguatge natural i fonts de context.
 
-El model ML dona prediccions i confianÃƒÆ’Ã‚Â§a. El RAG aporta interpretaciÃƒÆ’Ã‚Â³, prudÃƒÆ’Ã‚Â¨ncia i traÃƒÆ’Ã‚Â§abilitat.
+El model ML dona prediccions i confiança. El RAG aporta interpretació, prudència i traçabilitat.
 
 ## 2. Dataset utilitzat
 
-El model d'activitat s'ha entrenat amb UCI HAR. Aquest dataset contÃƒÆ’Ã‚Â© lectures d'accelerÃƒÆ’Ã‚Â²metre i giroscopi amb etiquetes d'activitat humana.
+El model d'activitat s'ha entrenat amb UCI HAR. Aquest dataset conté lectures d'acceleròmetre i giroscopi amb etiquetes d'activitat humana.
 
-LimitaciÃƒÆ’Ã‚Â³ important: UCI HAR no ÃƒÆ’Ã‚Â©s un dataset especÃƒÆ’Ã‚Â­fic de futbol. Per aixÃƒÆ’Ã‚Â² SmarTrain interpreta algunes classes com a aproximacions tÃƒÆ’Ã‚Â¨cniques:
+Limitació important: UCI HAR no és un dataset específic de futbol. Per això SmarTrain interpreta algunes classes com a aproximacions tècniques:
 
 - pujar o baixar escales com a indicador d'alta intensitat;
-- caminar com a desplaÃƒÆ’Ã‚Â§ament suau;
-- estar quiet com a repÃƒÆ’Ã‚Â²s.
+- caminar com a desplaçament suau;
+- estar quiet com a repòs.
 
-Aquesta limitaciÃƒÆ’Ã‚Â³ es mostra a l'app mitjanÃƒÆ’Ã‚Â§ant el resum RAG.
+Aquesta limitació es mostra a l'app mitjançant el resum RAG.
 
 ## 3. Preprocessament
 
 El preprocessament converteix les lectures en finestres compatibles amb el model:
 
-- cÃƒÆ’Ã‚Â rrega de dades;
-- normalitzaciÃƒÆ’Ã‚Â³;
-- separaciÃƒÆ’Ã‚Â³ d'entrenament i validaciÃƒÆ’Ã‚Â³;
-- construcciÃƒÆ’Ã‚Â³ de tensors;
-- generaciÃƒÆ’Ã‚Â³ de metadades per a entrenament i exportaciÃƒÆ’Ã‚Â³.
+- càrrega de dades;
+- normalització;
+- separació d'entrenament i validació;
+- construcció de tensors;
+- generació de metadades per a entrenament i exportació.
 
 Script principal:
 
@@ -41,19 +41,19 @@ ml/scripts/preprocess.py
 
 ## 4. Models avaluats
 
-Durant l'experimentaciÃƒÆ’Ã‚Â³ s'han comparat diversos enfocaments de classificaciÃƒÆ’Ã‚Â³ de sÃƒÆ’Ã‚Â¨ries temporals:
+Durant l'experimentació s'han comparat diversos enfocaments de classificació de sèries temporals:
 
-- models densos sobre caracterÃƒÆ’Ã‚Â­stiques agregades;
+- models densos sobre característiques agregades;
 - xarxes convolucionals lleugeres;
 - variants amb diferent mida de finestra;
 - variants amb diferent nombre d'unitats i capes.
 
-Els criteris de selecciÃƒÆ’Ã‚Â³ han estat:
+Els criteris de selecció han estat:
 
 - exactitud i estabilitat;
 - mida del model;
-- latÃƒÆ’Ã‚Â¨ncia al mÃƒÆ’Ã‚Â²bil;
-- facilitat d'exportaciÃƒÆ’Ã‚Â³ a TensorFlow Lite.
+- latència al mòbil;
+- facilitat d'exportació a TensorFlow Lite.
 
 ## 5. Ajust d'hiperparametres
 
@@ -108,7 +108,7 @@ inferencia TFLite: 0,058 ms
 
 Aquest resultat documenta l'ajust d'hiperparametres demanat i mostra que una configuracio mitjana, no la mes gran, ofereix el millor equilibri entre qualitat, mida i latencia.
 
-## 6. Model final i exportaciÃƒÆ’Ã‚Â³
+## 6. Model final i exportació
 
 El model final s'exporta a TensorFlow Lite per executar-se dins l'app Android.
 
@@ -125,47 +125,47 @@ Flux:
 dades sensor -> preprocessament -> entrenament -> export TFLite -> app Android
 ```
 
-## 7. IntegraciÃƒÆ’Ã‚Â³ a l'app
+## 7. Integració a l'app
 
 L'app captura dades del dispositiu, executa el model i guarda les sessions.
 
 Flux end-to-end:
 
 ```text
-mÃƒÆ’Ã‚Â²bil
+mòbil
   -> sensors
   -> model TensorFlow Lite
-  -> resum ML de sessiÃƒÆ’Ã‚Â³
+  -> resum ML de sessió
   -> generador local, qwen3-coder-next o Backend RAG
-  -> detall de sessiÃƒÆ’Ã‚Â³
+  -> detall de sessió
 ```
 
-La interfÃƒÆ’Ã‚Â­cie mostra:
+La interfície mostra:
 
 - durada;
-- distÃƒÆ’Ã‚Â ncia;
+- distància;
 - activitat dominant;
-- confianÃƒÆ’Ã‚Â§a mitjana;
+- confiança mitjana;
 - nombre de prediccions;
 - blocs d'alta intensitat;
-- lÃƒÆ’Ã‚Â­nia temporal d'activitat;
-- interpretaciÃƒÆ’Ã‚Â³ post-sessiÃƒÆ’Ã‚Â³.
+- línia temporal d'activitat;
+- interpretació post-sessió.
 
-## 8. RAG per a l'aplicaciÃƒÆ’Ã‚Â³
+## 8. RAG per a l'aplicació
 
 ### Problema
 
-El classificador dona una etiqueta, perÃƒÆ’Ã‚Â² un usuari no expert necessita una explicaciÃƒÆ’Ã‚Â³. El RAG permet transformar la sortida del model en una recomanaciÃƒÆ’Ã‚Â³ contextualitzada i verificable.
+El classificador dona una etiqueta, però un usuari no expert necessita una explicació. El RAG permet transformar la sortida del model en una recomanació contextualitzada i verificable.
 
 ### Dades utilitzades
 
 El corpus RAG combina:
 
-- base de coneixement prÃƒÆ’Ã‚Â²pia sobre interpretaciÃƒÆ’Ã‚Â³ del model;
+- base de coneixement pròpia sobre interpretació del model;
 - recomanacions d'entrenament prudents;
 - documents FAQ per respondre preguntes guiades;
 - documents sobre qualitat del sensor, posicio del mobil i estabilitat del mostreig;
-- resultats i informes d'experimentaciÃƒÆ’Ã‚Â³;
+- resultats i informes d'experimentació;
 - sessions anonimitzades de prova.
 
 ### Estructura
@@ -174,9 +174,9 @@ El corpus RAG combina:
 ml/rag/
   data/                     Corpus en JSONL
   eval/                     Preguntes i sessions de prova
-  chroma_db/smartrain/      ÃƒÆ’Ã‚Ândex vectorial
-  scripts/                  ConstrucciÃƒÆ’Ã‚Â³, comparaciÃƒÆ’Ã‚Â³ i backend
-  results/                  Resultats d'avaluaciÃƒÆ’Ã‚Â³
+  chroma_db/smartrain/      Índex vectorial
+  scripts/                  Construcció, comparació i backend
+  results/                  Resultats d'avaluació
 ```
 
 ### Tecnologia
@@ -187,15 +187,15 @@ ml/rag/
 - Ollama Cloud amb `qwen3-coder-next` per generar respostes.
 - TensorFlow Projector per visualitzar embeddings.
 
-## 9. ExperimentaciÃƒÆ’Ã‚Â³ RAG
+## 9. Experimentació RAG
 
 S'han validat tres parts:
 
-- recuperaciÃƒÆ’Ã‚Â³ de fragments rellevants;
-- generaciÃƒÆ’Ã‚Â³ amb diferents models;
-- integraciÃƒÆ’Ã‚Â³ completa amb l'app Android.
+- recuperació de fragments rellevants;
+- generació amb diferents models;
+- integració completa amb l'app Android.
 
-Resultat de l'ÃƒÆ’Ã‚Â­ndex Chroma:
+Resultat de l'índex Chroma:
 
 ```text
 raw_documents: 33
@@ -211,28 +211,28 @@ ml/rag/results/projector/metadata.tsv
 ml/rag/results/projector/pca_preview.png
 ```
 
-La visualitzaciÃƒÆ’Ã‚Â³ amb PCA, t-SNE i UMAP mostra agrupacions per `category` i `source`, cosa que ajuda a comprovar que els documents no estan barrejats aleatÃƒÆ’Ã‚Â²riament.
+La visualització amb PCA, t-SNE i UMAP mostra agrupacions per `category` i `source`, cosa que ajuda a comprovar que els documents no estan barrejats aleatòriament.
 
-## 10. ComparaciÃƒÆ’Ã‚Â³ de models amb RAG
+## 10. Comparació de models amb RAG
 
-S'han comparat respostes generades amb diferents opcions locals i cloud. El criteri principal no ha estat nomÃƒÆ’Ã‚Â©s la fluÃƒÆ’Ã‚Â¯desa, sinÃƒÆ’Ã‚Â³:
+S'han comparat respostes generades amb diferents opcions locals i cloud. El criteri principal no ha estat només la fluïdesa, sinó:
 
 - respecte pel context recuperat;
-- no invenciÃƒÆ’Ã‚Â³ de mÃƒÆ’Ã‚Â¨triques;
-- resposta en catalÃƒÆ’Ã‚Â ;
+- no invenció de mètriques;
+- resposta en català;
 - utilitat per a l'usuari;
-- latÃƒÆ’Ã‚Â¨ncia acceptable;
+- latència acceptable;
 - capacitat de seguir una resposta prudent.
 
-El model seleccionat per al mode cloud i el backend ÃƒÆ’Ã‚Â©s:
+El model seleccionat per al mode cloud i el backend és:
 
 ```text
 qwen3-coder-next
 ```
 
-El mode local per regles es mantÃƒÆ’Ã‚Â© com a fallback perquÃƒÆ’Ã‚Â¨ l'app continuÃƒÆ’Ã‚Â¯ funcionant si falla la xarxa, el backend o la API.
+El mode local per regles es manté com a fallback perquè l'app continuï funcionant si falla la xarxa, el backend o la API.
 
-## 11. Funcionalitats RAG prÃƒÆ’Ã‚Â²pies
+## 11. Funcionalitats RAG pròpies
 
 El mode `Backend RAG` aporta funcionalitats que el mode directe de model no pot oferir sol:
 
@@ -240,18 +240,18 @@ El mode `Backend RAG` aporta funcionalitats que el mode directe de model no pot 
 - chunks visibles;
 - scores de similitud;
 - fragments clicables i ampliables;
-- FAQ RAG amb preguntes guiades post-sessiÃƒÆ’Ã‚Â³.
+- FAQ RAG amb preguntes guiades post-sessió.
 
-Les preguntes guiades implementades sÃƒÆ’Ã‚Â³n:
+Les preguntes guiades implementades són:
 
-- com millorar la propera sessiÃƒÆ’Ã‚Â³;
-- per quÃƒÆ’Ã‚Â¨ es recomana una acciÃƒÆ’Ã‚Â³;
-- quines limitacions tÃƒÆ’Ã‚Â© la predicciÃƒÆ’Ã‚Â³;
-- quina recuperaciÃƒÆ’Ã‚Â³ convÃƒÆ’Ã‚Â©;
-- quÃƒÆ’Ã‚Â¨ significa la confianÃƒÆ’Ã‚Â§a del model;
+- com millorar la propera sessió;
+- per què es recomana una acció;
+- quines limitacions té la predicció;
+- quina recuperació convé;
+- què significa la confiança del model;
 - com interpretar els blocs d'alta intensitat.
 
-Aquest enfocament evita un chatbot genÃƒÆ’Ã‚Â¨ric i dona una utilitat concreta al RAG dins el flux principal de l'app.
+Aquest enfocament evita un chatbot genèric i dona una utilitat concreta al RAG dins el flux principal de l'app.
 Les FAQ poden funcionar encara que el resum principal s'hagi generat amb mode local o cloud, sempre que el backend RAG estigui actiu i accessible.
 
 ## 12. Resultats experimentals
@@ -259,45 +259,45 @@ Les FAQ poden funcionar encara que el resum principal s'hagi generat amb mode lo
 El sistema complet funciona end-to-end:
 
 - el model TFLite s'executa dins l'app;
-- la sessiÃƒÆ’Ã‚Â³ guarda mÃƒÆ’Ã‚Â¨triques i prediccions;
+- la sessió guarda mètriques i prediccions;
 - el selector de Perfil permet triar el mode IA;
 - el backend RAG recupera chunks amb ChromaDB;
-- `qwen3-coder-next` genera la interpretaciÃƒÆ’Ã‚Â³;
-- l'app mostra resposta, fonts i latÃƒÆ’Ã‚Â¨ncia.
+- `qwen3-coder-next` genera la interpretació;
+- l'app mostra resposta, fonts i latència.
 
-Validacions manuals en mÃƒÆ’Ã‚Â²bil fÃƒÆ’Ã‚Â­sic:
+Validacions manuals en mòbil físic:
 
 - `http://192.168.1.14:8000/health` retorna `{"status":"ok"}`;
 - `http://192.168.1.14:8000/rag/demo-session-summary` retorna resposta RAG;
 - el mode Backend RAG funciona des de l'app;
 - les fitxes de chunks es poden obrir individualment.
 
-## 13. DiscussiÃƒÆ’Ã‚Â³
+## 13. Discussió
 
-El sistema ÃƒÆ’Ã‚Â©s ÃƒÆ’Ã‚Âºtil perquÃƒÆ’Ã‚Â¨ separa clarament tres nivells:
+El sistema és útil perquè separa clarament tres nivells:
 
-- ML: predicciÃƒÆ’Ã‚Â³ objectiva de finestres de moviment;
-- RAG: recuperaciÃƒÆ’Ã‚Â³ de coneixement controlat;
-- IA generativa: explicaciÃƒÆ’Ã‚Â³ final per a l'usuari.
+- ML: predicció objectiva de finestres de moviment;
+- RAG: recuperació de coneixement controlat;
+- IA generativa: explicació final per a l'usuari.
 
-La limitaciÃƒÆ’Ã‚Â³ principal ÃƒÆ’Ã‚Â©s que el dataset no ÃƒÆ’Ã‚Â©s especÃƒÆ’Ã‚Â­fic de futbol. Per aixÃƒÆ’Ã‚Â² les recomanacions es formulen com a aproximacions i no com a diagnÃƒÆ’Ã‚Â²stics esportius definitius.
+La limitació principal és que el dataset no és específic de futbol. Per això les recomanacions es formulen com a aproximacions i no com a diagnòstics esportius definitius.
 
 ## 14. Conclusions
 
 SmarTrain compleix el flux complet demanat:
 
-- entrenament i exportaciÃƒÆ’Ã‚Â³ d'un model ML;
-- integraciÃƒÆ’Ã‚Â³ del model a l'app;
-- interfÃƒÆ’Ã‚Â­cie per mostrar resultats;
+- entrenament i exportació d'un model ML;
+- integració del model a l'app;
+- interfície per mostrar resultats;
 - backend integrat;
 - RAG propi funcional;
-- documentaciÃƒÆ’Ã‚Â³ reproduÃƒÆ’Ã‚Â¯ble.
+- documentació reproduïble.
 
-La funcionalitat RAG final no ÃƒÆ’Ã‚Â©s nomÃƒÆ’Ã‚Â©s un resum: permet veure fonts i fer preguntes guiades sobre la sessiÃƒÆ’Ã‚Â³, cosa que dona valor real a la integraciÃƒÆ’Ã‚Â³.
+La funcionalitat RAG final no és només un resum: permet veure fonts i fer preguntes guiades sobre la sessió, cosa que dona valor real a la integració.
 
-## 15. ReproducciÃƒÆ’Ã‚Â³
+## 15. Reproducció
 
-Entrenament i exportaciÃƒÆ’Ã‚Â³ ML:
+Entrenament i exportació ML:
 
 ```powershell
 python ml/scripts/preprocess.py
@@ -305,7 +305,7 @@ python ml/scripts/train_model.py
 python ml/scripts/convert_to_tflite.py
 ```
 
-ConstrucciÃƒÆ’Ã‚Â³ RAG:
+Construcció RAG:
 
 ```powershell
 python ml/rag/scripts/build_knowledge_base.py
@@ -318,7 +318,7 @@ Backend:
 uvicorn ml.rag.scripts.rag_backend:app --host 0.0.0.0 --port 8000
 ```
 
-AvaluaciÃƒÆ’Ã‚Â³ RAG:
+Avaluació RAG:
 
 ```powershell
 python ml/rag/scripts/compare_embedding_models.py
